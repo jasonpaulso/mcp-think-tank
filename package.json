@@ -1,11 +1,11 @@
 {
   "name": "mcp-think-server",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "An MCP server that provides a 'think' tool for structured reasoning in AI assistants",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "mcp-think-server": "./bin/mcp-think-server.js"
+    "mcp-think-server": "bin/mcp-think-server.js"
   },
   "scripts": {
     "build": "tsc",
