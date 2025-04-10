@@ -1,4 +1,4 @@
-# Think MCP Server
+# MCP Think Server
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/d86470ba-45d4-48d0-8ebe-783c402dd4f4" alt="ContextCraft Logo" width="240">
