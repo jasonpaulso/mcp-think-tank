@@ -8,6 +8,7 @@ This implementation plan outlines the process for enhancing the MCP Think Server
 - Build semantic connections between pieces of information
 - Access previous reasoning and conclusions
 - Maintain contextual awareness of user preferences and past interactions
+- research https://github.com/itseasy21/mcp-knowledge-graph and see if it can be used to implement this
 
 ## System Architecture
 
@@ -171,15 +172,16 @@ interface KnowledgeGraph {
 
 ## Milestone Timeline
 
-1. **Project Setup** - Day 1
-2. **Knowledge Graph Core** - Days 2-4
-3. **Tool Implementation** - Days 5-7
-4. **Integration** - Days 8-9
-5. **Testing & Documentation** - Days 10-12
-6. **Deployment** - Day 13-14
+1. **Project Setup** - Days 1
+2. **Knowledge Graph Core** - Days 1
+3. **Tool Implementation** - Days 1
+4. **Integration** - Days 1
+5. **Testing & Documentation** - Days 1
+6. **Deployment** - Days 1
 
 ## Future Enhancements
 
+- [ ] Add proper smithery config (need to ask me to create acount at smithery.com)
 - [ ] Vector embedding integration for semantic search
 - [ ] Automatic knowledge extraction from conversations
 - [ ] Time-aware memory with temporal relations
