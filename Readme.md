@@ -87,6 +87,50 @@ If you encounter issues during installation:
    npm link
    ```
 
+## Cursor Integration
+
+When setting up with Cursor, follow these specific steps:
+
+1. **Configure MCP in Cursor's settings**:
+
+   Create or edit your `~/.cursor/mcp.json` file:
+
+   ```json
+   {
+     "mcpServers": {
+       "think-tool": {
+         "command": "mcp-think-server",
+         "type": "stdio"
+       }
+     }
+   }
+   ```
+
+   Alternatively, for a temporary setup:
+
+   ```json
+   {
+     "mcpServers": {
+       "think-tool": {
+         "command": "npx",
+         "type": "stdio",
+         "args": [
+           "mcp-think-server"
+         ]
+       }
+     }
+   }
+   ```
+
+2. **Restart Cursor** after changing configuration.
+
+3. **If using the npx method fails**, try the global installation method or the local installation first to make sure the package is properly built.
+
+4. **Troubleshooting Cursor integration**:
+   - Check Cursor's MCP logs for detailed error messages
+   - Ensure Node.js v18+ is in your PATH
+   - Verify that no other MCP server is using the same name
+
 ## How It Works
 
 According to Anthropic's latest research, the "think" tool works through a standard tool specification format:

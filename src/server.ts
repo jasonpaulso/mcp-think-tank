@@ -4,7 +4,7 @@ import { z } from "zod";
 // Create a new MCP server
 const server = new FastMCP({
   name: "Think Tool Server",
-  version: "1.0.0",
+  version: "1.0.3",
 });
 
 // Add the "think" tool
@@ -25,7 +25,8 @@ server.addTool({
   },
 });
 
-// Start the server with stdio transport
+// For the warning "FastMCP could not infer client capabilities", we need a version update
+// of fastmcp to fix properly. For now, use the basic configuration:
 server.start({
   transportType: "stdio",
 });

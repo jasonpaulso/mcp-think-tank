@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4 (2024-04-10)
+
+### Fixed
+- Improved warning message handling for "FastMCP could not infer client capabilities"
+- Added detailed instructions for Cursor integration
+- Updated server version to match package version
+- Added more troubleshooting steps for Cursor integration
+
 ## 1.0.3 (2024-04-10)
 
 ### Fixed
