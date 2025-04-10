@@ -47,8 +47,23 @@ This MCP server is a lightweight, efficient implementation of Anthropic's "think
 
 ## Installation
 
-### Global Installation
-You can install the server globally:
+### Recommended: Direct NPX Installation
+
+The simplest and most reliable way to use mcp-think-server:
+
+```bash
+# No installation needed, just configure Cursor or Claude to use:
+npx -y mcp-think-server
+```
+
+This method:
+- Always uses the latest version
+- Avoids permission issues
+- Works consistently across different environments
+
+### Alternative: Global Installation
+
+If you prefer a global installation:
 
 ```bash
 npm install -g mcp-think-server
@@ -60,8 +75,9 @@ And then run it from anywhere:
 mcp-think-server
 ```
 
-### Local Installation
-You can also install it locally:
+### Alternative: Local Installation
+
+You can also install it locally to your project:
 
 ```bash
 npm install mcp-think-server
@@ -89,47 +105,67 @@ If you encounter issues during installation:
 
 ## Cursor Integration
 
-When setting up with Cursor, follow these specific steps:
+### Recommended Setup (NPX Method)
 
-1. **Configure MCP in Cursor's settings**:
+For the most reliable integration with Cursor, use this configuration in your `~/.cursor/mcp.json`:
 
-   Create or edit your `~/.cursor/mcp.json` file:
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "npx",
+      "args": ["-y", "mcp-think-server"],
+      "type": "stdio"
+    }
+  }
+}
+```
 
-   ```json
-   {
-     "mcpServers": {
-       "think-tool": {
-         "command": "mcp-think-server",
-         "type": "stdio"
-       }
-     }
-   }
-   ```
+This method:
+- Uses npx to always fetch the latest version
+- Avoids permission issues
+- Doesn't require global installation
+- Works consistently across different environments
 
-   Alternatively, for a temporary setup:
+### Alternative Setup Methods
 
-   ```json
-   {
-     "mcpServers": {
-       "think-tool": {
-         "command": "npx",
-         "type": "stdio",
-         "args": [
-           "mcp-think-server"
-         ]
-       }
-     }
-   }
-   ```
+If you prefer other installation approaches:
 
-2. **Restart Cursor** after changing configuration.
+**Global Installation** (requires manual updates):
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-server",
+      "type": "stdio"
+    }
+  }
+}
+```
 
-3. **If using the npx method fails**, try the global installation method or the local installation first to make sure the package is properly built.
+**Full Path Method** (for troubleshooting):
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "/path/to/mcp-think-server",
+      "type": "stdio"
+    }
+  }
+}
+```
 
-4. **Troubleshooting Cursor integration**:
-   - Check Cursor's MCP logs for detailed error messages
-   - Ensure Node.js v18+ is in your PATH
-   - Verify that no other MCP server is using the same name
+### Important Notes
+
+1. After changing your configuration, **restart Cursor** for changes to take effect
+2. If using the NPX method for the first time, there might be a delay as the package downloads
+3. Verify Node.js v18+ is installed in your system
+
+### Troubleshooting
+
+- Check Cursor's MCP logs for detailed error messages
+- Ensure Node.js is in your PATH
+- Verify that no other MCP server is using the same name
 
 ## How It Works
 
