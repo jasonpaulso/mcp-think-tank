@@ -4,11 +4,11 @@
 echo "Installing Think Tool MCP Server..."
 
 # Create directory for the server
-INSTALL_DIR="$HOME/.think-mcp-server"
+INSTALL_DIR="$HOME/.mcp-think-server"
 mkdir -p "$INSTALL_DIR"
 
 # Clone the repository
-git clone https://github.com/flight505/think-mcp-server.git "$INSTALL_DIR/repo" 2>/dev/null || 
+git clone https://github.com/flight505/mcp-think-server.git "$INSTALL_DIR/repo" 2>/dev/null || 
   (cd "$INSTALL_DIR/repo" && git pull)
 
 # Install dependencies and build
@@ -17,12 +17,12 @@ npm install
 npm run build
 
 # Create executable script
-EXEC_PATH="$HOME/.local/bin/think-mcp-server"
+EXEC_PATH="$HOME/.local/bin/mcp-think-server"
 mkdir -p "$(dirname "$EXEC_PATH")"
 
 cat > "$EXEC_PATH" << 'EOF'
 #!/bin/bash
-cd "$HOME/.think-mcp-server/repo"
+cd "$HOME/.mcp-think-server/repo"
 node dist/server.js
 EOF
 
@@ -40,7 +40,7 @@ echo ""
 echo "Installation complete!"
 echo ""
 echo "Usage:"
-echo "  Run 'think-mcp-server' to start the server"
+echo "  Run 'mcp-think-server' to start the server"
 echo ""
 echo "Claude Desktop Configuration:"
 echo "  Edit: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)"
@@ -50,7 +50,7 @@ echo "Add the following to your config:"
 echo '{
   "mcpServers": {
     "think-tool": {
-      "command": "think-mcp-server"
+      "command": "mcp-think-server"
     }
   }
 }'
@@ -58,5 +58,5 @@ echo ""
 echo "Cursor Configuration:"
 echo "  Settings > MCP Servers > Add New Server"
 echo "  Name: think-tool"
-echo "  Command: think-mcp-server"
+echo "  Command: mcp-think-server"
 echo "" 

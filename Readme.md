@@ -1,6 +1,6 @@
 # Think MCP Server
 
-[![npm version](https://img.shields.io/npm/v/think-mcp-server.svg)](https://www.npmjs.com/package/think-mcp-server)
+[![npm version](https://img.shields.io/npm/v/mcp-think-server.svg)](https://www.npmjs.com/package/mcp-think-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Official implementation of Anthropic's "think" tool as an MCP server** - dramatically improve Claude's reasoning capabilities with structured thinking.
@@ -44,7 +44,7 @@ This MCP server is a lightweight, efficient implementation of Anthropic's "think
 
 ### 1. Direct npx Configuration (No Installation Required - Recommended)
 
-The easiest way to use the think-mcp-server is to configure Cursor to run it directly with npx:
+The easiest way to use the mcp-think-server is to configure Cursor to run it directly with npx:
 
 1. Create or edit your `~/.cursor/mcp.json` file:
 
@@ -56,7 +56,7 @@ The easiest way to use the think-mcp-server is to configure Cursor to run it dir
       "type": "stdio",
       "args": [
         "-y",
-        "think-mcp-server@latest"
+        "mcp-think-server@latest"
       ]
     }
   }
@@ -78,10 +78,10 @@ If you prefer to install the package globally:
 
 ```bash
 # Install globally
-npm install -g think-mcp-server
+npm install -g mcp-think-server
 
 # Start the server
-think-mcp-server
+mcp-think-server
 ```
 
 #### Configuration for Cursor with npm installation:
@@ -92,7 +92,7 @@ Edit your `~/.cursor/mcp.json` file:
 {
   "mcpServers": {
     "think-tool": {
-      "command": "think-mcp-server"
+      "command": "mcp-think-server"
     }
   }
 }
@@ -110,7 +110,7 @@ Add the following:
 {
   "mcpServers": {
     "think-tool": {
-      "command": "think-mcp-server"
+      "command": "mcp-think-server"
     }
   }
 }
@@ -123,13 +123,13 @@ For a more comprehensive setup:
 #### macOS/Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/flight505/think-mcp-server/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.sh | bash
 ```
 
 #### Windows (Run in Command Prompt as Administrator):
 
 ```cmd
-curl -fsSL https://raw.githubusercontent.com/flight505/think-mcp-server/main/install.bat -o install.bat && install.bat
+curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.bat -o install.bat && install.bat
 ```
 
 These scripts automatically:
@@ -145,8 +145,8 @@ If you prefer to run the server locally:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/flight505/think-mcp-server.git
-   cd think-mcp-server
+   git clone https://github.com/flight505/mcp-think-server.git
+   cd mcp-think-server
    ```
 
 2. **Install dependencies**:

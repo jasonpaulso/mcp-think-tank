@@ -1,11 +1,11 @@
 {
-  "name": "think-mcp-server",
+  "name": "mcp-think-server",
   "version": "1.0.0",
   "description": "An MCP server that provides a 'think' tool for structured reasoning in AI assistants",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "think-mcp-server": "./bin/think-mcp-server.js"
+    "mcp-think-server": "./bin/think-mcp-server.js"
   },
   "scripts": {
     "build": "tsc",
@@ -18,13 +18,13 @@
   "keywords": ["mcp", "ai", "claude", "think-tool", "reasoning", "structured-thinking", "cursor", "anthropic"],
   "author": "flight505",
   "license": "MIT",
-  "homepage": "https://github.com/flight505/think-mcp-server",
+  "homepage": "https://github.com/flight505/mcp-think-server",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flight505/think-mcp-server.git"
+    "url": "git+https://github.com/flight505/mcp-think-server.git"
   },
   "bugs": {
-    "url": "https://github.com/flight505/think-mcp-server/issues"
+    "url": "https://github.com/flight505/mcp-think-server/issues"
   },
   "dependencies": {
     "@types/node": "^22.13.17",
