@@ -219,6 +219,7 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
       generateMissingEmbeddings?: boolean;
     } = {}
   ): Promise<Array<{ entity: Entity; similarity: number }>> {
+    console.error(`Starting semantic search for: "${query}"`);
     const {
       threshold = 0.7,
       limit = 10,
@@ -235,15 +236,17 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
     }
 
     // Generate embedding for query
+    console.error('Generating embedding for search query...');
     const queryEmbedding = await embeddingService.generateEmbedding(query);
     if (!queryEmbedding) {
       console.warn('Failed to generate embedding for query. Falling back to text search.');
       return this.searchNodes(query).map(entity => ({ entity, similarity: 1 }));
     }
 
-    // Collect entities that need embeddings
-    const entitiesToEmbed: Entity[] = [];
+    // If we need to generate missing embeddings
     if (generateMissingEmbeddings) {
+      // Collect entities that need embeddings
+      const entitiesToEmbed: Entity[] = [];
       for (const entity of this.entities.values()) {
         if (!entity.embedding && entity.observations.length > 0) {
           entitiesToEmbed.push(entity);
@@ -252,21 +255,39 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
 
       // Generate embeddings in batches if needed
       if (entitiesToEmbed.length > 0) {
-        await this.generateEntityEmbeddings(entitiesToEmbed);
+        console.error(`Generating embeddings for ${entitiesToEmbed.length} entities...`);
+        
+        // Process in smaller batches to avoid timeouts
+        const batchSize = 20;
+        for (let i = 0; i < entitiesToEmbed.length; i += batchSize) {
+          const batch = entitiesToEmbed.slice(i, i + batchSize);
+          console.error(`Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(entitiesToEmbed.length/batchSize)}`);
+          await this.generateEntityEmbeddings(batch);
+        }
       }
     }
 
     // Calculate similarity scores for all entities with embeddings
+    console.error('Calculating similarity scores...');
     const results: Array<{ entity: Entity; similarity: number }> = [];
+    
+    let entitiesWithEmbeddings = 0;
+    let entitiesWithoutEmbeddings = 0;
     
     for (const entity of this.entities.values()) {
       if (entity.embedding) {
+        entitiesWithEmbeddings++;
         const similarity = embeddingService.cosineSimilarity(queryEmbedding, entity.embedding);
         if (similarity >= threshold) {
           results.push({ entity, similarity });
         }
+      } else {
+        entitiesWithoutEmbeddings++;
       }
     }
+    
+    console.error(`Processed ${entitiesWithEmbeddings} entities with embeddings (${entitiesWithoutEmbeddings} without embeddings)`);
+    console.error(`Found ${results.length} results above threshold ${threshold}`);
 
     // Sort by similarity (highest first) and limit results
     return results

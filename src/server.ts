@@ -34,8 +34,10 @@ registerMemoryTools(server);
 // of fastmcp to fix properly. For now, use the basic configuration:
 server.start({
   transportType: "stdio",
+  requestTimeout: config.requestTimeout,
 });
 
 // Use console.error instead of console.log - this writes to stderr which won't interfere with the protocol
 console.error(`Think Tool Server with Memory is running...`);
 console.error(`Memory path: ${config.memoryPath}`);
+console.error(`Request timeout: ${config.requestTimeout/1000} seconds`);

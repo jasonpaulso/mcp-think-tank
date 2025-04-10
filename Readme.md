@@ -1,263 +1,24 @@
-# MCP Think Server with Knowledge Graph Memory
+# MCP Think Server
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/d86470ba-45d4-48d0-8ebe-783c402dd4f4" alt="ContextCraft Logo" width="240">
-  <p>The "think" tool excels where other approaches fall short - now with persistent memory across conversations</p>
+  
+![MCP Think Server](https://raw.githubusercontent.com/flight505/mcp-think-server/main/assets/think-banner.png)
+
+[![npm version](https://img.shields.io/npm/v/mcp-think-server.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-server)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Server-orange.svg)](https://github.com/modelcontextprotocol)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Voyage AI](https://img.shields.io/badge/Voyage_AI-Powered-blue.svg)](https://voyageai.com/)
+
 </div>
 
-[![npm version](https://img.shields.io/npm/v/mcp-think-server.svg)](https://www.npmjs.com/package/mcp-think-server)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Overview
 
-**Official implementation of Anthropic's "think" tool as an MCP server** - dramatically improve Claude's reasoning capabilities with structured thinking and persistent knowledge graph memory.
+MCP Think Server provides Claude with a dedicated space for structured reasoning in complex scenarios, allowing the model to systematically work through problems with enhanced deliberation. This implementation includes persistent memory capabilities through a knowledge graph, enabling recall and connections between previously encountered information.
 
-## What is the Think Tool with Memory?
-
-The MCP Think Server now combines two powerful capabilities:
-
-1. **Structured Reasoning**: The original "think" tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks.
-
-2. **Persistent Memory**: The new Knowledge Graph Memory feature allows Claude to retain information across conversations, build semantic relationships between entities, and access previous reasoning.
-
-## Knowledge Graph Memory
-
-The knowledge graph memory feature extends Claude's capabilities by providing:
-
-- **Information Persistence**: Store and retrieve facts across multiple sessions
-- **Semantic Connections**: Create and navigate relationships between entities
-- **Reasoning History**: Access previous conclusions and thought processes
-
-### Memory Model
-
-The knowledge graph is built around three key concepts:
-
-1. **Entities**: Nodes in the graph representing people, objects, concepts, etc.
-   ```json
-   {
-     "name": "Claude",
-     "entityType": "ai_assistant",
-     "observations": ["Built by Anthropic", "Uses a think tool"]
-   }
-   ```
-
-2. **Relations**: Connections between entities
-   ```json
-   {
-     "from": "Claude",
-     "to": "Anthropic",
-     "relationType": "was_created_by"
-   }
-   ```
-
-3. **Observations**: Facts or attributes associated with entities
-
-### Memory Tools
-
-The following MCP tools are available for memory operations:
-
-#### Entity Management
-- `create_entities` - Create multiple entities
-- `update_entities` - Update entity properties
-- `delete_entities` - Remove entities
-
-#### Relation Management
-- `create_relations` - Create connections between entities
-- `update_relations` - Update relation properties
-- `delete_relations` - Remove relations
-
-#### Observation Management
-- `add_observations` - Add new observations to entities
-- `delete_observations` - Remove observations from entities
-
-#### Query and Retrieval
-- `read_graph` - Get the entire knowledge graph
-- `open_nodes` - Retrieve specific entities
-- `search_nodes` - Find entities by keyword search
-- `semantic_search` - Find entities using semantic similarity
-- `generate_embeddings` - Generate vector embeddings for all entities
-
-### Semantic Search
-
-The knowledge graph now supports semantic search using vector embeddings. This allows Claude to find conceptually similar information even when there's no exact text match.
-
-#### How it works
-
-1. Entities are converted to vector embeddings using OpenAI's embedding models
-2. Queries are also converted to embeddings
-3. The system finds entities with the highest semantic similarity to the query
-4. Results are ranked by similarity score
-
-#### Using Semantic Search
-
-To use semantic search:
-
-```js
-semantic_search({
-  query: "What projects is the team working on?",
-  threshold: 0.7,  // Minimum similarity score (0-1)
-  limit: 5,        // Maximum number of results
-  generateMissingEmbeddings: true  // Auto-generate embeddings if needed
-})
-```
-
-#### Setting up OpenAI API for Embeddings
-
-To enable semantic search, set your OpenAI API key:
-
-```bash
-# Set as environment variable
-export OPENAI_API_KEY=your_api_key
-
-# Or when running the server
-OPENAI_API_KEY=your_api_key mcp-think-server
-
-# Or in Cursor configuration
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server",
-      "args": [],
-      "env": {
-        "OPENAI_API_KEY": "your_api_key"
-      },
-      "type": "stdio"
-    }
-  }
-}
-```
-
-## Setup and Configuration
-
-### Memory Path Configuration
-
-By default, the knowledge graph is stored in `~/.mcp-think-server/memory.jsonl`. You can specify a custom path using the `--memory-path` option:
-
-```bash
-mcp-think-server --memory-path=/path/to/your/memory.json
-```
-
-Or in your Cursor configuration:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server",
-      "args": ["--memory-path=/path/to/your/memory.json"],
-      "type": "stdio"
-    }
-  }
-}
-```
-
-### Embedding Configuration
-
-The server supports two embedding providers: OpenAI and Voyage AI. You can configure the embedding service using environment variables or command-line arguments.
-
-#### Provider Selection
-
-Choose between OpenAI and Voyage AI:
-
-```bash
-# Use OpenAI (default)
-EMBEDDING_PROVIDER=openai mcp-think-server
-
-# Use Voyage AI
-EMBEDDING_PROVIDER=voyage mcp-think-server
-
-# Or via command line
-mcp-think-server --embedding-provider=voyage
-```
-
-#### API Keys
-
-Set API keys for the chosen provider:
-
-```bash
-# For OpenAI
-OPENAI_API_KEY=your_api_key mcp-think-server
-
-# For Voyage AI
-VOYAGE_API_KEY=your_api_key mcp-think-server
-
-# Or via command line
-mcp-think-server --openai-api-key=your_key
-mcp-think-server --voyage-api-key=your_key
-```
-
-#### Model Configuration
-
-Customize the embedding model and dimensions:
-
-```bash
-# Set specific model
-EMBEDDING_MODEL=voyage-3-large mcp-think-server
-
-# Set embedding dimensions
-EMBEDDING_DIMENSIONS=1024 mcp-think-server
-
-# Or via command line
-mcp-think-server --embedding-model=text-embedding-3-small
-mcp-think-server --embedding-dimensions=1536
-```
-
-#### Voyage AI Specific Options
-
-Configure Voyage AI specific parameters:
-
-```bash
-# Set input type (query or document)
-EMBEDDING_INPUT_TYPE=query mcp-think-server
-
-# Set quantization (float, int8, binary)
-EMBEDDING_QUANTIZATION=float mcp-think-server
-
-# Or via command line
-mcp-think-server --embedding-input-type=query
-mcp-think-server --embedding-quantization=int8
-```
-
-#### Caching Options
-
-Control embedding caching:
-
-```bash
-# Disable caching
-EMBEDDING_CACHE=false mcp-think-server
-
-# Set custom cache directory
-EMBEDDING_CACHE_DIR=/path/to/cache mcp-think-server
-
-# Or via command line
-mcp-think-server --embedding-cache=false
-mcp-think-server --embedding-cache-dir=/path/to/cache
-```
-
-#### Cursor Configuration
-
-Example Cursor configuration with Voyage AI:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server",
-      "args": ["--embedding-provider=voyage"],
-      "env": {
-        "VOYAGE_API_KEY": "your_voyage_api_key"
-      },
-      "type": "stdio"
-    }
-  }
-}
-```
-
-## What is the Think Tool?
-
-The "think" tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks. Unlike Anthropic's "extended thinking" capability (which helps Claude plan before generating a response), the "think" tool allows Claude to pause mid-task to process new information obtained from tool calls or user interactions.
-
-According to Anthropic's March 2025 research, this approach enables more thoughtful, accurate, and reliable responses, especially for tasks requiring complex reasoning, policy adherence, and sequential decision-making.
-
-## Performance Benefits (Latest Research)
+## 🧠 The Power of Structured Reasoning
 
 Recent studies by Anthropic demonstrate remarkable improvements when using the "think" tool:
 
@@ -267,242 +28,243 @@ Recent studies by Anthropic demonstrate remarkable improvements when using the "
 - **Improved performance** on software engineering benchmarks
 - **1.6% average improvement** on SWE-Bench, contributing to Claude 3.7 Sonnet's state-of-the-art score of 0.623
 
-The best performance comes from pairing the "think" tool with domain-specific prompting that provides examples of reasoning approaches relevant to the task.
+The "think" tool creates a dedicated space for Claude to reason explicitly about complex problems, improving both accuracy and consistency when handling challenging tasks.
 
-## Key Benefits
+## 🚀 Key Features
 
-The "think" tool excels where other approaches fall short:
-- **Better than extended thinking** for cases where Claude doesn't have all necessary information from the initial query
-- **More effective than baseline prompting** for policy-heavy scenarios
-- **Especially powerful** for analyzing tool outputs from other MCP servers
+- 💭 **Structured Thinking**: Dedicated space for step-by-step reasoning
+- 🧩 **Knowledge Graph Memory**: Persistent, relationship-based memory storage
+- 🔍 **Semantic Search**: Find relevant information using natural language queries
+- 🔄 **Extended Timeout**: Configurable timeout settings to prevent disconnections
+- 🤝 **Client Support**: Works with Claude, Cursor, and other MCP clients
+- 🛠️ **Tool Optimization**: Batched processing and efficient embedding generation
+- 📊 **Voyage AI Integration**: High-quality embedding model for semantic search
 
-## Technical Implementation
+## 📦 Installation
 
-This MCP server is a lightweight, efficient implementation that combines:
+### NPX (Recommended)
 
-- **Structured Thinking**: The original "think" tool based on Anthropic's research
-- **Knowledge Graph Memory**: Persistent storage of information across conversations
-- **MCP Standards Compliance**: Follows Anthropic's official MCP specifications
-
-## Installation
-
-### Recommended: Direct NPX Installation
-
-The simplest and most reliable way to use mcp-think-server:
-
-```bash
-# No installation needed, just configure Cursor or Claude to use:
-npx -y mcp-think-server
-```
-
-This method:
-- Always uses the latest version
-- Avoids permission issues
-- Works consistently across different environments
-
-### Alternative: Global Installation
-
-If you prefer a global installation:
-
-```bash
-npm install -g mcp-think-server
-```
-
-And then run it from anywhere:
-
-```bash
-mcp-think-server
-```
-
-### Alternative: Local Installation
-
-You can also install it locally to your project:
-
-```bash
-npm install mcp-think-server
-```
-
-And run it via npx:
+The easiest way to use MCP Think Server is via NPX:
 
 ```bash
 npx mcp-think-server
 ```
 
-### Troubleshooting
+With custom options:
+```bash
+npx mcp-think-server --request-timeout=300 --memory-path=/custom/path/memory.jsonl
+```
 
-If you encounter issues during installation:
+### Global Installation
 
-1. Make sure you have Node.js version 18 or higher installed
-2. If TypeScript compilation fails, you can try:
-   ```bash
-   git clone https://github.com/flight505/mcp-think-server.git
-   cd mcp-think-server
-   npm install
-   npm run build
-   npm link
-   ```
+```bash
+npm install -g mcp-think-server
+mcp-think-server
+```
 
-## Cursor Integration
+### Unix-based Systems (MacOS/Linux)
 
-### Recommended Setup (NPX Method)
+```bash
+curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.sh | bash
+```
 
-For the most reliable integration with Cursor, use this configuration in your `~/.cursor/mcp.json`:
+### Windows
+
+```bash
+curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.bat && install.bat
+```
+
+## ⚙️ Configuration
+
+### Quick Start
+
+For immediate use with default settings:
+
+```bash
+npx mcp-think-server
+```
+
+### Memory Path Configuration
+
+By default, the knowledge graph is stored in `~/.mcp-think-server/memory.jsonl`. You can specify a custom path:
+
+```bash
+mcp-think-server --memory-path=/path/to/your/memory.json
+```
+
+### Request Timeout Configuration
+
+Configure timeouts to prevent client disconnections during long-running operations:
+
+```bash
+# Set timeout to 10 minutes (600 seconds)
+REQUEST_TIMEOUT=600 mcp-think-server
+
+# Or via command line
+mcp-think-server --request-timeout=600
+```
+
+### Embedding Configuration
+
+Configure the semantic search embedding model (Voyage AI):
+
+```bash
+# Set API key
+VOYAGE_API_KEY=your_api_key mcp-think-server
+
+# Set specific model
+EMBEDDING_MODEL=voyage-3-large mcp-think-server
+
+# Set embedding dimensions
+EMBEDDING_DIMENSIONS=1024 mcp-think-server
+```
+
+## 🔌 Client Integration
+
+### Claude Desktop
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-server",
+      "env": {
+        "REQUEST_TIMEOUT": "300",
+        "VOYAGE_API_KEY": "your_voyage_api_key"
+      }
+    }
+  }
+}
+```
+
+### Cursor
+
+In Cursor's MCP Server settings:
 
 ```json
 {
   "mcpServers": {
     "think-tool": {
       "command": "npx",
-      "args": ["-y", "mcp-think-server"],
+      "args": ["-y", "mcp-think-server", "--request-timeout=300"],
       "type": "stdio"
     }
   }
 }
 ```
 
-This method:
-- Uses npx to always fetch the latest version
-- Avoids permission issues
-- Doesn't require global installation
-- Works consistently across different environments
+## 🧰 Available Tools
 
-### Alternative Setup Methods
+The server provides the following MCP tools:
 
-If you prefer other installation approaches:
+### Think Tool
+- `think`: Create a dedicated space for structured reasoning during complex tasks
 
-**Global Installation** (requires manual updates):
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server",
-      "type": "stdio"
-    }
-  }
-}
-```
+### Memory Tools
+- `create_entities`: Create new entities in the knowledge graph
+- `create_relations`: Create relationships between entities
+- `add_observations`: Add new observations to existing entities
+- `update_entities`: Update existing entity properties
+- `update_relations`: Update existing relationships
+- `delete_entities`: Remove entities from the knowledge graph
+- `delete_observations`: Remove specific observations from entities
+- `delete_relations`: Remove relationships between entities
+- `read_graph`: Get the entire knowledge graph
+- `open_nodes`: Retrieve specific entities by name
+- `search_nodes`: Find entities using text-based search
+- `semantic_search`: Find entities using semantic similarity
+- `generate_embeddings`: Generate embeddings for all entities
 
-**Full Path Method** (for troubleshooting):
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "/path/to/mcp-think-server",
-      "type": "stdio"
-    }
-  }
-}
-```
+## 🧠 How it Works
 
-### Important Notes
+1. **Dedicated Reasoning Space**: The `think` tool provides Claude with a dedicated space to think through complex problems systematically.
 
-1. After changing your configuration, **restart Cursor** for changes to take effect
-2. If using the NPX method for the first time, there might be a delay as the package downloads
-3. Verify Node.js v18+ is installed in your system
+2. **Knowledge Storage**: Information is stored in a knowledge graph consisting of:
+   - **Entities**: Named items with properties and observations
+   - **Relations**: Connections between entities
+   - **Embeddings**: Vector representations for semantic search
 
-### Troubleshooting
+3. **Semantic Search**: Find relevant information using natural language queries powered by Voyage AI's embeddings.
 
-- Check Cursor's MCP logs for detailed error messages
-- Ensure Node.js is in your PATH
-- Verify that no other MCP server is using the same name
+4. **Persistence**: All information remains available across sessions through file-based storage.
 
-## How It Works
+## 📊 Performance Optimization
 
-According to Anthropic's latest research, the "think" tool works through a standard tool specification format:
+The server includes several optimizations:
 
-```json
-{
-  "name": "think",
-  "description": "Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed.",
-  "input_schema": {
-    "type": "object",
-    "properties": {
-      "thought": {
-        "type": "string",
-        "description": "A thought to think about."
-      }
-    },
-    "required": ["thought"]
-  }
-}
-```
+- **Extended timeouts**: Prevent disconnections during complex operations
+- **Batched processing**: Efficiently handle large numbers of entities
+- **Embedding caching**: Avoid regenerating embeddings for known entities
+- **Progressive feedback**: Detailed progress information for long-running tasks
 
-**Key mechanism:** The tool doesn't perform any external actions or retrieve new information - it simply provides Claude with a dedicated space for structured reasoning. This dramatically improves performance on complex tasks by allowing Claude to:
+## 📝 Example Usage
 
-1. **Pause mid-response** to organize thoughts when new information is received
-2. **Create a structured approach** to multi-step problems
-3. **Verify policy compliance** more thoroughly and consistently
-4. **Carefully analyze outputs** from other MCP tools
-5. **Maintain better context awareness** across long interactions
-
-## When to Use the Think Tool
-
-The "think" tool is especially valuable when:
-
-1. **Working with other MCP tools** - Great for analyzing outputs from databases, filesystems, or APIs
-2. **Following complex policies** - Perfect for customer service, legal, or compliance scenarios
-3. **Making sequential decisions** - Ideal for workflows where later steps depend on earlier ones
-4. **Processing web search results** - Helps Claude synthesize information from multiple sources
-5. **Solving coding challenges** - Improves success rates on software engineering tasks
-
-## System Prompt for Optimal Results
-
-Anthropic's research shows that **combining the "think" tool with optimized prompting delivers the strongest performance improvements**. For best results, add the following optimized system prompt to your Claude interaction:
-
-### For Claude Desktop (Custom Instructions)
-
-Add this to Settings > Custom Instructions:
+Working with the think tool:
 
 ```
-You have access to a "think" tool that provides a dedicated space for structured reasoning. Using this tool significantly improves your performance on complex tasks.
+I need to think about how to solve this complex algorithm problem.
 
-## When to use the think tool
+[Claude calls the think tool]
 
-Before taking any action or responding to the user after receiving tool results, use the think tool as a scratchpad to:
-- List the specific rules that apply to the current request
-- Check if all required information is collected
-- Verify that the planned action complies with all policies
-- Iterate over tool results for correctness
-- Analyze complex information from web searches or other tools
-- Plan multi-step approaches before executing them
+Problem definition: We need to find an efficient algorithm for finding the shortest path between two points in a weighted graph.
 
-## How to use the think tool effectively
+Relevant facts/context:
+- Dijkstra's algorithm works for graphs with non-negative weights
+- Bellman-Ford can handle negative weights but is slower
+- A* is more efficient when a good heuristic is available
+- We need to consider time complexity and space requirements
 
-When using the think tool:
-1. Break down complex problems into clearly defined steps
-2. Identify key facts, constraints, and requirements
-3. Check for gaps in information and plan how to fill them
-4. Evaluate multiple approaches before choosing one
-5. Verify your reasoning for logical errors or biases
+Analysis steps:
+1. If all weights are non-negative, Dijkstra's algorithm is optimal with O((V+E)logV) time complexity
+2. If negative weights exist, Bellman-Ford is required but has O(VE) complexity
+3. If we have a good distance heuristic, A* can improve performance
+4. For extremely large graphs, we might need approximation algorithms
 
-Remember that using the think tool has been shown to improve your performance by up to 54% on complex tasks, especially when working with multiple tools or following detailed policies.
+Conclusion/decision:
+The best approach is to start with Dijkstra's algorithm implemented with a priority queue for its balance of efficiency and simplicity. For special cases with negative weights, we can fall back to Bellman-Ford.
 ```
 
-### For Cursor (Global Rules)
-
-Add this to Cursor Settings > General > Rules for AI:
+Working with the knowledge graph:
 
 ```
-After any context change (viewing new files, running commands, or receiving tool outputs), use the "mcp_think" tool to organize your reasoning before responding.
+Let me create some entities about scientists and their discoveries:
 
-Specifically, always use the think tool when:
-- After examining file contents or project structure
-- After running terminal commands or analyzing their outputs
-- After receiving search results or API responses
-- Before making code suggestions or explaining complex concepts
-- When transitioning between different parts of a task
+[Claude calls create_entities]
 
-When using the think tool:
-- List the specific rules or constraints that apply to the current task
-- Check if all required information is collected
-- Verify that your planned approach is correct
-- Break down complex problems into clearly defined steps
-- Analyze outputs from other tools thoroughly
-- Plan multi-step approaches before executing them
+Now let's create relations between our scientists and discoveries:
 
-The think tool has been proven to improve performance by up to 54% on complex tasks, especially when working with multiple tools or following detailed policies.
+[Claude calls create_relations]
+
+Let's use semantic search to find information related to "quantum physics":
+
+[Claude calls semantic_search]
 ```
 
-## License
+## 🤝 Contributing
 
-[MIT License](LICENSE)
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📚 Related Projects
+
+- [Model Context Protocol](https://github.com/modelcontextprotocol/typescript-sdk)
+- [FastMCP](https://github.com/jlowin/fastmcp)
+- [Claude 3.7 Sonnet](https://www.anthropic.com/claude)
+
+---
+
+<div align="center">
+  <p>Developed by <a href="https://github.com/flight505">flight505</a></p>
+  <p>Give a ⭐️ if this project helped you!</p>
+</div>

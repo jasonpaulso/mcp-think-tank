@@ -20,6 +20,13 @@ export const config = {
   // Memory path from command line or default
   memoryPath: argv['memory-path'] || DEFAULT_MEMORY_PATH,
   
+  // Request timeout in milliseconds (default: 300 seconds = 5 minutes)
+  requestTimeout: argv['request-timeout'] ? 
+                 parseInt(argv['request-timeout'] as string, 10) * 1000 : 
+                 process.env.REQUEST_TIMEOUT ? 
+                 parseInt(process.env.REQUEST_TIMEOUT, 10) * 1000 : 
+                 300000,
+  
   // Embedding service configuration
   embedding: {
     // Provider is always 'voyage'

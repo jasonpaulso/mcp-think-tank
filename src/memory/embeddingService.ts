@@ -228,31 +228,65 @@ export class EmbeddingService {
       }
     });
 
-    // If there are uncached texts, get their embeddings
+    // If there are uncached texts, process them in smaller batches
+    // to avoid timeouts and optimize performance
     if (uncachedTexts.length > 0) {
-      try {
-        const embeddings = await this.generateVoyageEmbeddings(uncachedTexts);
+      // Use a reasonable batch size to avoid overwhelming the API
+      const batchSize = 10;  
+      
+      // Process in batches
+      for (let i = 0; i < uncachedTexts.length; i += batchSize) {
+        const batchTexts = uncachedTexts.slice(i, i + batchSize);
+        const batchIndices = uncachedIndices.slice(i, i + batchSize);
         
-        // Store embeddings in results and cache
-        embeddings.forEach((embedding, i) => {
-          if (embedding) {
-            const originalIndex = uncachedIndices[i];
-            const text = uncachedTexts[i];
-            results[originalIndex] = embedding;
-            
-            if (this.config.useCache) {
-              const cacheKey = `voyage:${this.config.model}:${text}`;
-              this.cache.set(cacheKey, embedding);
+        try {
+          console.log(`Processing embedding batch ${i/batchSize + 1}/${Math.ceil(uncachedTexts.length/batchSize)}`);
+          const embeddings = await this.generateVoyageEmbeddings(batchTexts);
+          
+          // Store embeddings in results and cache
+          embeddings.forEach((embedding, j) => {
+            if (embedding) {
+              const originalIndex = batchIndices[j];
+              const text = batchTexts[j];
+              results[originalIndex] = embedding;
+              
+              if (this.config.useCache) {
+                const cacheKey = `voyage:${this.config.model}:${text}`;
+                this.cache.set(cacheKey, embedding);
+              }
+            }
+          });
+
+          // Save cache after each batch - more frequent saves to avoid losing work
+          if (this.config.useCache) {
+            this.saveCache();
+          }
+        } catch (error) {
+          console.error(`Error generating batch ${i/batchSize + 1}:`, error);
+          // For batch errors, try to process individually to salvage what we can
+          for (let j = 0; j < batchTexts.length; j++) {
+            try {
+              const text = batchTexts[j];
+              const embedding = await this.generateVoyageEmbedding(text);
+              if (embedding) {
+                const originalIndex = batchIndices[j];
+                results[originalIndex] = embedding;
+                
+                if (this.config.useCache) {
+                  const cacheKey = `voyage:${this.config.model}:${text}`;
+                  this.cache.set(cacheKey, embedding);
+                }
+              }
+            } catch (innerError) {
+              console.error(`Failed to process individual text in batch ${i/batchSize + 1}:`, innerError);
             }
           }
-        });
-
-        // Save cache after all embeddings are generated
-        if (this.config.useCache) {
-          this.saveCache();
+          
+          // Save cache after individual processing
+          if (this.config.useCache) {
+            this.saveCache();
+          }
         }
-      } catch (error) {
-        console.error('Error generating embeddings batch:', error);
       }
     }
 
