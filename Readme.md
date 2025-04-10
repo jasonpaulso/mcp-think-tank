@@ -1,5 +1,10 @@
 # Think MCP Server
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/d86470ba-45d4-48d0-8ebe-783c402dd4f4" alt="ContextCraft Logo" width="180">
+  <p>A powerful code formatter and exporter for sharing code with AI models.</p>
+</div>
+
 [![npm version](https://img.shields.io/npm/v/mcp-think-server.svg)](https://www.npmjs.com/package/mcp-think-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
