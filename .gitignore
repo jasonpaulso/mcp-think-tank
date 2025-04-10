@@ -40,3 +40,4 @@ coverage/
 
 # Optional eslint cache
 .eslintcache 
+blog-post.md

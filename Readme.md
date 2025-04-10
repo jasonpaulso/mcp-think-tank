@@ -1,32 +1,48 @@
-# Think Tool MCP Server
+# Think MCP Server
 
 [![npm version](https://img.shields.io/npm/v/think-mcp-server.svg)](https://www.npmjs.com/package/think-mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Official implementation of Anthropic's "think" tool as an MCP server** - Dramatically improve Claude's reasoning capabilities with structured thinking.
+**Official implementation of Anthropic's "think" tool as an MCP server** - dramatically improve Claude's reasoning capabilities with structured thinking.
 
 ## What is the Think Tool?
 
-This MCP server implements the exact "think" tool that Anthropic introduced in their [engineering blog post](https://www.anthropic.com/engineering/claude-think-tool). The Think Tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks, enabling more thoughtful, accurate, and reliable responses.
+The "think" tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks. Unlike Anthropic's "extended thinking" capability (which helps Claude plan before generating a response), the "think" tool allows Claude to pause mid-task to process new information obtained from tool calls or user interactions.
 
-## Proven Performance Benefits
+According to Anthropic's March 2025 research, this approach enables more thoughtful, accurate, and reliable responses, especially for tasks requiring complex reasoning, policy adherence, and sequential decision-making.
 
-Anthropic's research demonstrates remarkable improvements when using the "think" tool:
+## Performance Benefits (Latest Research)
 
-- **54% improvement** in complex customer service tasks
-- **Significantly better adherence** to detailed policies and guidelines
+Recent studies by Anthropic demonstrate remarkable improvements when using the "think" tool:
+
+- **54% relative improvement** in the airline domain (0.570 vs. 0.370 on pass^1 metric)
+- **Significantly better performance** in the retail domain (0.812 vs. 0.783 baseline)
 - **Enhanced consistency** across multiple trials of the same task
 - **Improved performance** on software engineering benchmarks
-- **Minimal implementation overhead** compared to other enhancement techniques
+- **1.6% average improvement** on SWE-Bench, contributing to Claude 3.7 Sonnet's state-of-the-art score of 0.623
+
+The best performance comes from pairing the "think" tool with domain-specific prompting that provides examples of reasoning approaches relevant to the task.
+
+## Key Benefits
 
 The "think" tool excels where other approaches fall short:
-- **Better than extended thinking** for cases requiring complex tool chains
+- **Better than extended thinking** for cases where Claude doesn't have all necessary information from the initial query
 - **More effective than baseline prompting** for policy-heavy scenarios
-- **Especially powerful** when paired with optimized prompting
+- **Especially powerful** for analyzing tool outputs from other MCP servers
+
+## Technical Implementation
+
+This MCP server is a lightweight, efficient implementation of Anthropic's "think" tool using the FastMCP library:
+
+- **Minimal footprint**: Just ~32 lines of TypeScript code
+- **Simple interface**: Accepts a single parameter for structured reasoning
+- **Standards-compliant**: Follows Anthropic's official MCP specifications
+- **Zero dependencies** beyond the MCP protocol requirements
+- **Cross-platform compatible**: Works with Claude Desktop, Cursor, and other MCP clients
 
 ## Installation Options
 
-### 1. Direct npx Configuration (No Installation Required)
+### 1. Direct npx Configuration (No Installation Required - Recommended)
 
 The easiest way to use the think-mcp-server is to configure Cursor to run it directly with npx:
 
@@ -53,8 +69,54 @@ This approach:
 - Requires no local installation
 - Always uses the latest version
 - Works immediately with no setup
+- **Eliminates Smithery dependency issues**: Bypasses the need for Smithery, which has been experiencing performance issues in some regions
+- **Zero maintenance**: Updates automatically when new versions are published
 
-### 2. Single-Script Installation
+### 2. Global NPM Installation
+
+If you prefer to install the package globally:
+
+```bash
+# Install globally
+npm install -g think-mcp-server
+
+# Start the server
+think-mcp-server
+```
+
+#### Configuration for Cursor with npm installation:
+
+Edit your `~/.cursor/mcp.json` file:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "think-mcp-server"
+    }
+  }
+}
+```
+
+#### Configuration for Claude Desktop with npm installation:
+
+Create or edit your Claude Desktop configuration file:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add the following:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "think-mcp-server"
+    }
+  }
+}
+```
+
+### 3. Single-Script Installation
 
 For a more comprehensive setup:
 
@@ -77,44 +139,6 @@ These scripts automatically:
 - Create an executable in your PATH
 - Provide instructions for configuring Claude/Cursor
 
-### 3. Direct NPM Installation
-
-If you prefer to install the package globally:
-
-```bash
-# Install globally
-npm install -g think-mcp-server
-
-# Start the server
-think-mcp-server
-
-# For Claude Desktop, add to configuration (see below)
-```
-
-#### Configuration for Claude Desktop with npm installation:
-
-Create or edit your Claude Desktop configuration file:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-Add the following:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "think-mcp-server"
-    }
-  }
-}
-```
-
-#### Configuration for Cursor with npm installation:
-
-Open Cursor settings and add a new MCP server with:
-- Name: `think-tool`
-- Command: `think-mcp-server`
-
 ### 4. Manual Installation
 
 If you prefer to run the server locally:
@@ -136,37 +160,38 @@ If you prefer to run the server locally:
    npm start
    ```
 
-4. **Configure Claude Desktop manually**:
-   - Find or create the configuration file:
-     - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-     - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-   - Add your server configuration:
-
-   ```json
-   {
-     "mcpServers": {
-       "think-tool": {
-         "command": "node",
-         "args": ["path/to/think-mcp-server/dist/server.js"]
-       }
-     }
-   }
-   ```
+4. **Configure Claude Desktop or Cursor manually** using the appropriate configuration file as described above.
 
 ## How It Works
 
-The "think" tool implements the exact mechanism described in Anthropic's engineering blog. Unlike extended thinking (which happens before Claude starts responding), the "think" tool allows Claude to pause and reflect during its response generation.
+According to Anthropic's latest research, the "think" tool works through a standard tool specification format:
 
-**Key mechanism:** The tool doesn't perform any external actions or retrieve new information - it simply provides Claude with a dedicated scratchpad to work through reasoning step-by-step, which dramatically improves performance on complex tasks.
+```json
+{
+  "name": "think",
+  "description": "Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "thought": {
+        "type": "string",
+        "description": "A thought to think about."
+      }
+    },
+    "required": ["thought"]
+  }
+}
+```
 
-When Claude uses the "think" tool:
-1. It **pauses to organize thoughts** before continuing a complex reasoning chain
-2. It **creates a structured approach** to multi-step problems
-3. It **verifies policy compliance** more thoroughly and consistently
-4. It **carefully analyzes tool outputs** before deciding next steps
-5. It **maintains better context awareness** across long interactions
+**Key mechanism:** The tool doesn't perform any external actions or retrieve new information - it simply provides Claude with a dedicated space for structured reasoning. This dramatically improves performance on complex tasks by allowing Claude to:
 
-### When to Use the Think Tool
+1. **Pause mid-response** to organize thoughts when new information is received
+2. **Create a structured approach** to multi-step problems
+3. **Verify policy compliance** more thoroughly and consistently
+4. **Carefully analyze outputs** from other MCP tools
+5. **Maintain better context awareness** across long interactions
+
+## When to Use the Think Tool
 
 The "think" tool is especially valuable when:
 
@@ -182,8 +207,7 @@ Anthropic's research shows that **combining the "think" tool with optimized prom
 
 ### For Claude Desktop (Custom Instructions)
 
-1. Go to Settings > Custom Instructions
-2. Add the following system prompt:
+Add this to Settings > Custom Instructions:
 
 ```
 You have access to a "think" tool that provides a dedicated space for structured reasoning. Using this tool significantly improves your performance on complex tasks.
@@ -212,11 +236,7 @@ Remember that using the think tool has been shown to improve your performance by
 
 ### For Cursor (Global Rules)
 
-To add the Think Tool as a Cursor Rule:
-
-1. Open Cursor Settings
-2. Navigate to General > Rules for AI
-3. Add a new rule with the following content:
+Add this to Cursor Settings > General > Rules for AI:
 
 ```
 After any context change (viewing new files, running commands, or receiving tool outputs), use the "mcp_think" tool to organize your reasoning before responding.
