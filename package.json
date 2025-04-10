@@ -1,6 +1,6 @@
 {
   "name": "mcp-think-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An MCP server that provides a 'think' tool for structured reasoning in AI assistants",
   "type": "module",
   "main": "dist/server.js",
@@ -12,7 +12,6 @@
     "start": "node dist/server.js",
     "dev": "node --loader ts-node/esm src/server.ts",
     "inspect": "npx fastmcp inspect src/server.ts",
-    "postinstall": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -51,6 +50,7 @@
   "files": [
     "dist",
     "bin",
+    "src",
     "Readme.md",
     "LICENSE"
   ],

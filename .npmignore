@@ -1,5 +1,5 @@
-# Source files
-src/
+# Source files (keeping for better debugging and ts-node fallback)
+# src/
 
 # Configuration files
 .gitignore

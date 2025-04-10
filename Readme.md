@@ -45,127 +45,47 @@ This MCP server is a lightweight, efficient implementation of Anthropic's "think
 - **Zero dependencies** beyond the MCP protocol requirements
 - **Cross-platform compatible**: Works with Claude Desktop, Cursor, and other MCP clients
 
-## Installation Options
+## Installation
 
-### 1. Direct npx Configuration (No Installation Required - Recommended)
-
-The easiest way to use the mcp-think-server is to configure Cursor to run it directly with npx:
-
-1. Create or edit your `~/.cursor/mcp.json` file:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "npx",
-      "type": "stdio",
-      "args": [
-        "-y",
-        "mcp-think-server@latest"
-      ]
-    }
-  }
-}
-```
-
-2. Restart Cursor, and the tool will be available automatically.
-
-This approach:
-- Requires no local installation
-- Always uses the latest version
-- Works immediately with no setup
-- **Eliminates Smithery dependency issues**: Bypasses the need for Smithery, which has been experiencing performance issues in some regions
-- **Zero maintenance**: Updates automatically when new versions are published
-
-### 2. Global NPM Installation
-
-If you prefer to install the package globally:
+### Global Installation
+You can install the server globally:
 
 ```bash
-# Install globally
 npm install -g mcp-think-server
+```
 
-# Start the server
+And then run it from anywhere:
+
+```bash
 mcp-think-server
 ```
 
-#### Configuration for Cursor with npm installation:
-
-Edit your `~/.cursor/mcp.json` file:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server"
-    }
-  }
-}
-```
-
-#### Configuration for Claude Desktop with npm installation:
-
-Create or edit your Claude Desktop configuration file:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-
-Add the following:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-server"
-    }
-  }
-}
-```
-
-### 3. Single-Script Installation
-
-For a more comprehensive setup:
-
-#### macOS/Linux:
+### Local Installation
+You can also install it locally:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.sh | bash
+npm install mcp-think-server
 ```
 
-#### Windows (Run in Command Prompt as Administrator):
+And run it via npx:
 
-```cmd
-curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.bat -o install.bat && install.bat
+```bash
+npx mcp-think-server
 ```
 
-These scripts automatically:
-- Download the repository
-- Install dependencies
-- Build the project
-- Create an executable in your PATH
-- Provide instructions for configuring Claude/Cursor
+### Troubleshooting
 
-### 4. Manual Installation
+If you encounter issues during installation:
 
-If you prefer to run the server locally:
-
-1. **Clone the repository**:
+1. Make sure you have Node.js version 18 or higher installed
+2. If TypeScript compilation fails, you can try:
    ```bash
    git clone https://github.com/flight505/mcp-think-server.git
    cd mcp-think-server
-   ```
-
-2. **Install dependencies**:
-   ```bash
    npm install
-   ```
-
-3. **Build and run**:
-   ```bash
    npm run build
-   npm start
+   npm link
    ```
-
-4. **Configure Claude Desktop or Cursor manually** using the appropriate configuration file as described above.
 
 ## How It Works
 
