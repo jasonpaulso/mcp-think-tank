@@ -1,14 +1,101 @@
-# MCP Think Server
+# MCP Think Server with Knowledge Graph Memory
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/d86470ba-45d4-48d0-8ebe-783c402dd4f4" alt="ContextCraft Logo" width="240">
-  <p>The "think" tool excels where other approaches fall short</p>
+  <p>The "think" tool excels where other approaches fall short - now with persistent memory across conversations</p>
 </div>
 
 [![npm version](https://img.shields.io/npm/v/mcp-think-server.svg)](https://www.npmjs.com/package/mcp-think-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Official implementation of Anthropic's "think" tool as an MCP server** - dramatically improve Claude's reasoning capabilities with structured thinking.
+**Official implementation of Anthropic's "think" tool as an MCP server** - dramatically improve Claude's reasoning capabilities with structured thinking and persistent knowledge graph memory.
+
+## What is the Think Tool with Memory?
+
+The MCP Think Server now combines two powerful capabilities:
+
+1. **Structured Reasoning**: The original "think" tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks.
+
+2. **Persistent Memory**: The new Knowledge Graph Memory feature allows Claude to retain information across conversations, build semantic relationships between entities, and access previous reasoning.
+
+## Knowledge Graph Memory
+
+The knowledge graph memory feature extends Claude's capabilities by providing:
+
+- **Information Persistence**: Store and retrieve facts across multiple sessions
+- **Semantic Connections**: Create and navigate relationships between entities
+- **Reasoning History**: Access previous conclusions and thought processes
+
+### Memory Model
+
+The knowledge graph is built around three key concepts:
+
+1. **Entities**: Nodes in the graph representing people, objects, concepts, etc.
+   ```json
+   {
+     "name": "Claude",
+     "entityType": "ai_assistant",
+     "observations": ["Built by Anthropic", "Uses a think tool"]
+   }
+   ```
+
+2. **Relations**: Connections between entities
+   ```json
+   {
+     "from": "Claude",
+     "to": "Anthropic",
+     "relationType": "was_created_by"
+   }
+   ```
+
+3. **Observations**: Facts or attributes associated with entities
+
+### Memory Tools
+
+The following MCP tools are available for memory operations:
+
+#### Entity Management
+- `create_entities` - Create multiple entities
+- `update_entities` - Update entity properties
+- `delete_entities` - Remove entities
+
+#### Relation Management
+- `create_relations` - Create connections between entities
+- `update_relations` - Update relation properties
+- `delete_relations` - Remove relations
+
+#### Observation Management
+- `add_observations` - Add new observations to entities
+- `delete_observations` - Remove observations from entities
+
+#### Query and Retrieval
+- `read_graph` - Get the entire knowledge graph
+- `open_nodes` - Retrieve specific entities
+- `search_nodes` - Find entities by keyword search
+
+## Setup and Configuration
+
+### Memory Path Configuration
+
+By default, the knowledge graph is stored in `~/.mcp-think-server/memory.jsonl`. You can specify a custom path using the `--memory-path` option:
+
+```bash
+mcp-think-server --memory-path=/path/to/your/memory.json
+```
+
+Or in your Cursor configuration:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-server",
+      "args": ["--memory-path=/path/to/your/memory.json"],
+      "type": "stdio"
+    }
+  }
+}
+```
 
 ## What is the Think Tool?
 
@@ -37,13 +124,11 @@ The "think" tool excels where other approaches fall short:
 
 ## Technical Implementation
 
-This MCP server is a lightweight, efficient implementation of Anthropic's "think" tool using the FastMCP library:
+This MCP server is a lightweight, efficient implementation that combines:
 
-- **Minimal footprint**: Just ~32 lines of TypeScript code
-- **Simple interface**: Accepts a single parameter for structured reasoning
-- **Standards-compliant**: Follows Anthropic's official MCP specifications
-- **Zero dependencies** beyond the MCP protocol requirements
-- **Cross-platform compatible**: Works with Claude Desktop, Cursor, and other MCP clients
+- **Structured Thinking**: The original "think" tool based on Anthropic's research
+- **Knowledge Graph Memory**: Persistent storage of information across conversations
+- **MCP Standards Compliance**: Follows Anthropic's official MCP specifications
 
 ## Installation
 

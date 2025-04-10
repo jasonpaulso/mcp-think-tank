@@ -1,9 +1,11 @@
 import { FastMCP, UserError } from "fastmcp";
 import { z } from "zod";
+import { registerMemoryTools } from "./memory/tools.js";
+import { config } from "./config.js";
 
 // Create a new MCP server
 const server = new FastMCP({
-  name: "Think Tool Server",
+  name: "Think Tool Server with Memory",
   version: "1.0.5",
 });
 
@@ -25,6 +27,9 @@ server.addTool({
   },
 });
 
+// Register all memory-related tools
+registerMemoryTools(server);
+
 // For the warning "FastMCP could not infer client capabilities", we need a version update
 // of fastmcp to fix properly. For now, use the basic configuration:
 server.start({
@@ -32,4 +37,5 @@ server.start({
 });
 
 // Use console.error instead of console.log - this writes to stderr which won't interfere with the protocol
-console.error("Think Tool Server is running...");
+console.error(`Think Tool Server with Memory is running...`);
+console.error(`Memory path: ${config.memoryPath}`);
