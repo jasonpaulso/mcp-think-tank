@@ -1,11 +1,11 @@
 {
   "name": "mcp-think-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An MCP server that provides a 'think' tool for structured reasoning in AI assistants",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "mcp-think-server": "./bin/think-mcp-server.js"
+    "mcp-think-server": "./bin/mcp-think-server.js"
   },
   "scripts": {
     "build": "tsc",
@@ -15,7 +15,16 @@
     "postinstall": "npm run build",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["mcp", "ai", "claude", "think-tool", "reasoning", "structured-thinking", "cursor", "anthropic"],
+  "keywords": [
+    "mcp",
+    "ai",
+    "claude",
+    "think-tool",
+    "reasoning",
+    "structured-thinking",
+    "cursor",
+    "anthropic"
+  ],
   "author": "flight505",
   "license": "MIT",
   "homepage": "https://github.com/flight505/mcp-think-server",

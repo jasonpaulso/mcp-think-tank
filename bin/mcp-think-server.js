@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * This is the executable entry point for the think-mcp-server 
+ * This is the executable entry point for the mcp-think-server 
  * when installed globally via npm
  */
 
