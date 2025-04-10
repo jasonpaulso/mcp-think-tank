@@ -1,0 +1,20 @@
+# Source files
+src/
+
+# Configuration files
+.gitignore
+tsconfig.json
+.cursor/
+
+# Development files
+node_modules/
+smithery.yaml
+Dockerfile
+install.sh
+install.bat
+
+# Misc
+.git/
+.github/
+.vscode/
+.idea/ 
