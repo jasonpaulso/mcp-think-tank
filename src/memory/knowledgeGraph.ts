@@ -303,7 +303,10 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
 
     // Assign embeddings to entities
     entities.forEach((entity, index) => {
-      entity.embedding = embeddings[index];
+      const embedding = embeddings[index];
+      if (embedding !== null) {
+        entity.embedding = embedding;
+      }
     });
   }
 

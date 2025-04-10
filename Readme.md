@@ -149,6 +149,108 @@ Or in your Cursor configuration:
 }
 ```
 
+### Embedding Configuration
+
+The server supports two embedding providers: OpenAI and Voyage AI. You can configure the embedding service using environment variables or command-line arguments.
+
+#### Provider Selection
+
+Choose between OpenAI and Voyage AI:
+
+```bash
+# Use OpenAI (default)
+EMBEDDING_PROVIDER=openai mcp-think-server
+
+# Use Voyage AI
+EMBEDDING_PROVIDER=voyage mcp-think-server
+
+# Or via command line
+mcp-think-server --embedding-provider=voyage
+```
+
+#### API Keys
+
+Set API keys for the chosen provider:
+
+```bash
+# For OpenAI
+OPENAI_API_KEY=your_api_key mcp-think-server
+
+# For Voyage AI
+VOYAGE_API_KEY=your_api_key mcp-think-server
+
+# Or via command line
+mcp-think-server --openai-api-key=your_key
+mcp-think-server --voyage-api-key=your_key
+```
+
+#### Model Configuration
+
+Customize the embedding model and dimensions:
+
+```bash
+# Set specific model
+EMBEDDING_MODEL=voyage-3-large mcp-think-server
+
+# Set embedding dimensions
+EMBEDDING_DIMENSIONS=1024 mcp-think-server
+
+# Or via command line
+mcp-think-server --embedding-model=text-embedding-3-small
+mcp-think-server --embedding-dimensions=1536
+```
+
+#### Voyage AI Specific Options
+
+Configure Voyage AI specific parameters:
+
+```bash
+# Set input type (query or document)
+EMBEDDING_INPUT_TYPE=query mcp-think-server
+
+# Set quantization (float, int8, binary)
+EMBEDDING_QUANTIZATION=float mcp-think-server
+
+# Or via command line
+mcp-think-server --embedding-input-type=query
+mcp-think-server --embedding-quantization=int8
+```
+
+#### Caching Options
+
+Control embedding caching:
+
+```bash
+# Disable caching
+EMBEDDING_CACHE=false mcp-think-server
+
+# Set custom cache directory
+EMBEDDING_CACHE_DIR=/path/to/cache mcp-think-server
+
+# Or via command line
+mcp-think-server --embedding-cache=false
+mcp-think-server --embedding-cache-dir=/path/to/cache
+```
+
+#### Cursor Configuration
+
+Example Cursor configuration with Voyage AI:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-server",
+      "args": ["--embedding-provider=voyage"],
+      "env": {
+        "VOYAGE_API_KEY": "your_voyage_api_key"
+      },
+      "type": "stdio"
+    }
+  }
+}
+```
+
 ## What is the Think Tool?
 
 The "think" tool provides Claude with a dedicated space for structured reasoning during complex problem-solving tasks. Unlike Anthropic's "extended thinking" capability (which helps Claude plan before generating a response), the "think" tool allows Claude to pause mid-task to process new information obtained from tool calls or user interactions.

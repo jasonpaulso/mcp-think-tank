@@ -182,9 +182,48 @@ interface KnowledgeGraph {
 ## Future Enhancements
 
 - [ ] Add proper smithery config (need to ask me to create acount at smithery.com)
-- [ ] Vector embedding integration for semantic search
+- [x] Vector embedding integration for semantic search
+  - [x] Create EmbeddingService with caching
+  - [x] Update Entity interface with embedding field
+  - [x] Implement vector similarity search
+  - [x] Add semantic_search and generate_embeddings tools
+  - [x] Update documentation
+- [x] Voyage AI embedding integration
+  - [x] Add voyageai SDK dependency
+  - [x] Implement EmbeddingService with Voyage AI
+  - [x] Add environment variable configuration for Voyage API key
+  - [x] Update configuration to use Voyage-specific parameters
+  - [x] Test embedding generation with voyage-3-large
+  - [x] Clean up code to focus exclusively on Voyage AI
+  - [x] Update documentation with Voyage AI configuration
 - [ ] Automatic knowledge extraction from conversations
 - [ ] Time-aware memory with temporal relations
 - [ ] User-specific memory partitioning
 - [ ] Memory visualization tools 
 - [ ] Visual Reasoning Support
+  - [ ] Update Entity interface to support image entities
+    - [ ] Add imageUrl, imageMetadata, and imageEmbedding fields
+    - [ ] Implement image entity validation
+    - [ ] Add support for image entity serialization/deserialization
+  - [ ] Extend EmbeddingService for multimodal embeddings
+    - [ ] Add support for Voyage AI multimodal models (voyage-multimodal-3)
+    - [ ] Add caching for image embeddings
+  - [ ] Implement image entity tools
+    - [ ] `create_image_entity` - Create entity with image URL and metadata
+    - [ ] `generate_image_embedding` - Generate embedding for image entities
+    - [ ] `visual_semantic_search` - Search using image or text queries
+  - [ ] Add image processing utilities
+    - [ ] Create image metadata extraction module
+    - [ ] Implement image content verification
+    - [ ] Add support for image tagging and annotation
+  - [ ] Extend storage layer for efficient image handling
+    - [ ] Optimize storage for image URLs and metadata
+    - [ ] Implement efficient image embedding storage and retrieval
+  - [ ] Create image reasoning integration
+    - [ ] Integrate visual reasoning with the think tool
+    - [ ] Add image description generation capabilities
+    - [ ] Implement visual relationship detection
+  - [ ] Update documentation
+    - [ ] Document image entity structure and tools
+    - [ ] Provide examples for visual reasoning use cases
+    - [ ] Update README with visual reasoning capabilities

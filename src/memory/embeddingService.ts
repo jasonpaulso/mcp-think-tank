@@ -1,38 +1,57 @@
-import { OpenAI } from 'openai';
+import { VoyageAIClient } from 'voyageai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import config from '../config.js';
+
+// Embedding provider type - now only Voyage is supported
+export type EmbeddingProvider = 'voyage';
 
 // Configuration options for the embedding service
 interface EmbeddingServiceConfig {
-  apiKey?: string;        // OpenAI API key
-  model?: string;         // Embedding model to use
-  dimensions?: number;    // Dimensions for the embeddings
-  cacheDir?: string;      // Directory to store cache
-  useCache?: boolean;     // Whether to use caching
+  provider?: EmbeddingProvider; // Embedding provider to use (always 'voyage')
+  apiKey?: string;              // API key for Voyage AI
+  model?: string;               // Embedding model to use
+  dimensions?: number;          // Dimensions for the embeddings
+  cacheDir?: string;            // Directory to store cache
+  useCache?: boolean;           // Whether to use caching
+  // Voyage-specific options
+  inputType?: 'query' | 'document'; // Type of input for Voyage AI
+  quantization?: 'float' | 'int8' | 'binary'; // Quantization type for Voyage AI
 }
 
-// Default configuration
+// Default configuration for Voyage AI
 const DEFAULT_CONFIG: EmbeddingServiceConfig = {
-  model: 'text-embedding-3-small',
-  dimensions: 1536,
+  provider: 'voyage',
+  model: 'voyage-3-large',
+  dimensions: 1024,
+  inputType: 'query',
+  quantization: 'float',
   cacheDir: path.join(os.homedir(), '.mcp-think-server', 'cache'),
-  useCache: true
+  useCache: true,
 };
 
 /**
- * Service for generating and comparing text embeddings
+ * Service for generating and comparing text embeddings using Voyage AI
  */
 export class EmbeddingService {
-  private client: OpenAI | null = null;
+  private voyageClient: VoyageAIClient | null = null;
   private config: EmbeddingServiceConfig;
   private cache: Map<string, number[]> = new Map();
   private cacheFile: string;
   private initialized = false;
 
   constructor(config: EmbeddingServiceConfig = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.cacheFile = path.join(this.config.cacheDir!, 'embeddings-cache.json');
+    // Start with default config and override with provided config
+    this.config = { 
+      ...DEFAULT_CONFIG, 
+      ...config
+    };
+
+    this.cacheFile = path.join(
+      this.config.cacheDir!, 
+      `embeddings-cache-voyage.json`
+    );
   }
 
   /**
@@ -40,29 +59,74 @@ export class EmbeddingService {
    */
   async initialize(): Promise<boolean> {
     if (this.initialized) return true;
+    return this.initializeVoyage();
+  }
 
-    // Get API key from config or environment variable
-    const apiKey = this.config.apiKey || process.env.OPENAI_API_KEY;
+  /**
+   * Initialize Voyage AI client
+   */
+  private async initializeVoyage(): Promise<boolean> {
+    // Check if API key is available
+    const apiKey = this.config.apiKey;
     if (!apiKey) {
-      console.warn('OpenAI API key not found. Semantic search will be unavailable.');
+      console.warn('No Voyage AI API key found in configuration.');
       return false;
     }
 
-    // Initialize OpenAI client
     try {
-      this.client = new OpenAI({ apiKey });
+      // Create Voyage client with proper options object
+      this.voyageClient = new VoyageAIClient({ apiKey });
+      console.log('Voyage AI client initialized.');
       
-      // Create cache directory if using cache
-      if (this.config.useCache) {
-        await this.ensureCacheDirectory();
-        await this.loadCache();
-      }
+      // Load cache if available
+      await this.loadCache();
       
       this.initialized = true;
       return true;
     } catch (error) {
-      console.error('Failed to initialize embedding service:', error);
+      console.error('Failed to initialize Voyage AI client:', error);
       return false;
+    }
+  }
+
+  /**
+   * Load embedding cache from disk
+   */
+  private async loadCache(): Promise<void> {
+    if (!this.config.useCache) return;
+    
+    // Create cache directory if it doesn't exist
+    const cacheDir = path.dirname(this.cacheFile);
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+    
+    // Load cache if it exists
+    if (fs.existsSync(this.cacheFile)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(this.cacheFile, 'utf8'));
+        this.cache = new Map(Object.entries(data));
+        console.log(`Loaded ${this.cache.size} cached embeddings.`);
+      } catch (error) {
+        console.warn('Failed to load embedding cache:', error);
+        // Create a new cache if loading fails
+        this.cache = new Map();
+      }
+    }
+  }
+
+  /**
+   * Save embedding cache to disk
+   */
+  private saveCache(): void {
+    if (!this.config.useCache) return;
+    
+    try {
+      // Convert map to object for serialization
+      const data = Object.fromEntries(this.cache);
+      fs.writeFileSync(this.cacheFile, JSON.stringify(data));
+    } catch (error) {
+      console.warn('Failed to save embedding cache:', error);
     }
   }
 
@@ -70,7 +134,7 @@ export class EmbeddingService {
    * Check if the service is available
    */
   isAvailable(): boolean {
-    return this.initialized && this.client !== null;
+    return this.initialized && this.voyageClient !== null;
   }
 
   /**
@@ -83,18 +147,16 @@ export class EmbeddingService {
     }
 
     // Check cache first
-    const cacheKey = `${this.config.model}:${text}`;
+    const cacheKey = `voyage:${this.config.model}:${text}`;
     if (this.config.useCache && this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
 
+    // Generate embedding using Voyage AI
     try {
-      const response = await this.client!.embeddings.create({
-        model: this.config.model!,
-        input: text
-      });
-
-      const embedding = response.data[0].embedding;
+      const embedding = await this.generateVoyageEmbedding(text);
+      
+      if (!embedding) return null;
       
       // Store in cache
       if (this.config.useCache) {
@@ -110,67 +172,87 @@ export class EmbeddingService {
   }
 
   /**
-   * Generate embeddings for multiple text strings
+   * Generate embedding with Voyage AI
+   */
+  private async generateVoyageEmbedding(text: string): Promise<number[] | null> {
+    if (!this.voyageClient) return null;
+    
+    try {
+      // Voyage API expects different parameter names than what we're using internally
+      const response = await this.voyageClient.embed({
+        model: this.config.model!,
+        input: text,
+        // Use proper parameter names compatible with the Voyage API
+        ...(this.config.inputType && { inputType: this.config.inputType }),
+        ...(this.config.dimensions && { dimensions: this.config.dimensions }),
+        ...(this.config.quantization && { outputDtype: this.config.quantization })
+      });
+
+      // Handle the response safely
+      const result = response as any;
+      if (result && result.embeddings && Array.isArray(result.embeddings) && result.embeddings.length > 0) {
+        return result.embeddings[0];
+      }
+      
+      console.error('Unexpected Voyage API response format:', response);
+      return null;
+    } catch (error) {
+      console.error('Error generating Voyage embedding:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Generate embeddings for multiple texts
    */
   async generateEmbeddings(texts: string[]): Promise<(number[] | null)[]> {
     if (!this.isAvailable()) {
       await this.initialize();
-      if (!this.isAvailable()) return texts.map(() => null);
+      if (!this.isAvailable()) {
+        return texts.map(() => null);
+      }
     }
 
-    // Filter out texts that already have cached embeddings
+    // Check cache and collect uncached texts
     const uncachedTexts: string[] = [];
     const uncachedIndices: number[] = [];
-    const results: (number[] | null)[] = texts.map(() => null);
+    const results: (number[] | null)[] = new Array(texts.length).fill(null);
 
-    if (this.config.useCache) {
-      texts.forEach((text, index) => {
-        const cacheKey = `${this.config.model}:${text}`;
-        if (this.cache.has(cacheKey)) {
-          results[index] = this.cache.get(cacheKey)!;
-        } else {
-          uncachedTexts.push(text);
-          uncachedIndices.push(index);
-        }
-      });
-    } else {
-      uncachedTexts.push(...texts);
-      uncachedIndices.push(...texts.map((_, i) => i));
-    }
+    texts.forEach((text, i) => {
+      const cacheKey = `voyage:${this.config.model}:${text}`;
+      if (this.config.useCache && this.cache.has(cacheKey)) {
+        results[i] = this.cache.get(cacheKey)!;
+      } else {
+        uncachedTexts.push(text);
+        uncachedIndices.push(i);
+      }
+    });
 
     // If there are uncached texts, get their embeddings
     if (uncachedTexts.length > 0) {
       try {
-        // Split into batches of 20 to avoid rate limits
-        const batchSize = 20;
-        for (let i = 0; i < uncachedTexts.length; i += batchSize) {
-          const batchTexts = uncachedTexts.slice(i, i + batchSize);
-          const batchIndices = uncachedIndices.slice(i, i + batchSize);
-          
-          const response = await this.client!.embeddings.create({
-            model: this.config.model!,
-            input: batchTexts
-          });
-
-          // Store embeddings in results and cache
-          response.data.forEach((item, j) => {
-            const originalIndex = batchIndices[j];
-            const text = uncachedTexts[j];
-            results[originalIndex] = item.embedding;
+        const embeddings = await this.generateVoyageEmbeddings(uncachedTexts);
+        
+        // Store embeddings in results and cache
+        embeddings.forEach((embedding, i) => {
+          if (embedding) {
+            const originalIndex = uncachedIndices[i];
+            const text = uncachedTexts[i];
+            results[originalIndex] = embedding;
             
             if (this.config.useCache) {
-              const cacheKey = `${this.config.model}:${text}`;
-              this.cache.set(cacheKey, item.embedding);
+              const cacheKey = `voyage:${this.config.model}:${text}`;
+              this.cache.set(cacheKey, embedding);
             }
-          });
-        }
+          }
+        });
 
         // Save cache after all embeddings are generated
         if (this.config.useCache) {
           this.saveCache();
         }
       } catch (error) {
-        console.error('Error generating embeddings:', error);
+        console.error('Error generating embeddings batch:', error);
       }
     }
 
@@ -178,74 +260,73 @@ export class EmbeddingService {
   }
 
   /**
-   * Calculate the cosine similarity between two vectors
+   * Generate embeddings for multiple texts with Voyage AI
+   */
+  private async generateVoyageEmbeddings(texts: string[]): Promise<(number[] | null)[]> {
+    if (!this.voyageClient) {
+      return texts.map(() => null);
+    }
+    
+    try {
+      const response = await this.voyageClient.embed({
+        model: this.config.model!,
+        input: texts,
+        ...(this.config.inputType && { inputType: this.config.inputType }),
+        ...(this.config.dimensions && { dimensions: this.config.dimensions }),
+        ...(this.config.quantization && { outputDtype: this.config.quantization })
+      });
+
+      // Handle the response safely
+      const result = response as any;
+      if (result && result.embeddings && Array.isArray(result.embeddings)) {
+        return result.embeddings;
+      }
+      
+      console.error('Unexpected Voyage API response format:', response);
+      return texts.map(() => null);
+    } catch (error) {
+      console.error('Error generating Voyage embeddings batch:', error);
+      return texts.map(() => null);
+    }
+  }
+
+  /**
+   * Calculate cosine similarity between two vectors
    */
   cosineSimilarity(a: number[], b: number[]): number {
     if (a.length !== b.length) {
       throw new Error('Vectors must have the same dimensions');
     }
-
+    
     let dotProduct = 0;
     let normA = 0;
     let normB = 0;
-
+    
     for (let i = 0; i < a.length; i++) {
       dotProduct += a[i] * b[i];
       normA += a[i] * a[i];
       normB += b[i] * b[i];
     }
-
+    
+    normA = Math.sqrt(normA);
+    normB = Math.sqrt(normB);
+    
     if (normA === 0 || normB === 0) {
-      return 0;
+      return 0; // Handle division by zero
     }
-
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
-
-  /**
-   * Ensure the cache directory exists
-   */
-  private async ensureCacheDirectory(): Promise<void> {
-    try {
-      await fs.promises.mkdir(this.config.cacheDir!, { recursive: true });
-    } catch (error) {
-      console.error('Failed to create cache directory:', error);
-      this.config.useCache = false;
-    }
-  }
-
-  /**
-   * Load the embedding cache from disk
-   */
-  private async loadCache(): Promise<void> {
-    try {
-      if (fs.existsSync(this.cacheFile)) {
-        const data = await fs.promises.readFile(this.cacheFile, 'utf8');
-        const parsed = JSON.parse(data);
-        this.cache = new Map(Object.entries(parsed));
-      }
-    } catch (error) {
-      console.error('Failed to load embedding cache:', error);
-      this.cache = new Map();
-    }
-  }
-
-  /**
-   * Save the embedding cache to disk
-   */
-  private async saveCache(): Promise<void> {
-    try {
-      const cacheObj = Object.fromEntries(this.cache);
-      await fs.promises.writeFile(
-        this.cacheFile,
-        JSON.stringify(cacheObj),
-        'utf8'
-      );
-    } catch (error) {
-      console.error('Failed to save embedding cache:', error);
-    }
+    
+    return dotProduct / (normA * normB);
   }
 }
 
 // Singleton instance of the embedding service
-export const embeddingService = new EmbeddingService(); 
+export const embeddingService = new EmbeddingService({
+  provider: config.embedding.provider,
+  apiKey: config.embedding.voyageApiKey,
+  model: config.embedding.model,
+  dimensions: config.embedding.dimensions,
+  inputType: config.embedding.inputType,
+  quantization: config.embedding.quantization,
+  useCache: config.embedding.useCache,
+  cacheDir: config.embedding.cacheDir
+}); 
