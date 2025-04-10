@@ -72,6 +72,58 @@ The following MCP tools are available for memory operations:
 - `read_graph` - Get the entire knowledge graph
 - `open_nodes` - Retrieve specific entities
 - `search_nodes` - Find entities by keyword search
+- `semantic_search` - Find entities using semantic similarity
+- `generate_embeddings` - Generate vector embeddings for all entities
+
+### Semantic Search
+
+The knowledge graph now supports semantic search using vector embeddings. This allows Claude to find conceptually similar information even when there's no exact text match.
+
+#### How it works
+
+1. Entities are converted to vector embeddings using OpenAI's embedding models
+2. Queries are also converted to embeddings
+3. The system finds entities with the highest semantic similarity to the query
+4. Results are ranked by similarity score
+
+#### Using Semantic Search
+
+To use semantic search:
+
+```js
+semantic_search({
+  query: "What projects is the team working on?",
+  threshold: 0.7,  // Minimum similarity score (0-1)
+  limit: 5,        // Maximum number of results
+  generateMissingEmbeddings: true  // Auto-generate embeddings if needed
+})
+```
+
+#### Setting up OpenAI API for Embeddings
+
+To enable semantic search, set your OpenAI API key:
+
+```bash
+# Set as environment variable
+export OPENAI_API_KEY=your_api_key
+
+# Or when running the server
+OPENAI_API_KEY=your_api_key mcp-think-server
+
+# Or in Cursor configuration
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-server",
+      "args": [],
+      "env": {
+        "OPENAI_API_KEY": "your_api_key"
+      },
+      "type": "stdio"
+    }
+  }
+}
+```
 
 ## Setup and Configuration
 

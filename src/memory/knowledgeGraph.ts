@@ -1,8 +1,11 @@
+import { embeddingService } from './embeddingService.js';
+
 // Entity structure
 export interface Entity {
   name: string;            // Unique identifier
   entityType: string;      // Type classification
   observations: string[];  // Facts/observations
+  embedding?: number[];    // Vector embedding for semantic search
 }
 
 // Relation structure
@@ -39,7 +42,8 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
     this.entities.set(entity.name, {
       name: entity.name,
       entityType: entity.entityType,
-      observations: [...entity.observations]
+      observations: [...entity.observations],
+      embedding: entity.embedding
     });
 
     return true;
@@ -199,6 +203,116 @@ export class KnowledgeGraphImpl implements KnowledgeGraph {
     }
 
     return results;
+  }
+
+  /**
+   * Search for entities using semantic similarity with embeddings
+   * @param query The search query
+   * @param options Options for semantic search
+   * @returns Array of entities with similarity scores
+   */
+  async semanticSearch(
+    query: string, 
+    options: { 
+      threshold?: number; 
+      limit?: number;
+      generateMissingEmbeddings?: boolean;
+    } = {}
+  ): Promise<Array<{ entity: Entity; similarity: number }>> {
+    const {
+      threshold = 0.7,
+      limit = 10,
+      generateMissingEmbeddings = true
+    } = options;
+    
+    // Check if embedding service is available
+    if (!embeddingService.isAvailable()) {
+      await embeddingService.initialize();
+      if (!embeddingService.isAvailable()) {
+        console.warn('Embedding service unavailable. Falling back to text search.');
+        return this.searchNodes(query).map(entity => ({ entity, similarity: 1 }));
+      }
+    }
+
+    // Generate embedding for query
+    const queryEmbedding = await embeddingService.generateEmbedding(query);
+    if (!queryEmbedding) {
+      console.warn('Failed to generate embedding for query. Falling back to text search.');
+      return this.searchNodes(query).map(entity => ({ entity, similarity: 1 }));
+    }
+
+    // Collect entities that need embeddings
+    const entitiesToEmbed: Entity[] = [];
+    if (generateMissingEmbeddings) {
+      for (const entity of this.entities.values()) {
+        if (!entity.embedding && entity.observations.length > 0) {
+          entitiesToEmbed.push(entity);
+        }
+      }
+
+      // Generate embeddings in batches if needed
+      if (entitiesToEmbed.length > 0) {
+        await this.generateEntityEmbeddings(entitiesToEmbed);
+      }
+    }
+
+    // Calculate similarity scores for all entities with embeddings
+    const results: Array<{ entity: Entity; similarity: number }> = [];
+    
+    for (const entity of this.entities.values()) {
+      if (entity.embedding) {
+        const similarity = embeddingService.cosineSimilarity(queryEmbedding, entity.embedding);
+        if (similarity >= threshold) {
+          results.push({ entity, similarity });
+        }
+      }
+    }
+
+    // Sort by similarity (highest first) and limit results
+    return results
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+  }
+
+  /**
+   * Generate embeddings for a list of entities
+   * @param entities Entities to generate embeddings for
+   */
+  async generateEntityEmbeddings(entities: Entity[]): Promise<void> {
+    // Check if embedding service is available
+    if (!embeddingService.isAvailable()) {
+      await embeddingService.initialize();
+      if (!embeddingService.isAvailable()) {
+        console.warn('Embedding service unavailable. Cannot generate embeddings.');
+        return;
+      }
+    }
+
+    // Prepare text content for each entity
+    const textsToEmbed = entities.map(entity => {
+      // Combine entity name, type and observations into a single text
+      return [
+        entity.name,
+        entity.entityType,
+        ...entity.observations
+      ].join('\n');
+    });
+
+    // Generate embeddings
+    const embeddings = await embeddingService.generateEmbeddings(textsToEmbed);
+
+    // Assign embeddings to entities
+    entities.forEach((entity, index) => {
+      entity.embedding = embeddings[index];
+    });
+  }
+
+  /**
+   * Generate embeddings for all entities in the graph
+   */
+  async generateAllEmbeddings(): Promise<void> {
+    const entities = Array.from(this.entities.values());
+    await this.generateEntityEmbeddings(entities);
   }
 
   // Get specific entities by name

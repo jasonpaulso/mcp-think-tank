@@ -312,7 +312,7 @@ export function registerMemoryTools(server: FastMCP): void {
   server.addTool({
     name: 'update_relations',
     description: 'Update multiple existing relations in the knowledge graph',
-    parameters: Schemas.CreateRelationsSchema, // Reuse the same schema as create_relations
+    parameters: Schemas.UpdateRelationsSchema,
     execute: async (args) => {
       const results = {
         updated: [] as Array<{from: string, to: string, relationType: string}>,
@@ -356,6 +356,65 @@ export function registerMemoryTools(server: FastMCP): void {
         failed: results.failed.length > 0 ? results.failed : null,
         message: `Updated ${results.updated.length} relations. Created ${results.created.length} relations. Failed for ${results.failed.length} relations.`
       });
+    }
+  });
+
+  // Semantic search
+  server.addTool({
+    name: 'semantic_search',
+    description: 'Search for nodes in the knowledge graph using semantic similarity',
+    parameters: Schemas.SemanticSearchSchema,
+    execute: async (args) => {
+      try {
+        const results = await graph.semanticSearch(args.query, {
+          threshold: args.threshold,
+          limit: args.limit,
+          generateMissingEmbeddings: args.generateMissingEmbeddings
+        });
+        
+        // Return as string
+        return JSON.stringify({
+          results: results.map(result => ({
+            entity: result.entity,
+            similarity: result.similarity
+          })),
+          count: results.length,
+          message: `Found ${results.length} semantically similar entities.`
+        });
+      } catch (error) {
+        console.error('Error in semantic search:', error);
+        return JSON.stringify({
+          error: 'Failed to perform semantic search',
+          message: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+  });
+
+  // Generate embeddings for all entities
+  server.addTool({
+    name: 'generate_embeddings',
+    description: 'Generate embeddings for all entities in the knowledge graph',
+    parameters: z.object({
+      random_string: z.string().describe("Dummy parameter for no-parameter tools").optional()
+    }),
+    execute: async () => {
+      try {
+        await graph.generateAllEmbeddings();
+        graphStorage.save();
+        
+        return JSON.stringify({
+          message: `Generated embeddings for all entities.`,
+          success: true
+        });
+      } catch (error) {
+        console.error('Error generating embeddings:', error);
+        return JSON.stringify({
+          error: 'Failed to generate embeddings',
+          message: error instanceof Error ? error.message : String(error),
+          success: false
+        });
+      }
     }
   });
 }

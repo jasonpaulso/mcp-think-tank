@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs';
 import { KnowledgeGraphImpl } from './knowledgeGraph.js';
 import config from '../config.js';
+import { embeddingService } from './embeddingService.js';
 
 /**
  * Storage class for persisting the knowledge graph to disk.

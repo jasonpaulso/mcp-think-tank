@@ -38,8 +38,10 @@
     "@types/node": "^22.13.17",
     "fastmcp": "^1.21.0",
     "minimist": "^1.2.8",
+    "openai": "^4.93.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
+    "voyageai": "^0.0.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {

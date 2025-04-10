@@ -76,6 +76,19 @@ export const UpdateEntitiesSchema = z.object({
   )
 });
 
+// Schema for updating relations
+export const UpdateRelationsSchema = z.object({
+  relations: z.array(RelationSchema)
+});
+
+// Schema for semantic search
+export const SemanticSearchSchema = z.object({
+  query: z.string().min(1, "Search query cannot be empty"),
+  threshold: z.number().min(0).max(1).optional().describe("Minimum similarity threshold (0-1)"),
+  limit: z.number().min(1).max(100).optional().describe("Maximum number of results"),
+  generateMissingEmbeddings: z.boolean().optional().describe("Generate embeddings for entities that don't have them")
+});
+
 // Helper function to validate an entity
 export function validateEntity(entity: any): Entity {
   return EntitySchema.parse(entity);
