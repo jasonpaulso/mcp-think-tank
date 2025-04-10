@@ -4,7 +4,7 @@ import { z } from "zod";
 // Create a new MCP server
 const server = new FastMCP({
   name: "Think Tool Server",
-  version: "1.0.3",
+  version: "1.0.5",
 });
 
 // Add the "think" tool

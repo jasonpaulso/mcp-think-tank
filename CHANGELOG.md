@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 (2024-04-10)
+
+### Improved
+- Updated documentation to recommend npx installation method for Cursor
+- Enhanced installation instructions for better clarity
+- Added more detailed configuration examples
+
 ## 1.0.4 (2024-04-10)
 
 ### Fixed
