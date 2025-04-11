@@ -1,11 +1,11 @@
 {
-  "name": "mcp-think-server",
+  "name": "mcp-think-tank",
   "version": "1.0.5",
-  "description": "An MCP server that provides a 'think' tool for structured reasoning in AI assistants",
+  "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
-    "mcp-think-server": "bin/mcp-think-server.js"
+    "mcp-think-tank": "bin/mcp-think-tank.js"
   },
   "scripts": {
     "build": "tsc",
@@ -22,17 +22,19 @@
     "reasoning",
     "structured-thinking",
     "cursor",
-    "anthropic"
+    "anthropic",
+    "knowledge-graph",
+    "memory"
   ],
   "author": "flight505",
   "license": "MIT",
-  "homepage": "https://github.com/flight505/mcp-think-server",
+  "homepage": "https://github.com/flight505/mcp-think-tank",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flight505/mcp-think-server.git"
+    "url": "git+https://github.com/flight505/mcp-think-tank.git"
   },
   "bugs": {
-    "url": "https://github.com/flight505/mcp-think-server/issues"
+    "url": "https://github.com/flight505/mcp-think-tank/issues"
   },
   "dependencies": {
     "@types/node": "^22.13.17",

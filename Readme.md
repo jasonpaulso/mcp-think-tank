@@ -1,21 +1,21 @@
-# MCP Think Server
+# MCP Think Tank
 
 <div align="center">
   
-![MCP Think Server](https://raw.githubusercontent.com/flight505/mcp-think-server/main/assets/think-banner.png)
+![MCP Think Tank](https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/think-banner.png)
 
-[![npm version](https://img.shields.io/npm/v/mcp-think-server.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-server)
+[![npm version](https://img.shields.io/npm/v/mcp-think-tank.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-tank)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
-[![Model Context Protocol](https://img.shields.io/badge/MCP-Server-orange.svg)](https://github.com/modelcontextprotocol)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-Tank-orange.svg)](https://github.com/modelcontextprotocol)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 
 </div>
 
 ## Overview
 
-MCP Think Server provides Claude with a dedicated space for structured reasoning in complex scenarios, allowing the model to systematically work through problems with enhanced deliberation. This implementation includes persistent memory capabilities through a knowledge graph, enabling recall and connections between previously encountered information.
+MCP Think Tank provides Claude with a dedicated space for structured reasoning in complex scenarios, allowing the model to systematically work through problems with enhanced deliberation. This implementation includes persistent memory capabilities through a knowledge graph, enabling recall and connections between previously encountered information.
 
 ## 🧠 The Power of Structured Reasoning
 
@@ -27,14 +27,11 @@ Recent studies by Anthropic demonstrate remarkable improvements when using the "
 - **Improved performance** on software engineering benchmarks
 - **1.6% average improvement** on SWE-Bench, contributing to Claude 3.7 Sonnet's state-of-the-art score of 0.623
 
-The "think" tool creates a dedicated space for Claude to reason explicitly about complex problems, improving both accuracy and consistency when handling challenging tasks.
-
 ## 🚀 Key Features
 
 - 💭 **Structured Thinking**: Dedicated space for step-by-step reasoning
 - 🧩 **Knowledge Graph Memory**: Persistent, relationship-based memory storage
 - 🔍 **Text Search**: Find relevant information using text-based queries
-- 🔄 **Extended Timeout**: Configurable timeout settings to prevent disconnections
 - 🤝 **Client Support**: Works with Claude, Cursor, and other MCP clients
 - 🛠️ **Tool Optimization**: Batched processing for efficient operations
 
@@ -42,64 +39,39 @@ The "think" tool creates a dedicated space for Claude to reason explicitly about
 
 ### NPX (Recommended)
 
-The easiest way to use MCP Think Server is via NPX:
+The easiest way to use MCP Think Tank is via NPX:
 
 ```bash
-npx mcp-think-server
-```
-
-With custom options:
-```bash
-npx mcp-think-server --request-timeout=300 --memory-path=/custom/path/memory.jsonl
+npx mcp-think-tank
 ```
 
 ### Global Installation
 
 ```bash
-npm install -g mcp-think-server
-mcp-think-server
+npm install -g mcp-think-tank
+mcp-think-tank
 ```
 
 ### Unix-based Systems (MacOS/Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.sh | bash
 ```
 
 ### Windows
 
 ```bash
-curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-server/main/install.bat && install.bat
+curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.bat && install.bat
 ```
 
 ## ⚙️ Configuration
 
-### Quick Start
-
-For immediate use with default settings:
-
-```bash
-npx mcp-think-server
-```
-
 ### Memory Path Configuration
 
-By default, the knowledge graph is stored in `~/.mcp-think-server/memory.jsonl`. You can specify a custom path:
+By default, the knowledge graph is stored in `~/.mcp-think-tank/memory.jsonl`. For custom paths, always use absolute paths:
 
 ```bash
-mcp-think-server --memory-path=/path/to/your/memory.json
-```
-
-### Request Timeout Configuration
-
-Configure timeouts to prevent client disconnections during long-running operations:
-
-```bash
-# Set timeout to 10 minutes (600 seconds)
-REQUEST_TIMEOUT=600 mcp-think-server
-
-# Or via command line
-mcp-think-server --request-timeout=600
+mcp-think-tank --memory-path=/absolute/path/to/your/memory.json
 ```
 
 ## 🔌 Client Integration
@@ -112,9 +84,23 @@ Add to your `claude_desktop_config.json`:
 {
   "mcpServers": {
     "think-tool": {
-      "command": "mcp-think-server",
+      "command": "mcp-think-tank"
+    }
+  }
+}
+```
+
+Important notes:
+- Use absolute paths for any file references
+- The server inherits only basic environment variables (USER, HOME, PATH)
+- For custom environment variables, use the `env` field:
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-tank",
       "env": {
-        "REQUEST_TIMEOUT": "300"
+        "NODE_ENV": "production"
       }
     }
   }
@@ -130,12 +116,25 @@ In Cursor's MCP Server settings:
   "mcpServers": {
     "think-tool": {
       "command": "npx",
-      "args": ["-y", "mcp-think-server", "--request-timeout=300"],
+      "args": ["-y", "mcp-think-tank"],
       "type": "stdio"
     }
   }
 }
 ```
+
+## 🔍 Debugging
+
+To view server logs:
+```bash
+tail -n 20 -F ~/Library/Logs/Claude/mcp*.log
+```
+
+Common issues to check:
+1. Working directory issues - use absolute paths
+2. Missing environment variables
+3. Permission problems
+4. Invalid configuration syntax
 
 ## 🧰 Available Tools
 
@@ -168,14 +167,6 @@ The server provides the following MCP tools:
 3. **Text Search**: Find relevant information using text-based queries.
 
 4. **Persistence**: All information remains available across sessions through file-based storage.
-
-## 📊 Performance Optimization
-
-The server includes several optimizations:
-
-- **Extended timeouts**: Prevent disconnections during complex operations
-- **Batched processing**: Efficiently handle large numbers of entities
-- **Progressive feedback**: Detailed progress information for long-running tasks
 
 ## 📝 Example Usage
 
@@ -215,9 +206,9 @@ Now let's create relations between our scientists and discoveries:
 
 [Claude calls create_relations]
 
-Let's use semantic search to find information related to "quantum physics":
+Let's search for information about "quantum physics":
 
-[Claude calls semantic_search]
+[Claude calls search_nodes]
 ```
 
 ## 🤝 Contributing

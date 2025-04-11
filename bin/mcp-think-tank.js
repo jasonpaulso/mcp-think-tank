@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * This is the executable entry point for the mcp-think-server 
+ * This is the executable entry point for the mcp-think-tank 
  * when installed globally via npm
  */
 
@@ -30,14 +30,14 @@ if (!existsSync(distPath)) {
 // Import the server module (will use ts-node as fallback if compilation fails)
 if (existsSync(distPath)) {
   import('../dist/server.js').catch(err => {
-    console.error('Failed to start the Think Tool server:', err);
+    console.error('Failed to start the Think Tank server:', err);
     process.exit(1);
   });
 } else {
   // Fallback to ts-node
   import('ts-node/register/index.js').then(() => {
     import('../src/server.ts').catch(err => {
-      console.error('Failed to start the Think Tool server:', err);
+      console.error('Failed to start the Think Tank server:', err);
       process.exit(1);
     });
   }).catch(err => {

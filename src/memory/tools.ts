@@ -278,7 +278,7 @@ export function registerMemoryTools(server: FastMCP): void {
     name: 'read_graph',
     description: 'Read the entire knowledge graph',
     parameters: z.object({
-      random_string: z.string().describe("Dummy parameter for no-parameter tools").optional()
+      dummy: z.string().describe("Returns the complete knowledge graph with entities and relationships").optional()
     }),
     execute: async () => {
       // Return as string

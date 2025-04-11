@@ -7,7 +7,7 @@ import minimist from 'minimist';
 const argv = minimist(process.argv.slice(2));
 
 // Default memory path
-const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-server', 'memory');
+const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-tank', 'memory');
 
 // Create default directories if they don't exist
 if (!existsSync(DEFAULT_MEMORY_PATH)) {

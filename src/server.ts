@@ -13,14 +13,14 @@ const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 console.log(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
 
 // Create necessary directories
-const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-server/memory.jsonl');
+const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
 createDirectory(path.dirname(memoryPath));
 
 console.log(`Memory path: ${memoryPath}`);
 
 // Create FastMCP server
 const server = new FastMCP({
-  name: "MCP Think Server",
+  name: "MCP Think Tank",
   version: "1.0.5"
 });
 

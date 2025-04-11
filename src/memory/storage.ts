@@ -63,7 +63,7 @@ export class GraphStorage {
 }
 
 // Create a default graph instance
-const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-server/memory.jsonl');
+const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
 
 // Export the graph and storage for use in tools
 export const graph = new KnowledgeGraph();

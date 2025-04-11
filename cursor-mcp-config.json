@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "think-tool": {
-      "name": "MCP Think Server",
+      "name": "MCP Think Tank",
       "description": "A FastMCP server that provides knowledge graph memory and structured reasoning capabilities",
       "command": "npm run start",
       "type": "stdio"

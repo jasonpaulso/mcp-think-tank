@@ -1,16 +1,16 @@
 #!/bin/bash
-# Simple installation script for Think Tool MCP Server
+# Simple installation script for Think Tank MCP Server
 
-echo "Installing Think Tool MCP Server with optimized settings..."
+echo "Installing Think Tank MCP Server with optimized settings..."
 
 # Create directory for the server
-INSTALL_DIR="$HOME/.mcp-think-server"
+INSTALL_DIR="$HOME/.mcp-think-tank"
 mkdir -p "$INSTALL_DIR"
 
 # Clone or update the repository
 if [ ! -d "$INSTALL_DIR/repo/.git" ]; then
   echo "Cloning repository..."
-  git clone https://github.com/flight505/mcp-think-server.git "$INSTALL_DIR/repo"
+  git clone https://github.com/flight505/mcp-think-tank.git "$INSTALL_DIR/repo"
 else
   echo "Updating repository..."
   cd "$INSTALL_DIR/repo"
@@ -27,7 +27,7 @@ BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
 # Create executable shell script
-cat > "$BIN_DIR/mcp-think-server" << EOF
+cat > "$BIN_DIR/mcp-think-tank" << EOF
 #!/bin/bash
 cd "$INSTALL_DIR/repo"
 # Use extended timeout (5 minutes default, can be overridden with REQUEST_TIMEOUT env var)
@@ -36,7 +36,7 @@ node dist/server.js --request-timeout="\$REQUEST_TIMEOUT" "\$@"
 EOF
 
 # Make executable
-chmod +x "$BIN_DIR/mcp-think-server"
+chmod +x "$BIN_DIR/mcp-think-tank"
 
 # Check if BIN_DIR is in PATH
 if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
@@ -59,8 +59,8 @@ echo ""
 echo "Installation complete!"
 echo ""
 echo "Usage:"
-echo "  Run 'mcp-think-server' to start the server"
-echo "  You can specify request timeout: REQUEST_TIMEOUT=600 mcp-think-server"
+echo "  Run 'mcp-think-tank' to start the server"
+echo "  You can specify request timeout: REQUEST_TIMEOUT=600 mcp-think-tank"
 echo ""
 echo "Claude Desktop Configuration:"
 echo "  Edit: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)"
@@ -70,7 +70,7 @@ echo "Add the following to your config:"
 echo '{
   "mcpServers": {
     "think-tool": {
-      "command": "mcp-think-server",
+      "command": "mcp-think-tank",
       "env": {
         "REQUEST_TIMEOUT": "300"
       }
@@ -81,5 +81,5 @@ echo ""
 echo "Cursor Configuration:"
 echo "  Settings > MCP Servers > Add New Server"
 echo "  Name: think-tool"
-echo "  Command: mcp-think-server"
+echo "  Command: mcp-think-tank"
 echo "" 
