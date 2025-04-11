@@ -4,6 +4,17 @@ import { registerThinkTool } from './think/tools.js';
 import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
+import { config } from './config.js';
+
+// Get configuration from environment
+const SKIP_EMBEDDINGS = process.env.SKIP_EMBEDDINGS === 'true';
+const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
+
+// Log configuration
+if (SKIP_EMBEDDINGS) {
+  console.log('Note: Memory/embedding tools are disabled (SKIP_EMBEDDINGS=true)');
+}
+console.log(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
 
 // Create necessary directories
 const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-server/memory.jsonl');
@@ -11,25 +22,26 @@ createDirectory(path.dirname(memoryPath));
 
 console.log(`Memory path: ${memoryPath}`);
 
-// Initialize the FastMCP server with required options
+// Create FastMCP server
 const server = new FastMCP({
   name: "MCP Think Server",
   version: "1.0.5"
 });
 
-// Register memory-related tools
+// Register memory tools
 registerMemoryTools(server);
 
 // Add the 'think' tool for structured reasoning
 registerThinkTool(server);
 
-// Start the server on the specified port (default: 3000)
-const port = parseInt(process.env.PORT || '3000', 10);
+// Start the server
+server.start();
 
-// Start the server using stdio transport (default)
-server.start({
-  transportType: "stdio"
+// Error handling
+process.on('uncaughtException', (error: Error) => {
+  console.error('Uncaught exception:', error);
 });
 
-// Use console.error instead of console.log - this writes to stderr which won't interfere with the protocol
-console.error(`MCP Think Server running on port ${port}`);
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('Unhandled rejection:', reason);
+});

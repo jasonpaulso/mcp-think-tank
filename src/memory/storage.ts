@@ -67,4 +67,6 @@ const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-thin
 
 // Export the graph and storage for use in tools
 export const graph = new KnowledgeGraph();
-export const graphStorage = new GraphStorage(memoryPath, graph); 
+export const graphStorage = new GraphStorage(memoryPath, graph);
+
+// We'll look at the file first to understand its implementation 

@@ -1,5 +1,3 @@
-import { embeddingService } from './embeddingService.js';
-
 /**
  * Entity interface
  */
@@ -40,11 +38,14 @@ export class KnowledgeGraph {
       return false;
     }
     
-    this.entities.set(entity.name, {
+    // Create a copy of the entity with all properties
+    const newEntity: Entity = {
       name: entity.name,
       entityType: entity.entityType,
       observations: [...entity.observations]
-    });
+    };
+    
+    this.entities.set(entity.name, newEntity);
     
     return true;
   }
@@ -106,6 +107,83 @@ export class KnowledgeGraph {
   }
 
   /**
+   * Delete observations from an entity
+   * @param entityName - The name of the entity
+   * @param observations - The observations to delete
+   * @returns true if entity exists, false otherwise
+   */
+  deleteObservations(entityName: string, observations: string[]): boolean {
+    const entity = this.entities.get(entityName);
+    if (!entity) {
+      return false;
+    }
+    
+    // Remove each observation if it exists
+    for (const observation of observations) {
+      const index = entity.observations.indexOf(observation);
+      if (index !== -1) {
+        entity.observations.splice(index, 1);
+      }
+    }
+    
+    return true;
+  }
+
+  /**
+   * Delete an entity and its relations
+   * @param entityName - The name of the entity to delete
+   * @returns true if deleted, false if not found
+   */
+  deleteEntity(entityName: string): boolean {
+    if (!this.entities.has(entityName)) {
+      return false;
+    }
+    
+    // Delete the entity
+    this.entities.delete(entityName);
+    
+    // Delete relations where this entity is the source
+    this.relations.delete(entityName);
+    
+    // Delete relations where this entity is the target
+    for (const [source, relations] of this.relations.entries()) {
+      const newRelations = Array.from(relations).filter(r => r.to !== entityName);
+      this.relations.set(source, new Set(newRelations));
+    }
+    
+    return true;
+  }
+
+  /**
+   * Delete a relation
+   * @param relation - The relation to delete
+   * @returns true if deleted, false if not found
+   */
+  deleteRelation(relation: Relation): boolean {
+    // Check if source entity exists in relations
+    if (!this.relations.has(relation.from)) {
+      return false;
+    }
+    
+    const relations = this.relations.get(relation.from);
+    
+    // Find the relation to delete
+    const relationToDelete = Array.from(relations!).find(r => 
+      r.from === relation.from && 
+      r.to === relation.to && 
+      r.relationType === relation.relationType
+    );
+    
+    if (!relationToDelete) {
+      return false;
+    }
+    
+    // Delete the relation
+    relations!.delete(relationToDelete);
+    return true;
+  }
+
+  /**
    * Search for entities based on a query
    * @param query - The search query
    * @returns Array of matching entities
@@ -145,7 +223,7 @@ export class KnowledgeGraph {
    * @param names - Array of entity names
    * @returns Array of found entities
    */
-  getEntitiesByName(names: string[]): Entity[] {
+  getEntities(names: string[]): Entity[] {
     const results: Entity[] = [];
     
     for (const name of names) {

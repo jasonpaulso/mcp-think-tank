@@ -10,18 +10,13 @@ const ImageMetadataSchema = z.object({
   tags: z.array(z.string()).optional()
 }).optional();
 
-// Entity validation schema
+// Core schemas for entity and relation validation
 export const EntitySchema = z.object({
   name: z.string().min(1, "Entity name cannot be empty"),
   entityType: z.string().min(1, "Entity type cannot be empty"),
-  observations: z.array(z.string()),
-  embedding: z.array(z.number()).optional(),
-  imageUrl: z.string().url("Image URL must be a valid URL").optional(),
-  imageMetadata: ImageMetadataSchema,
-  imageEmbedding: z.array(z.number()).optional()
+  observations: z.array(z.string())
 });
 
-// Relation validation schema
 export const RelationSchema = z.object({
   from: z.string().min(1, "Source entity name cannot be empty"),
   to: z.string().min(1, "Target entity name cannot be empty"),

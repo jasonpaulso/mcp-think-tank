@@ -6,8 +6,13 @@ import { existsSync, mkdirSync } from 'fs';
 // Parse command line arguments
 const argv = minimist(process.argv.slice(2));
 
-// Default memory path is in user's home directory
-const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-server', 'memory.jsonl');
+// Default memory path
+const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-server', 'memory');
+
+// Create default directories if they don't exist
+if (!existsSync(DEFAULT_MEMORY_PATH)) {
+  mkdirSync(DEFAULT_MEMORY_PATH, { recursive: true });
+}
 
 // Validate embedding provider - now only Voyage is supported
 const validateProvider = (provider: string | undefined): string => {
@@ -26,53 +31,9 @@ export const config = {
                  parseInt(process.env.REQUEST_TIMEOUT, 10) * 1000 : 
                  300000,
   
-  // Embedding service configuration
-  embedding: {
-    // Provider is always 'voyage'
-    provider: validateProvider(
-      argv['embedding-provider'] as string || 
-      process.env.EMBEDDING_PROVIDER
-    ),
-    
-    // API key can be passed via command line or environment variable
-    voyageApiKey: argv['voyage-api-key'] || process.env.VOYAGE_API_KEY,
-    
-    // Model configuration
-    model: argv['embedding-model'] || process.env.EMBEDDING_MODEL || 'voyage-3-large',
-    dimensions: argv['embedding-dimensions'] ? 
-                parseInt(argv['embedding-dimensions'] as string, 10) : 
-                1024,
-    
-    // Voyage-specific options
-    inputType: argv['embedding-input-type'] as 'query' | 'document' || 
-               process.env.EMBEDDING_INPUT_TYPE as 'query' | 'document' || 
-               'query',
-    quantization: argv['embedding-quantization'] as 'float' | 'int8' | 'binary' || 
-                  process.env.EMBEDDING_QUANTIZATION as 'float' | 'int8' | 'binary' ||
-                  'float',
-    
-    // Caching options
-    cache: argv['embedding-cache'] !== 'false' && 
-           process.env.EMBEDDING_CACHE !== 'false', // Enabled by default
-    cacheDir: argv['embedding-cache-dir'] || 
-              process.env.EMBEDDING_CACHE_DIR || 
-              join(homedir(), '.mcp-think-server', 'cache'),
-  },
-  
-  // Other config options can be added here
+  // Other config options
   debug: !!argv.debug,
   version: '1.0.0', // Should match package.json
 };
-
-// Ensure memory directory exists
-const memoryDir = config.memoryPath.substring(0, config.memoryPath.lastIndexOf('/'));
-if (!existsSync(memoryDir)) {
-  mkdirSync(memoryDir, { recursive: true });
-}
-
-// Ensure cache directory exists
-if (!existsSync(config.embedding.cacheDir)) {
-  mkdirSync(config.embedding.cacheDir, { recursive: true });
-}
 
 export default config; 
