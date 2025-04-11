@@ -1,7 +1,9 @@
 {
   "mcpServers": {
     "think-tool": {
-      "command": "./simple-think.sh",
+      "name": "MCP Think Server",
+      "description": "A FastMCP server that provides knowledge graph memory and structured reasoning capabilities",
+      "command": "npm run start",
       "type": "stdio"
     }
   }

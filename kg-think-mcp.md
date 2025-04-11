@@ -8,7 +8,6 @@ This implementation plan outlines the process for enhancing the MCP Think Server
 - Build semantic connections between pieces of information
 - Access previous reasoning and conclusions
 - Maintain contextual awareness of user preferences and past interactions
-- research https://github.com/itseasy21/mcp-knowledge-graph and see if it can be used to implement this
 
 ## System Architecture
 
@@ -109,7 +108,7 @@ The knowledge graph memory system will be implemented with the following compone
 - **Required Dependencies**:
   - [x] TypeScript and related type definitions
   - [x] FastMCP for server functionality
-  - [x] Storage solution (better-sqlite3 or simple JSON)
+  - [x] Storage solution (JSON-based)
   - [x] Zod for validation
 
 ## Technical Specifications
@@ -170,6 +169,47 @@ interface KnowledgeGraph {
    - Behavior: Retrieves specific entities
    - Output: Array of entity objects
 
+## Future Enhancements
+
+- [ ] Add proper smithery config (need to ask me to create account at smithery.com)
+- [ ] Vector embedding integration for semantic search
+  - [ ] Create EmbeddingService with caching
+  - [ ] Update Entity interface with embedding field
+  - [ ] Implement vector similarity search
+  - [ ] Add semantic_search and generate_embeddings tools
+  - [ ] Update documentation
+- [ ] Voyage AI embedding integration
+  - [ ] Add voyageai SDK dependency
+  - [ ] Implement EmbeddingService with Voyage AI
+  - [ ] Add environment variable configuration for Voyage API key
+  - [ ] Update configuration to use Voyage-specific parameters
+  - [ ] Test embedding generation with voyage-3-large
+  - [ ] Clean up code to focus exclusively on Voyage AI
+  - [ ] Update documentation with Voyage API configuration
+- [ ] Visual Reasoning Support
+  - [ ] Update Entity interface to support image entities
+    - [ ] Add imageUrl field to entity structure
+    - [ ] Add imageMetadata field (e.g., alt text, description, source)
+    - [ ] Add multimodal embedding field for image content representation
+    - [ ] Update entity validation to handle image fields
+  - [ ] Extend EmbeddingService for multimodal embeddings
+    - [ ] Add support for Voyage AI multimodal models (voyage-multimodal-3)
+    - [ ] Implement image embedding generation
+    - [ ] Add caching for image embeddings
+  - [ ] Implement image entity tools
+    - [ ] create_image_entity - Create entity with image URL and metadata
+    - [ ] generate_image_embedding - Generate embedding for image entities
+    - [ ] visual_semantic_search - Search using image or text queries
+  - [ ] Add image processing utilities
+    - [ ] Image metadata extraction
+    - [ ] Image content verification
+    - [ ] Image tagging and annotation
+  - [ ] Update documentation with visual reasoning capabilities
+- [ ] Automatic knowledge extraction from conversations
+- [ ] Time-aware memory with temporal relations
+- [ ] User-specific memory partitioning
+- [ ] Memory visualization tools
+
 ## Milestone Timeline
 
 1. **Project Setup** - Days 1
@@ -178,51 +218,3 @@ interface KnowledgeGraph {
 4. **Integration** - Days 1
 5. **Testing & Documentation** - Days 1
 6. **Deployment** - Days 1
-
-## Future Enhancements
-
-- [ ] Add proper smithery config (need to ask me to create acount at smithery.com)
-- [x] Vector embedding integration for semantic search
-  - [x] Create EmbeddingService with caching
-  - [x] Update Entity interface with embedding field
-  - [x] Implement vector similarity search
-  - [x] Add semantic_search and generate_embeddings tools
-  - [x] Update documentation
-- [x] Voyage AI embedding integration
-  - [x] Add voyageai SDK dependency
-  - [x] Implement EmbeddingService with Voyage AI
-  - [x] Add environment variable configuration for Voyage API key
-  - [x] Update configuration to use Voyage-specific parameters
-  - [x] Test embedding generation with voyage-3-large
-  - [x] Clean up code to focus exclusively on Voyage AI
-  - [x] Update documentation with Voyage API configuration
-- [x] MCP request timeout configuration
-  - [x] Add configurable timeout settings via environment variables
-  - [x] Add command-line options for setting timeouts
-  - [x] Update FastMCP initialization with custom timeout settings
-  - [x] Document timeout configuration in README
-  - [x] Add progress feedback for long-running operations
-  - [x] Improve batch processing for large-scale operations
-- [ ] Automatic knowledge extraction from conversations
-- [ ] Time-aware memory with temporal relations
-- [ ] User-specific memory partitioning
-- [ ] Memory visualization tools 
-- [ ] Visual Reasoning Support
-  - [x] Update Entity interface to support image entities
-    - [x] Add imageUrl field to entity structure
-    - [x] Add imageMetadata field (e.g., alt text, description, source)
-    - [x] Add multimodal embedding field for image content representation
-    - [x] Update entity validation to handle image fields
-  - [x] Extend EmbeddingService for multimodal embeddings
-    - [x] Add support for Voyage AI multimodal models (voyage-multimodal-3)
-    - [x] Implement image embedding generation
-    - [x] Add caching for image embeddings
-  - [x] Implement image entity tools
-    - [x] `create_image_entity` - Create entity with image URL and metadata
-    - [x] `generate_image_embedding` - Generate embedding for image entities
-    - [x] `visual_semantic_search` - Search using image or text queries
-  - [ ] Add image processing utilities
-    - [ ] Image metadata extraction
-    - [ ] Image content verification
-    - [ ] Image tagging and annotation
-  - [ ] Update documentation with visual reasoning capabilities

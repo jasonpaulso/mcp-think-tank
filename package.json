@@ -41,7 +41,6 @@
     "minimist": "^1.2.8",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "voyageai": "^0.0.4",
     "zod": "^3.24.2"
   },
   "devDependencies": {

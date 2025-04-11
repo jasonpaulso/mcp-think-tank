@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 // Batch size for processing large entity sets
 const BATCH_SIZE = 20;
+const MAX_OPERATION_TIME = 55000; // 55 seconds to allow for overhead
 
 /**
  * Process entities in batches to prevent timeouts on large operations
@@ -15,11 +16,21 @@ const BATCH_SIZE = 20;
 async function batchProcessEntities(entities: any[], processFn: (entity: any) => boolean) {
   const results = {
     created: [] as string[],
-    existing: [] as string[]
+    existing: [] as string[],
+    incomplete: false
   };
+
+  const startTime = Date.now();
 
   // Process in batches
   for (let i = 0; i < entities.length; i += BATCH_SIZE) {
+    // Check if we're approaching timeout
+    if (Date.now() - startTime > MAX_OPERATION_TIME) {
+      results.incomplete = true;
+      console.log(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
+      break;
+    }
+
     const batch = entities.slice(i, i + BATCH_SIZE);
     
     // Process each entity in the batch
@@ -74,7 +85,10 @@ export function registerMemoryTools(server: FastMCP): void {
       return JSON.stringify({
         created: results.created.length > 0 ? results.created : null,
         existing: results.existing.length > 0 ? results.existing : null,
-        message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.`,
+        incomplete: results.incomplete,
+        message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.${
+          results.incomplete ? ` Operation incomplete due to timeout - ${results.created.length + results.existing.length} of ${total} entities processed.` : ''
+        }`,
         imageEntities: results.created.filter(name => {
           const entity = graph.entities.get(name);
           return entity !== undefined;

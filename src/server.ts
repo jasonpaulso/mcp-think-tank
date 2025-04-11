@@ -7,13 +7,9 @@ import * as os from 'os';
 import { config } from './config.js';
 
 // Get configuration from environment
-const SKIP_EMBEDDINGS = process.env.SKIP_EMBEDDINGS === 'true';
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
 // Log configuration
-if (SKIP_EMBEDDINGS) {
-  console.log('Note: Memory/embedding tools are disabled (SKIP_EMBEDDINGS=true)');
-}
 console.log(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
 
 // Create necessary directories

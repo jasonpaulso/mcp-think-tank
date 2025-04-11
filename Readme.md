@@ -10,7 +10,6 @@
 [![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Server-orange.svg)](https://github.com/modelcontextprotocol)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Voyage AI](https://img.shields.io/badge/Voyage_AI-Powered-blue.svg)](https://voyageai.com/)
 
 </div>
 
@@ -34,11 +33,10 @@ The "think" tool creates a dedicated space for Claude to reason explicitly about
 
 - 💭 **Structured Thinking**: Dedicated space for step-by-step reasoning
 - 🧩 **Knowledge Graph Memory**: Persistent, relationship-based memory storage
-- 🔍 **Semantic Search**: Find relevant information using natural language queries
+- 🔍 **Text Search**: Find relevant information using text-based queries
 - 🔄 **Extended Timeout**: Configurable timeout settings to prevent disconnections
 - 🤝 **Client Support**: Works with Claude, Cursor, and other MCP clients
-- 🛠️ **Tool Optimization**: Batched processing and efficient embedding generation
-- 📊 **Voyage AI Integration**: High-quality embedding model for semantic search
+- 🛠️ **Tool Optimization**: Batched processing for efficient operations
 
 ## 📦 Installation
 
@@ -104,21 +102,6 @@ REQUEST_TIMEOUT=600 mcp-think-server
 mcp-think-server --request-timeout=600
 ```
 
-### Embedding Configuration
-
-Configure the semantic search embedding model (Voyage AI):
-
-```bash
-# Set API key
-VOYAGE_API_KEY=your_api_key mcp-think-server
-
-# Set specific model
-EMBEDDING_MODEL=voyage-3-large mcp-think-server
-
-# Set embedding dimensions
-EMBEDDING_DIMENSIONS=1024 mcp-think-server
-```
-
 ## 🔌 Client Integration
 
 ### Claude Desktop
@@ -131,8 +114,7 @@ Add to your `claude_desktop_config.json`:
     "think-tool": {
       "command": "mcp-think-server",
       "env": {
-        "REQUEST_TIMEOUT": "300",
-        "VOYAGE_API_KEY": "your_voyage_api_key"
+        "REQUEST_TIMEOUT": "300"
       }
     }
   }
@@ -174,8 +156,6 @@ The server provides the following MCP tools:
 - `read_graph`: Get the entire knowledge graph
 - `open_nodes`: Retrieve specific entities by name
 - `search_nodes`: Find entities using text-based search
-- `semantic_search`: Find entities using semantic similarity
-- `generate_embeddings`: Generate embeddings for all entities
 
 ## 🧠 How it Works
 
@@ -184,9 +164,8 @@ The server provides the following MCP tools:
 2. **Knowledge Storage**: Information is stored in a knowledge graph consisting of:
    - **Entities**: Named items with properties and observations
    - **Relations**: Connections between entities
-   - **Embeddings**: Vector representations for semantic search
 
-3. **Semantic Search**: Find relevant information using natural language queries powered by Voyage AI's embeddings.
+3. **Text Search**: Find relevant information using text-based queries.
 
 4. **Persistence**: All information remains available across sessions through file-based storage.
 
@@ -196,7 +175,6 @@ The server includes several optimizations:
 
 - **Extended timeouts**: Prevent disconnections during complex operations
 - **Batched processing**: Efficiently handle large numbers of entities
-- **Embedding caching**: Avoid regenerating embeddings for known entities
 - **Progressive feedback**: Detailed progress information for long-running tasks
 
 ## 📝 Example Usage

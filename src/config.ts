@@ -1,7 +1,7 @@
-import minimist from 'minimist';
+import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
-import { existsSync, mkdirSync } from 'fs';
+import minimist from 'minimist';
 
 // Parse command line arguments
 const argv = minimist(process.argv.slice(2));
@@ -13,11 +13,6 @@ const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-server', 'memory');
 if (!existsSync(DEFAULT_MEMORY_PATH)) {
   mkdirSync(DEFAULT_MEMORY_PATH, { recursive: true });
 }
-
-// Validate embedding provider - now only Voyage is supported
-const validateProvider = (provider: string | undefined): string => {
-  return 'voyage'; // Always use Voyage AI
-};
 
 // Export configuration object
 export const config = {
@@ -33,7 +28,7 @@ export const config = {
   
   // Other config options
   debug: !!argv.debug,
-  version: '1.0.0', // Should match package.json
+  version: '1.0.5', // Should match package.json
 };
 
 export default config; 

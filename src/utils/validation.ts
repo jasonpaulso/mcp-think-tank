@@ -1,108 +1,75 @@
 import { z } from 'zod';
-import { Entity, Relation } from '../memory/knowledgeGraph.js';
 
-// Image metadata validation schema
-const ImageMetadataSchema = z.object({
-  altText: z.string().optional(),
-  source: z.string().optional(),
-  timestamp: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional()
-}).optional();
-
-// Core schemas for entity and relation validation
-export const EntitySchema = z.object({
-  name: z.string().min(1, "Entity name cannot be empty"),
-  entityType: z.string().min(1, "Entity type cannot be empty"),
+// Entity validation schema
+const EntitySchema = z.object({
+  name: z.string().min(1),
+  entityType: z.string().min(1),
   observations: z.array(z.string())
 });
 
-export const RelationSchema = z.object({
-  from: z.string().min(1, "Source entity name cannot be empty"),
-  to: z.string().min(1, "Target entity name cannot be empty"),
-  relationType: z.string().min(1, "Relation type cannot be empty")
+// Relation validation schema
+const RelationSchema = z.object({
+  from: z.string().min(1),
+  to: z.string().min(1),
+  relationType: z.string().min(1)
 });
 
-// Schema for creating entities
+// Create entities schema
 export const CreateEntitiesSchema = z.object({
   entities: z.array(EntitySchema)
 });
 
-// Schema for creating relations
+// Create relations schema
 export const CreateRelationsSchema = z.object({
   relations: z.array(RelationSchema)
 });
 
-// Schema for adding observations
+// Add observations schema
 export const AddObservationsSchema = z.object({
-  observations: z.array(
-    z.object({
-      entityName: z.string().min(1, "Entity name cannot be empty"),
-      contents: z.array(z.string())
-    })
-  )
+  observations: z.array(z.object({
+    entityName: z.string().min(1),
+    contents: z.array(z.string())
+  }))
 });
 
-// Schema for deleting entities
+// Delete entities schema
 export const DeleteEntitiesSchema = z.object({
-  entityNames: z.array(z.string().min(1, "Entity name cannot be empty"))
+  entityNames: z.array(z.string().min(1))
 });
 
-// Schema for deleting observations
+// Delete observations schema
 export const DeleteObservationsSchema = z.object({
-  deletions: z.array(
-    z.object({
-      entityName: z.string().min(1, "Entity name cannot be empty"),
-      observations: z.array(z.string())
-    })
-  )
+  deletions: z.array(z.object({
+    entityName: z.string().min(1),
+    observations: z.array(z.string())
+  }))
 });
 
-// Schema for deleting relations
+// Delete relations schema
 export const DeleteRelationsSchema = z.object({
   relations: z.array(RelationSchema)
 });
 
-// Schema for searching nodes
+// Search nodes schema
 export const SearchNodesSchema = z.object({
-  query: z.string().min(1, "Search query cannot be empty")
+  query: z.string().min(1)
 });
 
-// Schema for opening nodes
+// Open nodes schema
 export const OpenNodesSchema = z.object({
-  names: z.array(z.string().min(1, "Entity name cannot be empty"))
+  names: z.array(z.string().min(1))
 });
 
-// Schema for updating entities
+// Update entities schema
 export const UpdateEntitiesSchema = z.object({
-  entities: z.array(
-    z.object({
-      name: z.string().min(1, "Entity name cannot be empty"),
-      entityType: z.string().optional(),
-      observations: z.array(z.string()).optional()
-    })
-  )
+  entities: z.array(z.object({
+    name: z.string().min(1),
+    entityType: z.string().optional(),
+    observations: z.array(z.string()).optional()
+  }))
 });
 
-// Schema for updating relations
+// Update relations schema
 export const UpdateRelationsSchema = z.object({
   relations: z.array(RelationSchema)
-});
-
-// Schema for semantic search
-export const SemanticSearchSchema = z.object({
-  query: z.string().min(1, "Search query cannot be empty"),
-  threshold: z.number().min(0).max(1).optional().describe("Minimum similarity threshold (0-1)"),
-  limit: z.number().min(1).max(100).optional().describe("Maximum number of results"),
-  generateMissingEmbeddings: z.boolean().optional().describe("Generate embeddings for entities that don't have them")
-});
-
-// Helper function to validate an entity
-export function validateEntity(entity: any): Entity {
-  return EntitySchema.parse(entity);
-}
-
-// Helper function to validate a relation
-export function validateRelation(relation: any): Relation {
-  return RelationSchema.parse(relation);
-} 
+}); 
