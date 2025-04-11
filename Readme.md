@@ -2,7 +2,11 @@
 
 <div align="center">
   
-![MCP Think Tank](https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/think-banner.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_light.png">
+  <img alt="MCP Think Tank Logo" src="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_light.png">
+</picture>
 
 [![npm version](https://img.shields.io/npm/v/mcp-think-tank.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-tank)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -68,11 +72,60 @@ curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/m
 
 ### Memory Path Configuration
 
-By default, the knowledge graph is stored in `~/.mcp-think-tank/memory.jsonl`. For custom paths, always use absolute paths:
+By default, the knowledge graph is stored in `~/.mcp-think-tank/memory.jsonl`. For custom paths, you can:
 
+1. Use command-line arguments:
 ```bash
-mcp-think-tank --memory-path=/absolute/path/to/your/memory.json
+mcp-think-tank --memory-path=/absolute/path/to/your/memory.jsonl
 ```
+
+2. Set the MEMORY_PATH environment variable:
+```bash
+MEMORY_PATH=/absolute/path/to/your/memory.jsonl mcp-think-tank
+```
+
+3. Configure in your MCP client configuration:
+
+#### Cursor Example
+
+In your `~/.cursor/mcp.json`:
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "npx",
+      "args": ["-y", "mcp-think-tank"],
+      "type": "stdio",
+      "env": {
+        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl"
+      },
+      "enabled": true
+    }
+  }
+}
+```
+
+#### Claude Desktop Example
+
+In your `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-tank",
+      "env": {
+        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl" 
+      }
+    }
+  }
+}
+```
+
+**Important Notes:**
+- Always use absolute paths for file references
+- The directory will be created automatically if it doesn't exist
+- If the file doesn't exist, an empty knowledge graph will be initialized
+- The `.jsonl` extension is recommended for the storage file
 
 ## 🔌 Client Integration
 
