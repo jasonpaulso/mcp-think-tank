@@ -1,43 +1,35 @@
-import { FastMCP, UserError } from "fastmcp";
-import { z } from "zod";
-import { registerMemoryTools } from "./memory/tools.js";
-import { config } from "./config.js";
+import { FastMCP } from 'fastmcp';
+import { registerMemoryTools } from './memory/tools.js';
+import { registerThinkTool } from './think/tools.js';
+import { createDirectory } from './utils/fs.js';
+import path from 'path';
+import * as os from 'os';
 
-// Create a new MCP server
+// Create necessary directories
+const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-server/memory.jsonl');
+createDirectory(path.dirname(memoryPath));
+
+console.log(`Memory path: ${memoryPath}`);
+
+// Initialize the FastMCP server with required options
 const server = new FastMCP({
-  name: "Think Tool Server with Memory",
-  version: "1.0.5",
+  name: "MCP Think Server",
+  version: "1.0.5"
 });
 
-// Add the "think" tool
-server.addTool({
-  name: "think",
-  description: "Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed. For best results, structure your reasoning with: 1) Problem definition, 2) Relevant facts/context, 3) Analysis steps, 4) Conclusion/decision.",
-  parameters: z.object({
-    structuredReasoning: z.string()
-      .min(10, "Reasoning should be substantial enough to be helpful")
-      .describe("A structured thought process to work through complex problems. Use this as a dedicated space for reasoning step-by-step.")
-  }),
-  execute: async (args, { log }) => {
-    // Log the thought (this will be visible in the server logs but not to the user)
-    log.info("Thinking process", { structuredReasoning: args.structuredReasoning });
-    
-    // Simply return the thought itself, as per Anthropic's blog post
-    return args.structuredReasoning;
-  },
-});
-
-// Register all memory-related tools
+// Register memory-related tools
 registerMemoryTools(server);
 
-// For the warning "FastMCP could not infer client capabilities", we need a version update
-// of fastmcp to fix properly. For now, use the basic configuration:
+// Add the 'think' tool for structured reasoning
+registerThinkTool(server);
+
+// Start the server on the specified port (default: 3000)
+const port = parseInt(process.env.PORT || '3000', 10);
+
+// Start the server using stdio transport (default)
 server.start({
-  transportType: "stdio",
-  requestTimeout: config.requestTimeout,
+  transportType: "stdio"
 });
 
 // Use console.error instead of console.log - this writes to stderr which won't interfere with the protocol
-console.error(`Think Tool Server with Memory is running...`);
-console.error(`Memory path: ${config.memoryPath}`);
-console.error(`Request timeout: ${config.requestTimeout/1000} seconds`);
+console.error(`MCP Think Server running on port ${port}`);

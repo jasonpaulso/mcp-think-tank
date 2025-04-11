@@ -1,94 +1,70 @@
-import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'fs';
-import { KnowledgeGraphImpl } from './knowledgeGraph.js';
-import config from '../config.js';
-import { embeddingService } from './embeddingService.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { KnowledgeGraph } from './knowledgeGraph.js';
 
 /**
- * Storage class for persisting the knowledge graph to disk.
+ * Class responsible for persisting the knowledge graph to disk
  */
 export class GraphStorage {
   private filePath: string;
-  private graph: KnowledgeGraphImpl;
+  private graph: KnowledgeGraph;
 
-  constructor(filePath: string = config.memoryPath) {
+  /**
+   * Create a new GraphStorage instance
+   * @param filePath - Path to the storage file
+   * @param graph - Knowledge graph to persist
+   */
+  constructor(filePath: string, graph: KnowledgeGraph) {
     this.filePath = filePath;
-    this.graph = this.load();
+    this.graph = graph;
+    this.load();
   }
 
   /**
-   * Load the knowledge graph from disk.
-   * @returns The loaded knowledge graph
+   * Load the graph from the file
    */
-  private load(): KnowledgeGraphImpl {
+  load(): void {
     try {
-      // Check if file exists
-      if (!existsSync(this.filePath)) {
-        return new KnowledgeGraphImpl();
+      if (fs.existsSync(this.filePath)) {
+        const data = fs.readFileSync(this.filePath, 'utf8');
+        const jsonData = JSON.parse(data);
+        this.graph.fromJSON(jsonData);
+        console.log(`Loaded graph from ${this.filePath}`);
+      } else {
+        console.log(`No existing graph found at ${this.filePath}, starting with empty graph`);
       }
-
-      // Read file
-      const fileContent = readFileSync(this.filePath, 'utf-8');
-      if (!fileContent.trim()) {
-        return new KnowledgeGraphImpl();
-      }
-
-      // Parse JSON
-      const data = JSON.parse(fileContent);
-      return KnowledgeGraphImpl.fromJSON(data);
     } catch (error) {
-      console.error('Error loading knowledge graph:', error);
-      return new KnowledgeGraphImpl();
+      console.error(`Error loading graph: ${error}`);
     }
   }
 
   /**
-   * Save the knowledge graph to disk.
+   * Save the graph to the file
    */
   save(): void {
     try {
-      const serialized = JSON.stringify(this.graph.toJSON(), null, 2);
-      writeFileSync(this.filePath, serialized, 'utf-8');
+      const data = JSON.stringify(this.graph.toJSON(), null, 2);
+      fs.writeFileSync(this.filePath, data, 'utf8');
+      console.log(`Saved graph to ${this.filePath}`);
     } catch (error) {
-      console.error('Error saving knowledge graph:', error);
+      console.error(`Error saving graph: ${error}`);
     }
   }
 
   /**
-   * Get the knowledge graph.
-   * @returns The knowledge graph
+   * Log an operation for debugging
+   * @param operation - The operation being performed
+   * @param details - Details about the operation
    */
-  getGraph(): KnowledgeGraphImpl {
-    return this.graph;
-  }
-
-  /**
-   * Add an operation log entry to track changes (for advanced implementations).
-   * @param operation The operation performed
-   * @param data The data associated with the operation
-   */
-  private logOperation(operation: string, data: any): void {
-    try {
-      const timestamp = new Date().toISOString();
-      const logEntry = JSON.stringify({
-        timestamp,
-        operation,
-        data
-      });
-
-      appendFileSync(`${this.filePath}.log`, `${logEntry}\n`, 'utf-8');
-    } catch (error) {
-      console.error('Error logging operation:', error);
-    }
+  logOperation(operation: string, details: any): void {
+    console.log(`[${operation}] ${JSON.stringify(details)}`);
   }
 }
 
-// Export a singleton instance of the graph storage
-export const graphStorage = new GraphStorage();
+// Create a default graph instance
+const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-server/memory.jsonl');
 
-// Export the graph directly for convenience
-export const graph = graphStorage.getGraph();
-
-// Set up autosave on process exit
-process.on('exit', () => {
-  graphStorage.save();
-}); 
+// Export the graph and storage for use in tools
+export const graph = new KnowledgeGraph();
+export const graphStorage = new GraphStorage(memoryPath, graph); 

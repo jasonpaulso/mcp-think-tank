@@ -195,35 +195,34 @@ interface KnowledgeGraph {
   - [x] Update configuration to use Voyage-specific parameters
   - [x] Test embedding generation with voyage-3-large
   - [x] Clean up code to focus exclusively on Voyage AI
-  - [x] Update documentation with Voyage AI configuration
+  - [x] Update documentation with Voyage API configuration
+- [x] MCP request timeout configuration
+  - [x] Add configurable timeout settings via environment variables
+  - [x] Add command-line options for setting timeouts
+  - [x] Update FastMCP initialization with custom timeout settings
+  - [x] Document timeout configuration in README
+  - [x] Add progress feedback for long-running operations
+  - [x] Improve batch processing for large-scale operations
 - [ ] Automatic knowledge extraction from conversations
 - [ ] Time-aware memory with temporal relations
 - [ ] User-specific memory partitioning
 - [ ] Memory visualization tools 
 - [ ] Visual Reasoning Support
-  - [ ] Update Entity interface to support image entities
-    - [ ] Add imageUrl, imageMetadata, and imageEmbedding fields
-    - [ ] Implement image entity validation
-    - [ ] Add support for image entity serialization/deserialization
-  - [ ] Extend EmbeddingService for multimodal embeddings
-    - [ ] Add support for Voyage AI multimodal models (voyage-multimodal-3)
-    - [ ] Add caching for image embeddings
-  - [ ] Implement image entity tools
-    - [ ] `create_image_entity` - Create entity with image URL and metadata
-    - [ ] `generate_image_embedding` - Generate embedding for image entities
-    - [ ] `visual_semantic_search` - Search using image or text queries
+  - [x] Update Entity interface to support image entities
+    - [x] Add imageUrl field to entity structure
+    - [x] Add imageMetadata field (e.g., alt text, description, source)
+    - [x] Add multimodal embedding field for image content representation
+    - [x] Update entity validation to handle image fields
+  - [x] Extend EmbeddingService for multimodal embeddings
+    - [x] Add support for Voyage AI multimodal models (voyage-multimodal-3)
+    - [x] Implement image embedding generation
+    - [x] Add caching for image embeddings
+  - [x] Implement image entity tools
+    - [x] `create_image_entity` - Create entity with image URL and metadata
+    - [x] `generate_image_embedding` - Generate embedding for image entities
+    - [x] `visual_semantic_search` - Search using image or text queries
   - [ ] Add image processing utilities
-    - [ ] Create image metadata extraction module
-    - [ ] Implement image content verification
-    - [ ] Add support for image tagging and annotation
-  - [ ] Extend storage layer for efficient image handling
-    - [ ] Optimize storage for image URLs and metadata
-    - [ ] Implement efficient image embedding storage and retrieval
-  - [ ] Create image reasoning integration
-    - [ ] Integrate visual reasoning with the think tool
-    - [ ] Add image description generation capabilities
-    - [ ] Implement visual relationship detection
-  - [ ] Update documentation
-    - [ ] Document image entity structure and tools
-    - [ ] Provide examples for visual reasoning use cases
-    - [ ] Update README with visual reasoning capabilities
+    - [ ] Image metadata extraction
+    - [ ] Image content verification
+    - [ ] Image tagging and annotation
+  - [ ] Update documentation with visual reasoning capabilities

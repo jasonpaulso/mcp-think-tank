@@ -1,11 +1,24 @@
 import { z } from 'zod';
 import { Entity, Relation } from '../memory/knowledgeGraph.js';
 
+// Image metadata validation schema
+const ImageMetadataSchema = z.object({
+  altText: z.string().optional(),
+  source: z.string().optional(),
+  timestamp: z.string().optional(),
+  description: z.string().optional(),
+  tags: z.array(z.string()).optional()
+}).optional();
+
 // Entity validation schema
 export const EntitySchema = z.object({
   name: z.string().min(1, "Entity name cannot be empty"),
   entityType: z.string().min(1, "Entity type cannot be empty"),
-  observations: z.array(z.string())
+  observations: z.array(z.string()),
+  embedding: z.array(z.number()).optional(),
+  imageUrl: z.string().url("Image URL must be a valid URL").optional(),
+  imageMetadata: ImageMetadataSchema,
+  imageEmbedding: z.array(z.number()).optional()
 });
 
 // Relation validation schema

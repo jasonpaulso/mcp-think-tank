@@ -1,8 +1,7 @@
 {
   "mcpServers": {
     "think-tool": {
-      "command": "npx",
-      "args": ["-y", "mcp-think-server@latest"],
+      "command": "./simple-think.sh",
       "type": "stdio"
     }
   }

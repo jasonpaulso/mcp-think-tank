@@ -2,7 +2,6 @@ import minimist from 'minimist';
 import { join } from 'path';
 import { homedir } from 'os';
 import { existsSync, mkdirSync } from 'fs';
-import { EmbeddingProvider } from './memory/embeddingService.js';
 
 // Parse command line arguments
 const argv = minimist(process.argv.slice(2));
@@ -11,7 +10,7 @@ const argv = minimist(process.argv.slice(2));
 const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-server', 'memory.jsonl');
 
 // Validate embedding provider - now only Voyage is supported
-const validateProvider = (provider: string | undefined): EmbeddingProvider => {
+const validateProvider = (provider: string | undefined): string => {
   return 'voyage'; // Always use Voyage AI
 };
 
@@ -53,8 +52,8 @@ export const config = {
                   'float',
     
     // Caching options
-    useCache: argv['embedding-cache'] !== 'false' && 
-              process.env.EMBEDDING_CACHE !== 'false', // Enabled by default
+    cache: argv['embedding-cache'] !== 'false' && 
+           process.env.EMBEDDING_CACHE !== 'false', // Enabled by default
     cacheDir: argv['embedding-cache-dir'] || 
               process.env.EMBEDDING_CACHE_DIR || 
               join(homedir(), '.mcp-think-server', 'cache'),

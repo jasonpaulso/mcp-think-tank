@@ -1,6 +1,51 @@
 import { FastMCP } from 'fastmcp';
 import { graph, graphStorage } from './storage.js';
 import * as Schemas from '../utils/validation.js';
+import { embeddingService } from './embeddingService.js';
+import { z } from 'zod'; 
+
+// Batch size for processing large entity sets
+const BATCH_SIZE = 20;
+
+/**
+ * Process entities in batches to prevent timeouts on large operations
+ * @param entities Array of entities to process
+ * @param processFn Function to process each entity
+ * @returns Object with created and existing entity names
+ */
+async function batchProcessEntities(entities: any[], processFn: (entity: any) => boolean) {
+  const results = {
+    created: [] as string[],
+    existing: [] as string[]
+  };
+
+  // Process in batches
+  for (let i = 0; i < entities.length; i += BATCH_SIZE) {
+    const batch = entities.slice(i, i + BATCH_SIZE);
+    
+    // Process each entity in the batch
+    for (const entity of batch) {
+      const success = processFn(entity);
+      if (success) {
+        results.created.push(entity.name);
+      } else {
+        results.existing.push(entity.name);
+      }
+    }
+    
+    // Save after each batch to ensure persistence
+    if (i + BATCH_SIZE < entities.length) {
+      graphStorage.save();
+    }
+    
+    // If not the last batch, add a small delay to prevent CPU blocking
+    if (i + BATCH_SIZE < entities.length) {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+  }
+  
+  return results;
+}
 
 /**
  * Register all memory-related tools with the MCP server
@@ -13,28 +58,28 @@ export function registerMemoryTools(server: FastMCP): void {
     description: 'Create multiple new entities in the knowledge graph',
     parameters: Schemas.CreateEntitiesSchema,
     execute: async (args) => {
-      const results = {
-        created: [] as string[],
-        existing: [] as string[]
-      };
-
-      for (const entity of args.entities) {
-        const success = graph.addEntity(entity);
-        if (success) {
-          results.created.push(entity.name);
-        } else {
-          results.existing.push(entity.name);
-        }
+      // Process entities in batches
+      const total = args.entities.length;
+      if (total > BATCH_SIZE) {
+        console.log(`Processing ${total} entities in batches of ${BATCH_SIZE}...`);
       }
-
-      // Save changes
+      
+      const results = await batchProcessEntities(args.entities, (entity) => {
+        return graph.addEntity(entity);
+      });
+      
+      // Save final changes
       graphStorage.save();
-
-      // Return as string
+      
+      // Return detailed results
       return JSON.stringify({
         created: results.created.length > 0 ? results.created : null,
         existing: results.existing.length > 0 ? results.existing : null,
-        message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.`
+        message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.`,
+        imageEntities: results.created.filter(name => {
+          const entity = graph.entities.get(name);
+          return entity && entity.imageUrl;
+        }).length
       });
     }
   });
@@ -362,32 +407,80 @@ export function registerMemoryTools(server: FastMCP): void {
   // Semantic search
   server.addTool({
     name: 'semantic_search',
-    description: 'Search for nodes in the knowledge graph using semantic similarity',
+    description: 'Find entities using semantic similarity',
     parameters: Schemas.SemanticSearchSchema,
     execute: async (args) => {
-      try {
-        const results = await graph.semanticSearch(args.query, {
-          threshold: args.threshold,
-          limit: args.limit,
-          generateMissingEmbeddings: args.generateMissingEmbeddings
-        });
-        
-        // Return as string
+      const threshold = args.threshold ?? 0.7;
+      const limit = args.limit ?? 10;
+      const generateMissingEmbeddings = args.generateMissingEmbeddings ?? true;
+      
+      // Generate embedding for the query
+      const queryEmbedding = await embeddingService.generateEmbedding(args.query, 'query');
+      
+      if (!queryEmbedding) {
         return JSON.stringify({
-          results: results.map(result => ({
-            entity: result.entity,
-            similarity: result.similarity
-          })),
-          count: results.length,
-          message: `Found ${results.length} semantically similar entities.`
-        });
-      } catch (error) {
-        console.error('Error in semantic search:', error);
-        return JSON.stringify({
-          error: 'Failed to perform semantic search',
-          message: error instanceof Error ? error.message : String(error)
+          entities: [],
+          message: "Failed to generate embedding for query"
         });
       }
+      
+      // Get all entities
+      const entities = Array.from(graph.entities.values());
+      
+      // Generate embeddings for entities that don't have them
+      if (generateMissingEmbeddings) {
+        const entitiesWithoutEmbeddings = entities.filter(e => !e.embedding);
+        
+        if (entitiesWithoutEmbeddings.length > 0) {
+          // Convert entities to text
+          const textsToEmbed = entitiesWithoutEmbeddings.map(entity => {
+            return `${entity.name} (${entity.entityType}): ${entity.observations.join(' ')}`;
+          });
+          
+          // Generate embeddings in batches to avoid timeouts
+          const batchSize = 10;
+          for (let i = 0; i < entitiesWithoutEmbeddings.length; i += batchSize) {
+            const batch = textsToEmbed.slice(i, i + batchSize);
+            const batchEntities = entitiesWithoutEmbeddings.slice(i, i + batchSize);
+            
+            const embeddings = await embeddingService.generateEmbeddings(batch);
+            
+            // Assign embeddings to entities
+            for (let j = 0; j < batchEntities.length; j++) {
+              if (embeddings && embeddings[j]) {
+                batchEntities[j].embedding = embeddings[j];
+              }
+            }
+          }
+          
+          // Save the graph with new embeddings
+          graphStorage.save();
+        }
+      }
+      
+      // Calculate similarity scores
+      const results = entities
+        .filter(entity => entity.embedding) // Only include entities with embeddings
+        .map(entity => {
+          const similarity = embeddingService.cosineSimilarity(
+            queryEmbedding,
+            entity.embedding!
+          );
+          return { entity, similarity };
+        })
+        .filter(result => result.similarity >= threshold)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, limit);
+      
+      // Return results
+      return JSON.stringify({
+        entities: results.map(r => ({
+          ...r.entity,
+          score: r.similarity
+        })),
+        count: results.length,
+        message: `Found ${results.length} semantically similar entities with threshold ${threshold}`
+      });
     }
   });
 
@@ -395,29 +488,229 @@ export function registerMemoryTools(server: FastMCP): void {
   server.addTool({
     name: 'generate_embeddings',
     description: 'Generate embeddings for all entities in the knowledge graph',
+    parameters: z.object({}),
+    execute: async (args) => {
+      // Get all entities
+      const entities = Array.from(graph.entities.values());
+      
+      // Convert entities to text
+      const textsToEmbed = entities.map(entity => {
+        return `${entity.name} (${entity.entityType}): ${entity.observations.join(' ')}`;
+      });
+      
+      // Process in smaller batches
+      const batchSize = 10;
+      const results = {
+        success: 0,
+        failed: 0
+      };
+      
+      for (let i = 0; i < entities.length; i += batchSize) {
+        const batch = textsToEmbed.slice(i, i + batchSize);
+        const batchEntities = entities.slice(i, i + batchSize);
+        
+        const embeddings = await embeddingService.generateEmbeddings(batch);
+        
+        // Assign embeddings to entities
+        for (let j = 0; j < batchEntities.length; j++) {
+          if (embeddings && embeddings[j]) {
+            batchEntities[j].embedding = embeddings[j];
+            results.success++;
+          } else {
+            results.failed++;
+          }
+        }
+      }
+      
+      // Save the graph with new embeddings
+      graphStorage.save();
+      
+      // Return results
+      return JSON.stringify({
+        success: results.success,
+        failed: results.failed,
+        message: `Generated embeddings for ${results.success} entities. ${results.failed} entities failed.`
+      });
+    }
+  });
+
+  // Create image entity
+  server.addTool({
+    name: 'create_image_entity',
+    description: 'Create a new entity with an associated image URL and metadata',
     parameters: z.object({
-      random_string: z.string().describe("Dummy parameter for no-parameter tools").optional()
+      name: z.string().min(1, "Entity name cannot be empty"),
+      entityType: z.string().min(1, "Entity type cannot be empty"),
+      observations: z.array(z.string()),
+      imageUrl: z.string().url("Image URL must be a valid URL"),
+      imageMetadata: z.object({
+        altText: z.string().optional(),
+        source: z.string().optional(),
+        timestamp: z.string().optional(),
+        description: z.string().optional(),
+        tags: z.array(z.string()).optional()
+      }).optional()
     }),
-    execute: async () => {
+    execute: async (args) => {
       try {
-        await graph.generateAllEmbeddings();
+        // Check if entity already exists
+        if (graph.entities.has(args.name)) {
+          return JSON.stringify({
+            success: false,
+            message: `Entity '${args.name}' already exists.`
+          });
+        }
+        
+        // Create the entity
+        const entity = {
+          name: args.name,
+          entityType: args.entityType,
+          observations: args.observations,
+          imageUrl: args.imageUrl,
+          imageMetadata: args.imageMetadata || {
+            altText: '',
+            description: ''
+          }
+        };
+        
+        graph.addEntity(entity);
+        
+        // Save changes
         graphStorage.save();
         
         return JSON.stringify({
-          message: `Generated embeddings for all entities.`,
-          success: true
+          success: true,
+          message: `Successfully created image entity: ${args.name}`,
+          entity: entity
         });
       } catch (error) {
-        console.error('Error generating embeddings:', error);
+        console.error('Error creating image entity:', error);
         return JSON.stringify({
-          error: 'Failed to generate embeddings',
-          message: error instanceof Error ? error.message : String(error),
-          success: false
+          success: false,
+          message: `Error creating image entity: ${error instanceof Error ? error.message : String(error)}`,
         });
       }
     }
   });
-}
 
-// Import Zod for the read_graph tool
-import { z } from 'zod'; 
+  // Generate image embedding
+  server.addTool({
+    name: 'generate_image_embedding',
+    description: 'Generate embedding for an image entity',
+    parameters: z.object({
+      entityName: z.string().min(1, "Entity name cannot be empty")
+    }),
+    execute: async (args) => {
+      // Get the entity
+      const entity = graph.entities.get(args.entityName);
+      
+      if (!entity) {
+        return JSON.stringify({
+          message: `Entity ${args.entityName} not found`,
+          success: false
+        });
+      }
+      
+      // Check if the entity has an image URL
+      if (!entity.imageUrl) {
+        return JSON.stringify({
+          message: `Entity ${args.entityName} does not have an image URL`,
+          success: false
+        });
+      }
+      
+      // Generate the embedding
+      const embedding = await embeddingService.generateImageEmbedding(entity.imageUrl);
+      
+      if (!embedding) {
+        return JSON.stringify({
+          message: `Failed to generate image embedding for ${args.entityName}`,
+          success: false
+        });
+      }
+      
+      // Store the embedding
+      entity.imageEmbedding = embedding;
+      
+      // Save the graph
+      graphStorage.save();
+      
+      return JSON.stringify({
+        message: `Successfully generated image embedding for ${args.entityName}`,
+        success: true
+      });
+    }
+  });
+
+  // Visual semantic search
+  server.addTool({
+    name: 'visual_semantic_search',
+    description: 'Search using image or text queries with semantic similarity',
+    parameters: z.object({
+      query: z.string().min(1, "Search query cannot be empty"),
+      useImage: z.boolean().optional().describe("Whether to use image embeddings for search"),
+      threshold: z.number().min(0).max(1).optional().describe("Minimum similarity threshold (0-1)"),
+      limit: z.number().min(1).max(100).optional().describe("Maximum number of results")
+    }),
+    execute: async (args) => {
+      const threshold = args.threshold ?? 0.7;
+      const limit = args.limit ?? 10;
+      const useImage = args.useImage ?? false;
+      
+      // Generate embedding for the query
+      let queryEmbedding;
+      
+      if (useImage) {
+        // Try to interpret the query as an image URL
+        queryEmbedding = await embeddingService.generateImageEmbedding(args.query);
+      } else {
+        // Use text embedding
+        queryEmbedding = await embeddingService.generateEmbedding(args.query, 'query');
+      }
+      
+      if (!queryEmbedding) {
+        return JSON.stringify({
+          entities: [],
+          message: "Failed to generate embedding for query"
+        });
+      }
+      
+      // Get all entities
+      const entities = Array.from(graph.entities.values());
+      
+      // Filter entities that have the appropriate embedding type
+      const validEntities = entities.filter(entity => {
+        return useImage ? entity.imageEmbedding : entity.embedding;
+      });
+      
+      // Calculate similarity scores
+      const results = validEntities.map(entity => {
+        const entityEmbedding = useImage ? entity.imageEmbedding : entity.embedding;
+        
+        if (!entityEmbedding) {
+          return { entity, similarity: 0 };
+        }
+        
+        const similarity = embeddingService.cosineSimilarity(
+          queryEmbedding!,
+          entityEmbedding
+        );
+        
+        return { entity, similarity };
+      })
+      .filter(result => result.similarity >= threshold)
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit);
+      
+      // Return results
+      return JSON.stringify({
+        entities: results.map(r => ({
+          ...r.entity,
+          score: r.similarity
+        })),
+        count: results.length,
+        message: `Found ${results.length} similar entities using ${useImage ? 'image' : 'text'} embeddings with threshold ${threshold}`
+      });
+    }
+  });
+} 
