@@ -140,6 +140,96 @@ In your `claude_desktop_config.json`:
 - If the file doesn't exist, an empty knowledge graph will be initialized
 - The `.jsonl` extension is recommended for the storage file
 
+## 📝 Cursor Rules
+
+To get the most out of MCP Think Tank, you can add custom rules to guide Cursor's behavior. Create these files in your `.cursor/rules` directory:
+
+### Global Rules (instructions.mdc)
+
+```markdown
+# Global MCP Think Tank Instructions
+
+You are working with a codebase that uses MCP Think Tank for enhanced reasoning and persistent memory. Follow these guidelines:
+
+## Thinking Process
+- Use structured reasoning for complex decisions
+- Break down problems into clear steps
+- Consider both immediate and long-term implications
+- Reflect on your reasoning process
+
+## Memory Usage
+- Commit important decisions to memory
+- Store reusable patterns and solutions
+- Create meaningful relations between concepts
+- Reference previous decisions when relevant
+
+## Development Patterns
+- Document architectural decisions with rationale
+- Maintain consistent coding patterns
+- Build on previous solutions
+- Review and reflect on implementation choices
+
+## Best Practices
+- Start complex tasks with structured thinking
+- Commit design decisions to memory
+- Reference previous solutions before creating new ones
+- Reflect on implementation choices
+- Build relationships between related concepts
+
+Remember to:
+1. Think through complex problems systematically
+2. Store important decisions and patterns
+3. Reference and build upon previous knowledge
+4. Reflect on and improve solutions
+```
+
+### Project-Specific Rules (project.mdc)
+
+```markdown
+# Project-Specific MCP Think Tank Guidelines
+
+This project uses MCP Think Tank for maintaining consistent development patterns and architectural decisions.
+
+## Development Workflow
+1. Architecture Decisions:
+   - Use structured thinking to evaluate options
+   - Document decisions with clear rationale
+   - Commit important decisions to memory
+   - Create relations to existing patterns
+
+2. Implementation:
+   - Reference previous decisions
+   - Maintain consistent patterns
+   - Document key design choices
+   - Reflect on trade-offs
+
+3. Code Review:
+   - Compare against stored patterns
+   - Evaluate consistency with previous decisions
+   - Consider long-term maintainability
+   - Document significant changes
+
+## Patterns to Maintain
+- Store reusable code patterns
+- Document component interfaces
+- Track technical debt decisions
+- Maintain dependency relationships
+
+## Memory Guidelines
+- Tag decisions with relevant categories
+- Create meaningful entity relationships
+- Add clear, actionable observations
+- Update existing patterns when improved
+
+Remember: Build on existing knowledge rather than reinventing solutions.
+```
+
+These rules help Cursor better assist you by:
+- Encouraging systematic thinking
+- Promoting consistent memory usage
+- Maintaining development patterns
+- Building on accumulated knowledge
+
 ## 🔌 Client Integration
 
 ### Claude Desktop
