@@ -238,52 +238,204 @@ The tool provides a dedicated space for systematic thinking, encouraging:
 
 ## 📝 Example Usage
 
-Here's how the think tool enables better reasoning through gentle guidance:
+Here's a series of examples showing how to effectively use the think and memory tools during development:
+
+### 1. Making Architecture Decisions
 
 ```
-I need to evaluate different approaches for implementing a caching system.
+User: I need to design the authentication system for our new microservices architecture. Please think through this and commit the decision to memory.
 
 [Claude uses the think tool]
 
 Problem Definition:
-Need to design an efficient caching system for a high-traffic web application.
+Design a secure, scalable authentication system for a microservices architecture.
 
 Relevant Context:
-- Current system serves 100K requests per minute
-- Cache hit rate needs improvement
-- Memory constraints: 8GB available
-- Existing implementation uses simple LRU
+- Multiple services need authentication
+- Mix of internal and external clients
+- Compliance requirements for sensitive data
+- Need to support future service additions
 
 Analysis Steps:
-1. Evaluated different caching strategies:
-   - LRU: Simple but not always optimal
-   - LFU: Better for stable access patterns
-   - ARC: Adaptive but more complex
-   - W-TinyLFU: Modern, efficient approach
-
-2. Considered implementation factors:
-   - Memory overhead per entry
-   - Concurrency requirements
-   - Maintenance complexity
-   - Integration effort
+1. Authentication approaches:
+   - Centralized auth service with JWT
+   - Distributed auth with service mesh
+   - Hybrid approach with cached tokens
+   
+2. Key considerations:
+   - Token validation overhead
+   - Service-to-service auth
+   - Secret management
+   - Scalability impact
 
 Self-Reflection:
-I notice I initially focused too much on algorithmic efficiency without considering operational complexity. The best solution isn't always the most sophisticated one - sometimes a well-implemented simple approach is better than a complex one that's hard to maintain.
+I notice I'm biasing towards complexity when simpler solutions might work. Let me reconsider from first principles.
 
 Conclusion:
-Recommend staying with an enhanced LRU implementation:
-1. Add size-aware eviction
-2. Implement concurrent access
-3. Add basic statistics tracking
-This balances performance improvements with maintainability and operational simplicity.
+Recommend centralized auth service approach:
+1. Single OAuth2/OIDC service with JWT
+2. Redis-backed token cache
+3. Service-specific public keys
+4. Sidecar pattern for validation
+
+[Claude commits to memory]
+Creating entity 'AuthSystem' with observations about the decision and rationale...
+Creating relations to 'Microservices' and 'Security' entities...
 ```
 
-This example demonstrates how the think tool's gentle guidance encourages:
-- Clear problem structuring
-- Comprehensive context consideration
-- Systematic analysis
-- Valuable self-reflection
-- Well-reasoned conclusions
+### 2. Implementation Reference
+
+```
+User: I'm starting to implement the auth service we discussed. Can you recall our architecture decision?
+
+[Claude checks memory]
+Found entity 'AuthSystem' with related decisions...
+
+Based on our previous analysis, we decided on a centralized auth service using:
+- OAuth2/OIDC protocol
+- JWT tokens with service-specific signing
+- Redis cache for token validation
+- Sidecar pattern for service integration
+
+Let me think through the implementation approach...
+
+Problem Definition:
+Plan the implementation phases for our chosen auth system.
+
+Analysis Steps:
+1. Core Components:
+   ```typescript
+   interface AuthService {
+     issueToken(credentials: UserCredentials): Promise<JWT>;
+     validateToken(token: string): Promise<TokenClaims>;
+     rotateServiceKeys(): Promise<void>;
+   }
+   ```
+
+2. Implementation Phases:
+   - Core token issuance and validation
+   - Redis cache integration
+   - Service key management
+   - Sidecar implementation
+
+Self-Reflection:
+The interface design aligns well with our architecture decision while keeping the implementation flexible.
+
+[Claude commits implementation details to memory]
+Adding observations to 'AuthSystem' about implementation structure...
+```
+
+### 3. Code Review and Reflection
+
+```
+User: Can you review this auth service implementation and reflect on how it aligns with our original design?
+
+[Code shown...]
+
+[Claude uses think tool]
+
+Problem Definition:
+Evaluate current implementation against our architectural decisions and best practices.
+
+Relevant Context:
+- Previous architecture decisions (loaded from memory)
+- Implementation details (loaded from memory)
+- Current code review
+
+Analysis Steps:
+1. Alignment Check:
+   ✅ Centralized OAuth2 implementation
+   ✅ JWT with proper signing
+   ❌ Missing Redis cache integration
+   ⚠️ Sidecar pattern partially implemented
+
+2. Code Quality:
+   - Good separation of concerns
+   - Clear interface definitions
+   - Missing error handling in key rotation
+   - Need more logging for audit trail
+
+Self-Reflection:
+I see we've drifted from our original caching strategy. This could impact performance under load.
+
+Conclusion:
+Recommended changes:
+1. Implement Redis cache as planned
+2. Add comprehensive error handling
+3. Enhance logging for security audit
+4. Complete sidecar implementation
+
+[Claude commits review findings]
+Adding observations about implementation review...
+Creating relation between 'AuthSystem' and 'CodeQuality'...
+```
+
+### 4. Using Accumulated Knowledge
+
+```
+User: We're seeing performance issues in the auth service. Can you think through potential optimizations based on our experience?
+
+[Claude loads relevant memory entries]
+Analyzing previous decisions, implementation details, and review findings...
+
+Problem Definition:
+Optimize auth service performance based on our accumulated knowledge.
+
+Analysis Steps:
+1. Known Issues (from memory):
+   - Missing Redis cache implementation
+   - Token validation overhead
+   - Incomplete sidecar pattern
+
+2. Performance Data:
+   - High latency in token validation
+   - Increased load on main auth service
+   - Service-to-service call overhead
+
+Self-Reflection:
+Our original architecture correctly anticipated these issues, but we didn't fully implement the solutions.
+
+Conclusion:
+Prioritized optimizations:
+1. Implement Redis cache (as originally planned):
+   ```typescript
+   class CachedAuthService implements AuthService {
+     constructor(
+       private redis: Redis,
+       private tokenTTL: number
+     ) {}
+
+     async validateToken(token: string): Promise<TokenClaims> {
+       const cached = await this.redis.get(token);
+       if (cached) return JSON.parse(cached);
+       
+       const claims = await this.validateTokenSignature(token);
+       await this.redis.setex(token, this.tokenTTL, JSON.stringify(claims));
+       return claims;
+     }
+   }
+   ```
+
+2. Complete sidecar implementation for local validation
+3. Add token pre-fetching for known high-traffic patterns
+
+[Claude commits optimization details]
+Adding observations about performance optimization...
+Updating 'AuthSystem' entity with optimization findings...
+```
+
+These examples demonstrate:
+- Explicit memory commits for important decisions
+- Natural reference to previous decisions
+- Structured reflection on implementation
+- Using accumulated knowledge for improvements
+- Progressive refinement through self-reflection
+
+The key to effective tool usage is:
+1. Commit important decisions and patterns to memory
+2. Request reflection on previous decisions when needed
+3. Build on accumulated knowledge for better solutions
+4. Use structured thinking for complex problems
 
 ## 🤝 Contributing
 
