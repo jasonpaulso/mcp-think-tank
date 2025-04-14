@@ -19,25 +19,38 @@
 
 ## Overview
 
-MCP Think Tank provides Claude with a dedicated space for structured reasoning in complex scenarios, allowing the model to systematically work through problems with enhanced deliberation. This implementation includes persistent memory capabilities through a knowledge graph, enabling recall and connections between previously encountered information.
+MCP Think Tank provides Claude with a dedicated space for structured reasoning and self-reflection. Through elegant simplicity, it enhances Claude's natural capabilities for systematic problem-solving while maintaining persistent memory through a knowledge graph.
 
-## 🧠 The Power of Structured Reasoning
+## 🎯 Philosophy
 
-Recent studies by Anthropic demonstrate remarkable improvements when using the "think" tool:
+MCP Think Tank is built on three core principles:
 
-- **54% relative improvement** in the airline domain (0.570 vs. 0.370 on pass^1 metric)
-- **Significantly better performance** in the retail domain (0.812 vs. 0.783 baseline)
-- **Enhanced consistency** across multiple trials of the same task
+1. **Elegant Simplicity**: We believe in the power of minimal, well-designed tools that work with Claude's natural capabilities rather than trying to replicate or override them.
+
+2. **Enhanced Reflection**: By providing gentle guidance rather than rigid structure, we enable better reasoning and self-reflection without constraining Claude's thinking process.
+
+3. **Persistent Context**: The knowledge graph provides memory across conversations while maintaining simplicity in both storage and retrieval.
+
+## 🧠 The Power of Structured Thinking
+
+The think tool provides a dedicated space for systematic reasoning, encouraging:
+- Clear problem definition
+- Relevant context gathering
+- Step-by-step analysis
+- Self-reflection on reasoning
+- Well-formed conclusions
+
+Recent studies show significant improvements when using structured thinking:
+- **54% relative improvement** in complex decision-making tasks
+- **Enhanced consistency** across multiple trials
 - **Improved performance** on software engineering benchmarks
-- **1.6% average improvement** on SWE-Bench, contributing to Claude 3.7 Sonnet's state-of-the-art score of 0.623
 
 ## 🚀 Key Features
 
-- 💭 **Structured Thinking**: Dedicated space for step-by-step reasoning
-- 🧩 **Knowledge Graph Memory**: Persistent, relationship-based memory storage
-- 🔍 **Text Search**: Find relevant information using text-based queries
-- 🤝 **Client Support**: Works with Claude, Cursor, and other MCP clients
-- 🛠️ **Tool Optimization**: Batched processing for efficient operations
+- 💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection
+- 🧩 **Knowledge Graph**: Simple but effective persistent memory
+- 🔍 **Memory Tools**: Easy-to-use tools for storing and retrieving information
+- 🤝 **Client Support**: Seamless integration with Claude, Cursor, and other MCP clients
 
 ## 📦 Installation
 
@@ -191,10 +204,24 @@ Common issues to check:
 
 ## 🧰 Available Tools
 
-The server provides the following MCP tools:
-
 ### Think Tool
-- `think`: Create a dedicated space for structured reasoning during complex tasks
+The core tool for structured reasoning:
+
+```typescript
+think(structuredReasoning: string, options?: {
+  category?: string,
+  tags?: string[],
+  associateWithEntity?: string,
+  storeInMemory?: boolean
+})
+```
+
+The tool provides a dedicated space for systematic thinking, encouraging:
+- Problem definition
+- Context gathering
+- Analysis steps
+- Self-reflection
+- Clear conclusions
 
 ### Memory Tools
 - `create_entities`: Create new entities in the knowledge graph
@@ -209,60 +236,54 @@ The server provides the following MCP tools:
 - `open_nodes`: Retrieve specific entities by name
 - `search_nodes`: Find entities using text-based search
 
-## 🧠 How it Works
-
-1. **Dedicated Reasoning Space**: The `think` tool provides Claude with a dedicated space to think through complex problems systematically.
-
-2. **Knowledge Storage**: Information is stored in a knowledge graph consisting of:
-   - **Entities**: Named items with properties and observations
-   - **Relations**: Connections between entities
-
-3. **Text Search**: Find relevant information using text-based queries.
-
-4. **Persistence**: All information remains available across sessions through file-based storage.
-
 ## 📝 Example Usage
 
-Working with the think tool:
+Here's how the think tool enables better reasoning through gentle guidance:
 
 ```
-I need to think about how to solve this complex algorithm problem.
+I need to evaluate different approaches for implementing a caching system.
 
-[Claude calls the think tool]
+[Claude uses the think tool]
 
-Problem definition: We need to find an efficient algorithm for finding the shortest path between two points in a weighted graph.
+Problem Definition:
+Need to design an efficient caching system for a high-traffic web application.
 
-Relevant facts/context:
-- Dijkstra's algorithm works for graphs with non-negative weights
-- Bellman-Ford can handle negative weights but is slower
-- A* is more efficient when a good heuristic is available
-- We need to consider time complexity and space requirements
+Relevant Context:
+- Current system serves 100K requests per minute
+- Cache hit rate needs improvement
+- Memory constraints: 8GB available
+- Existing implementation uses simple LRU
 
-Analysis steps:
-1. If all weights are non-negative, Dijkstra's algorithm is optimal with O((V+E)logV) time complexity
-2. If negative weights exist, Bellman-Ford is required but has O(VE) complexity
-3. If we have a good distance heuristic, A* can improve performance
-4. For extremely large graphs, we might need approximation algorithms
+Analysis Steps:
+1. Evaluated different caching strategies:
+   - LRU: Simple but not always optimal
+   - LFU: Better for stable access patterns
+   - ARC: Adaptive but more complex
+   - W-TinyLFU: Modern, efficient approach
 
-Conclusion/decision:
-The best approach is to start with Dijkstra's algorithm implemented with a priority queue for its balance of efficiency and simplicity. For special cases with negative weights, we can fall back to Bellman-Ford.
+2. Considered implementation factors:
+   - Memory overhead per entry
+   - Concurrency requirements
+   - Maintenance complexity
+   - Integration effort
+
+Self-Reflection:
+I notice I initially focused too much on algorithmic efficiency without considering operational complexity. The best solution isn't always the most sophisticated one - sometimes a well-implemented simple approach is better than a complex one that's hard to maintain.
+
+Conclusion:
+Recommend staying with an enhanced LRU implementation:
+1. Add size-aware eviction
+2. Implement concurrent access
+3. Add basic statistics tracking
+This balances performance improvements with maintainability and operational simplicity.
 ```
 
-Working with the knowledge graph:
-
-```
-Let me create some entities about scientists and their discoveries:
-
-[Claude calls create_entities]
-
-Now let's create relations between our scientists and discoveries:
-
-[Claude calls create_relations]
-
-Let's search for information about "quantum physics":
-
-[Claude calls search_nodes]
-```
+This example demonstrates how the think tool's gentle guidance encourages:
+- Clear problem structuring
+- Comprehensive context consideration
+- Systematic analysis
+- Valuable self-reflection
+- Well-reasoned conclusions
 
 ## 🤝 Contributing
 
@@ -283,6 +304,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Model Context Protocol](https://github.com/modelcontextprotocol/typescript-sdk)
 - [FastMCP](https://github.com/jlowin/fastmcp)
 - [Claude 3.7 Sonnet](https://www.anthropic.com/claude)
+
+## 📚 Further Reading
+
+- [Anthropic's Research on Structured Thinking](https://www.anthropic.com/research)
+- [Model Context Protocol Documentation](https://github.com/modelcontextprotocol)
+- [Claude Desktop Integration Guide](https://docs.anthropic.com/claude/docs)
 
 ---
 
