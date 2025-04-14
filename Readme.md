@@ -97,7 +97,7 @@ mcp-think-tank --memory-path=/absolute/path/to/your/memory.jsonl
 MEMORY_PATH=/absolute/path/to/your/memory.jsonl mcp-think-tank
 ```
 
-3. Configure in your MCP client configuration:
+3. In your MCP client configuration, create a new memory.jsonl file in the root of your project. If you don't, it will use the default memory.jsonl file across all projects, which can lead to suboptimal memories for each project.:
 
 #### Cursor Example
 
