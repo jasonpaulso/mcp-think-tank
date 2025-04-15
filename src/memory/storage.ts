@@ -36,7 +36,7 @@ export class GraphStorage {
         logger.info(`No existing graph found at ${this.filePath}, starting with empty graph`);
       }
     } catch (error) {
-      console.error(`Error loading graph: ${error}`);
+      logger.error(`Error loading graph: ${error}`);
     }
   }
 
@@ -49,7 +49,7 @@ export class GraphStorage {
       fs.writeFileSync(this.filePath, data, 'utf8');
       logger.info(`Saved graph to ${this.filePath}`);
     } catch (error) {
-      console.error(`Error saving graph: ${error}`);
+      logger.error(`Error saving graph: ${error}`);
     }
   }
 
@@ -59,7 +59,7 @@ export class GraphStorage {
    * @param details - Details about the operation
    */
   logOperation(operation: string, details: any): void {
-    console.log(`[${operation}] ${JSON.stringify(details)}`);
+    logger.debug(`[${operation}] ${JSON.stringify(details)}`);
   }
 }
 

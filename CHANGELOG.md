@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.0.5 (2024-04-10)
+## 1.1.1 (2024-04-14)
+
+### Fixed
+- Fixed JSON parsing errors caused by console.log interference with FastMCP stdio
+- Implemented proper logging system using stderr and file output
+- Added MCP_DEBUG environment variable for controlling debug output
+- Improved error handling with better stack traces
+- Updated all logging calls to use the new logger utility
+
+## 1.1.0 (2024-04-10)
 
 ### Improved
 - Updated documentation to recommend npx installation method for Cursor

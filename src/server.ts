@@ -36,9 +36,9 @@ server.start();
 
 // Error handling
 process.on('uncaughtException', (error: Error) => {
-  console.error('Uncaught exception:', error);
+  logger.error(`Uncaught exception: ${error.stack || error.message}`);
 });
 
 process.on('unhandledRejection', (reason: unknown) => {
-  console.error('Unhandled rejection:', reason);
+  logger.error(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
 });
