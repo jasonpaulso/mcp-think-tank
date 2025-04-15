@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { logger } from './logger.js';
 
 /**
  * Creates a directory and any parent directories if they don't exist
@@ -8,6 +9,6 @@ import * as path from 'path';
 export function createDirectory(dirPath: string): void {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
-    console.log(`Created directory: ${dirPath}`);
+    logger.info(`Created directory: ${dirPath}`);
   }
 } 

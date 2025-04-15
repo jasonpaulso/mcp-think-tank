@@ -5,18 +5,19 @@ import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
 import { config } from './config.js';
+import { logger } from './utils/logger.js';
 
 // Get configuration from environment
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
 // Log configuration
-console.log(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
+logger.info(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
 
 // Create necessary directories
 const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
 createDirectory(path.dirname(memoryPath));
 
-console.log(`Memory path: ${memoryPath}`);
+logger.info(`Memory path: ${memoryPath}`);
 
 // Create FastMCP server
 const server = new FastMCP({

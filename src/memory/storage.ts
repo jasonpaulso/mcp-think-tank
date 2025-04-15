@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { KnowledgeGraph } from './knowledgeGraph.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Class responsible for persisting the knowledge graph to disk
@@ -30,9 +31,9 @@ export class GraphStorage {
         const data = fs.readFileSync(this.filePath, 'utf8');
         const jsonData = JSON.parse(data);
         this.graph.fromJSON(jsonData);
-        console.log(`Loaded graph from ${this.filePath}`);
+        logger.info(`Loaded graph from ${this.filePath}`);
       } else {
-        console.log(`No existing graph found at ${this.filePath}, starting with empty graph`);
+        logger.info(`No existing graph found at ${this.filePath}, starting with empty graph`);
       }
     } catch (error) {
       console.error(`Error loading graph: ${error}`);
@@ -46,7 +47,7 @@ export class GraphStorage {
     try {
       const data = JSON.stringify(this.graph.toJSON(), null, 2);
       fs.writeFileSync(this.filePath, data, 'utf8');
-      console.log(`Saved graph to ${this.filePath}`);
+      logger.info(`Saved graph to ${this.filePath}`);
     } catch (error) {
       console.error(`Error saving graph: ${error}`);
     }

@@ -281,9 +281,34 @@ In Cursor's MCP Server settings:
 
 ## 🔍 Debugging
 
+### Logging Configuration
+
+MCP Think Tank uses a dedicated logging system that writes to both a file and stderr (when debug mode is enabled). Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log`.
+
+To enable debug logging, set the `MCP_DEBUG` environment variable:
+
+```bash
+MCP_DEBUG=true mcp-think-tank
+```
+
+Or in your configuration:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "mcp-think-tank",
+      "env": {
+        "MCP_DEBUG": "true"
+      }
+    }
+  }
+}
+```
+
 To view server logs:
 ```bash
-tail -n 20 -F ~/Library/Logs/Claude/mcp*.log
+tail -n 20 -F ~/.mcp-think-tank/logs/mcp-think-tank.log
 ```
 
 Common issues to check:
