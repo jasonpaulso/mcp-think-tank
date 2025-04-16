@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0 (Unreleased)
+
+### Added
+- Task Management System with Knowledge Graph integration
+  - Added `plan_tasks` tool for creating multiple tasks at once
+  - Added `list_tasks` tool for filtering tasks by status and priority
+  - Added `next_task` tool to get the highest priority task and mark it in-progress
+  - Added `complete_task` tool to mark tasks as done
+  - Added `update_tasks` tool for batch updates
+- Implemented persistent task storage with append-only JSONL format
+- Added `show_memory_path` utility tool to help locate knowledge graph file
+- Added comprehensive test suite with Vitest
+
+### Improved
+- Enhanced integration between tools for cross-communication
+- Added debounced saving for better performance on batch operations
+- Improved error handling and logging for task operations
+
 ## 1.1.1 (2024-04-14)
 
 ### Fixed

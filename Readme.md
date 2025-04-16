@@ -338,6 +338,65 @@ The tool provides a dedicated space for systematic thinking, encouraging:
 - Self-reflection
 - Clear conclusions
 
+### Task Management Tools
+A set of tools for tracking and managing tasks within projects:
+
+- `plan_tasks`: Create multiple tasks at once with automatic knowledge graph integration
+```typescript
+plan_tasks({
+  tasks: [
+    {
+      description: "Implement user authentication",
+      priority: "high",
+      due: "2024-05-15T09:00:00Z",
+      tags: ["auth", "security"]
+    },
+    {
+      description: "Write documentation",
+      priority: "medium",
+      due: "2024-05-20T09:00:00Z"
+    }
+  ]
+})
+```
+
+- `list_tasks`: Get tasks with optional filtering by status and priority
+```typescript
+list_tasks({
+  status: "todo",
+  priority: "high"
+})
+```
+
+- `next_task`: Get the highest priority todo task and mark it as in-progress
+```typescript
+next_task({})
+```
+
+- `complete_task`: Mark a task as done
+```typescript
+complete_task({
+  id: "task-uuid-here"
+})
+```
+
+- `update_tasks`: Update multiple tasks in batch
+```typescript
+update_tasks({
+  updates: [
+    {
+      id: "task-uuid-1",
+      description: "Updated description",
+      priority: "high"
+    },
+    {
+      id: "task-uuid-2",
+      status: "blocked"
+    }
+  ]
+})
+```
+
 ### Memory Tools
 - `create_entities`: Create new entities in the knowledge graph
 - `create_relations`: Create relationships between entities
@@ -350,6 +409,9 @@ The tool provides a dedicated space for systematic thinking, encouraging:
 - `read_graph`: Get the entire knowledge graph
 - `open_nodes`: Retrieve specific entities by name
 - `search_nodes`: Find entities using text-based search
+
+### Utility Tools
+- `show_memory_path`: Get the absolute path of the active knowledge graph file
 
 ## 📝 Example Usage
 
@@ -537,6 +599,60 @@ Prioritized optimizations:
 [Claude commits optimization details]
 Adding observations about performance optimization...
 Updating 'AuthSystem' entity with optimization findings...
+```
+
+### 5. Task Planning and Execution
+
+```
+User: I need to plan the development tasks for our new API. Can you help me set this up?
+
+[Claude uses plan_tasks tool]
+
+I've created a development plan with the following tasks:
+
+1. High Priority Tasks:
+   - Design API schema and endpoints
+   - Implement core CRUD operations
+   - Add authentication middleware
+
+2. Medium Priority Tasks:
+   - Write integration tests
+   - Setup CI/CD pipeline
+   - Create API documentation
+
+Let's get the most important task to start:
+
+[Claude uses next_task tool]
+Next task: Design API schema and endpoints (high priority)
+
+Let me think through this task first...
+
+[Claude uses think tool]
+Problem Definition: Plan the API schema design with appropriate endpoints
+
+Analysis Steps:
+1. Resource Identification:
+   - Users (authentication)
+   - Projects (main business object)
+   - Tasks (within projects)
+   
+2. Endpoint Design:
+   - RESTful approach for basic CRUD
+   - GraphQL for complex queries
+   - Versioned paths (/v1/...)
+
+Self-Reflection:
+This schema aligns with our microservices architecture while keeping tight domain boundaries.
+
+After design review, let's mark this as complete:
+
+[Claude uses complete_task tool]
+Task completed: Design API schema and endpoints
+
+Now let's check what's next:
+
+[Claude uses next_task tool]
+Next task: Implement core CRUD operations
 ```
 
 These examples demonstrate:

@@ -1,0 +1,2368 @@
+This file is a merged representation of a subset of the codebase, containing files not matching ignore patterns, combined into a single document by Repomix.
+The content has been processed where empty lines have been removed, line numbers have been added.
+
+================================================================
+Directory Structure
+================================================================
+bin/
+  mcp-think-tank.js
+src/
+  memory/
+    knowledgeGraph.ts
+    storage.ts
+    tools.ts
+  think/
+    schemas.ts
+    tools.ts
+  utils/
+    fs.ts
+    logger.ts
+    validation.ts
+  config.ts
+  server.ts
+.gitignore
+.npmignore
+CHANGELOG.md
+install.bat
+install.sh
+kg-think-mcp.md
+LICENSE
+package.json
+Readme.md
+smithery.yaml
+tsconfig.json
+
+================================================================
+Files
+================================================================
+
+================
+File: src/think/schemas.ts
+================
+ 1: import { z } from 'zod';
+ 2: /**
+ 3:  * Schema for the think tool parameters
+ 4:  */
+ 5: export const ThinkSchema = z.object({
+ 6:   structuredReasoning: z.string()
+ 7:     .min(10, 'Reasoning must be at least 10 characters long')
+ 8:     .describe('A structured thought process to work through complex problems. Use this as a dedicated space for reasoning step-by-step.'),
+ 9:   // Optional memory parameters - can be added in future to associate thoughts with specific contexts
+10:   associateWithEntity: z.string().optional()
+11:     .describe('Optional entity name to associate this thought with'),
+12:   category: z.string().optional()
+13:     .describe('Optional category for the thought (e.g., "problem-solving", "analysis", "planning")'),
+14:   tags: z.array(z.string()).optional()
+15:     .describe('Optional tags to help categorize and find this thought later'),
+16:   storeInMemory: z.boolean().optional()
+17:     .default(false)
+18:     .describe('Whether to store this thought in the knowledge graph memory'),
+19: });
+
+================
+File: src/utils/logger.ts
+================
+ 1: import * as fs from 'fs';
+ 2: import * as path from 'path';
+ 3: import { homedir } from 'os';
+ 4: class Logger {
+ 5:   private logFile: string;
+ 6:   private debugMode: boolean;
+ 7:   constructor() {
+ 8:     // Use environment variable or default to false
+ 9:     this.debugMode = process.env.MCP_DEBUG === 'true';
+10:     // Set up log file path in user's home directory
+11:     const logDir = path.join(homedir(), '.mcp-think-tank', 'logs');
+12:     if (!fs.existsSync(logDir)) {
+13:       fs.mkdirSync(logDir, { recursive: true });
+14:     }
+15:     this.logFile = path.join(logDir, 'mcp-think-tank.log');
+16:   }
+17:   private writeToFile(message: string) {
+18:     const timestamp = new Date().toISOString();
+19:     const logMessage = `${timestamp} - ${message}\n`;
+20:     // Append to log file
+21:     fs.appendFileSync(this.logFile, logMessage);
+22:   }
+23:   private formatMessage(level: string, message: string): string {
+24:     return `[${level}] ${message}`;
+25:   }
+26:   info(message: string) {
+27:     const formattedMessage = this.formatMessage('INFO', message);
+28:     if (this.debugMode) {
+29:       // Use stderr to avoid interfering with stdio communication
+30:       process.stderr.write(formattedMessage + '\n');
+31:     }
+32:     this.writeToFile(formattedMessage);
+33:   }
+34:   error(message: string) {
+35:     const formattedMessage = this.formatMessage('ERROR', message);
+36:     // Always write errors to stderr
+37:     process.stderr.write(formattedMessage + '\n');
+38:     this.writeToFile(formattedMessage);
+39:   }
+40:   debug(message: string) {
+41:     if (this.debugMode) {
+42:       const formattedMessage = this.formatMessage('DEBUG', message);
+43:       process.stderr.write(formattedMessage + '\n');
+44:       this.writeToFile(formattedMessage);
+45:     }
+46:   }
+47: }
+48: // Export a singleton instance
+49: export const logger = new Logger();
+
+================
+File: LICENSE
+================
+ 1: MIT License
+ 2: 
+ 3: Copyright (c) 2023 flight505
+ 4: 
+ 5: Permission is hereby granted, free of charge, to any person obtaining a copy
+ 6: of this software and associated documentation files (the "Software"), to deal
+ 7: in the Software without restriction, including without limitation the rights
+ 8: to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ 9: copies of the Software, and to permit persons to whom the Software is
+10: furnished to do so, subject to the following conditions:
+11: 
+12: The above copyright notice and this permission notice shall be included in all
+13: copies or substantial portions of the Software.
+14: 
+15: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+16: IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+17: FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+18: AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+19: LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+20: OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+21: SOFTWARE.
+
+================
+File: tsconfig.json
+================
+ 1: {
+ 2:   "compilerOptions": {
+ 3:     "target": "ES2020",
+ 4:     "module": "NodeNext",
+ 5:     "moduleResolution": "NodeNext",
+ 6:     "esModuleInterop": true,
+ 7:     "outDir": "dist",
+ 8:     "strict": true,
+ 9:     "skipLibCheck": true,
+10:     "forceConsistentCasingInFileNames": true
+11:   },
+12:   "include": ["src/**/*"],
+13:   "exclude": ["node_modules"]
+14: }
+
+================
+File: src/utils/fs.ts
+================
+ 1: import * as fs from 'fs';
+ 2: import * as path from 'path';
+ 3: import { logger } from './logger.js';
+ 4: /**
+ 5:  * Creates a directory and any parent directories if they don't exist
+ 6:  * @param dirPath - The path to create
+ 7:  */
+ 8: export function createDirectory(dirPath: string): void {
+ 9:   if (!fs.existsSync(dirPath)) {
+10:     fs.mkdirSync(dirPath, { recursive: true });
+11:     logger.info(`Created directory: ${dirPath}`);
+12:   }
+13: }
+
+================
+File: .npmignore
+================
+ 1: # Source files (keeping for better debugging and ts-node fallback)
+ 2: # src/
+ 3: 
+ 4: # Configuration files
+ 5: .gitignore
+ 6: tsconfig.json
+ 7: .cursor/
+ 8: 
+ 9: # Development files
+10: node_modules/
+11: smithery.yaml
+12: Dockerfile
+13: install.sh
+14: install.bat
+15: 
+16: # Misc
+17: .git/
+18: .github/
+19: .vscode/
+20: .idea/
+
+================
+File: bin/mcp-think-tank.js
+================
+ 1: #!/usr/bin/env node
+ 2: /**
+ 3:  * This is the executable entry point for the mcp-think-tank 
+ 4:  * when installed globally via npm
+ 5:  */
+ 6: import { existsSync } from 'fs';
+ 7: import { join, dirname } from 'path';
+ 8: import { fileURLToPath } from 'url';
+ 9: import { execSync } from 'child_process';
+10: const __dirname = dirname(fileURLToPath(import.meta.url));
+11: const distPath = join(__dirname, '../dist/server.js');
+12: // Helper for consistent error formatting
+13: const logError = (message) => {
+14:   const timestamp = new Date().toISOString();
+15:   process.stderr.write(`${timestamp} [ERROR] ${message}\n`);
+16: };
+17: // Check if dist/server.js exists, if not, try to compile TypeScript files
+18: if (!existsSync(distPath)) {
+19:   try {
+20:     process.stderr.write(`[INFO] Compiled files not found at ${distPath}, attempting to build...\n`);
+21:     execSync('npm run build', { 
+22:       cwd: join(__dirname, '..'), 
+23:       stdio: 'inherit' 
+24:     });
+25:   } catch (err) {
+26:     logError(`Failed to build the project: ${err.message}`);
+27:     logError('Attempting to run from source using ts-node...');
+28:   }
+29: }
+30: // Import the server module (will use ts-node as fallback if compilation fails)
+31: if (existsSync(distPath)) {
+32:   import('../dist/server.js').catch(err => {
+33:     logError(`Failed to start the Think Tank server: ${err.stack || err.message}`);
+34:     process.exit(1);
+35:   });
+36: } else {
+37:   // Fallback to ts-node
+38:   import('ts-node/register/index.js').then(() => {
+39:     import('../src/server.ts').catch(err => {
+40:       logError(`Failed to start the Think Tank server: ${err.stack || err.message}`);
+41:       process.exit(1);
+42:     });
+43:   }).catch(err => {
+44:     logError(`Failed to load ts-node: ${err.stack || err.message}`);
+45:     process.exit(1);
+46:   });
+47: }
+
+================
+File: src/think/tools.ts
+================
+ 1: import { FastMCP } from 'fastmcp';
+ 2: import { ThinkSchema } from './schemas.js';
+ 3: /**
+ 4:  * Registers the think tool with the MCP server
+ 5:  * @param server - The FastMCP server instance
+ 6:  */
+ 7: export function registerThinkTool(server: FastMCP): void {
+ 8:   server.addTool({
+ 9:     name: 'think',
+10:     description: 'Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed. Consider including: problem definition, relevant context, analysis steps, self-reflection on your reasoning, and conclusions. Adapt this structure as needed for your specific thought process.',
+11:     parameters: ThinkSchema,
+12:     execute: async (args: { structuredReasoning: string }) => {
+13:       // Return confirmation without trying to log to stdout
+14:       return "Your structured reasoning has been processed.";
+15:     }
+16:   });
+17: }
+
+================
+File: .gitignore
+================
+ 1: # Dependencies
+ 2: node_modules/
+ 3: npm-debug.log
+ 4: yarn-debug.log
+ 5: yarn-error.log
+ 6: package-lock.json
+ 7: 
+ 8: # Build outputs
+ 9: dist/
+10: build/
+11: *.tsbuildinfo
+12: 
+13: # Environment variables
+14: .env
+15: .env.*
+16: !.env.example
+17: 
+18: # IDE specific files
+19: .idea/
+20: .vscode/
+21: *.swp
+22: *.swo
+23: 
+24: # OS specific files
+25: .DS_Store
+26: Thumbs.db
+27: 
+28: # Logs
+29: logs/
+30: *.log
+31: npm-debug.log*
+32: yarn-debug.log*
+33: yarn-error.log*
+34: 
+35: # Coverage directory used by tools like istanbul
+36: coverage/
+37: 
+38: # Optional npm cache directory
+39: .npm/
+40: 
+41: # Optional eslint cache
+42: .eslintcache 
+43: blog-post.md
+44: blog-rubric.md
+
+================
+File: CHANGELOG.md
+================
+ 1: # Changelog
+ 2: 
+ 3: ## 1.1.1 (2024-04-14)
+ 4: 
+ 5: ### Fixed
+ 6: - Fixed JSON parsing errors caused by console.log interference with FastMCP stdio
+ 7: - Implemented proper logging system using stderr and file output
+ 8: - Added MCP_DEBUG environment variable for controlling debug output
+ 9: - Improved error handling with better stack traces
+10: - Updated all logging calls to use the new logger utility
+11: 
+12: ## 1.1.0 (2024-04-10)
+13: 
+14: ### Improved
+15: - Updated documentation to recommend npx installation method for Cursor
+16: - Enhanced installation instructions for better clarity
+17: - Added more detailed configuration examples
+18: 
+19: ## 1.0.4 (2024-04-10)
+20: 
+21: ### Fixed
+22: - Improved warning message handling for "FastMCP could not infer client capabilities"
+23: - Added detailed instructions for Cursor integration
+24: - Updated server version to match package version
+25: - Added more troubleshooting steps for Cursor integration
+26: 
+27: ## 1.0.3 (2024-04-10)
+28: 
+29: ### Fixed
+30: - Fixed global installation issues by removing problematic postinstall script
+31: - Enhanced bin script to handle missing compiled files, with fallbacks to compile on demand
+32: - Added better error handling and fallback to ts-node when TypeScript compilation fails
+33: 
+34: ## 1.0.2 (Previous release)
+35: 
+36: ### Features
+37: - Initial public release
+38: - Added support for the "think" tool
+39: - Added compatibility with Cursor and Claude Desktop
+
+================
+File: install.bat
+================
+ 1: @echo off
+ 2: echo Installing Think Tank MCP Server v1.0.5...
+ 3: 
+ 4: :: Create installation directory
+ 5: set INSTALL_DIR=%USERPROFILE%\.mcp-think-tank
+ 6: if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+ 7: 
+ 8: :: Clone or update the repository
+ 9: if not exist "%INSTALL_DIR%\repo\.git" (
+10:   echo Cloning repository...
+11:   git clone https://github.com/flight505/mcp-think-tank.git "%INSTALL_DIR%\repo"
+12: ) else (
+13:   echo Updating repository...
+14:   cd "%INSTALL_DIR%\repo"
+15:   git pull
+16: )
+17: 
+18: :: Install dependencies and build
+19: cd "%INSTALL_DIR%\repo"
+20: call npm install
+21: call npm run build
+22: 
+23: :: Create executable batch file
+24: set EXEC_DIR=%USERPROFILE%\AppData\Local\mcp-think-tank\bin
+25: if not exist "%EXEC_DIR%" mkdir "%EXEC_DIR%"
+26: 
+27: echo @echo off > "%EXEC_DIR%\mcp-think-tank.bat"
+28: echo cd /d "%INSTALL_DIR%\repo" >> "%EXEC_DIR%\mcp-think-tank.bat"
+29: echo if not defined REQUEST_TIMEOUT set REQUEST_TIMEOUT=300 >> "%EXEC_DIR%\mcp-think-tank.bat"
+30: echo node dist/server.js --request-timeout=%REQUEST_TIMEOUT% %* >> "%EXEC_DIR%\mcp-think-tank.bat"
+31: 
+32: :: Add to PATH
+33: setx PATH "%PATH%;%EXEC_DIR%"
+34: 
+35: echo.
+36: echo Installation complete!
+37: echo.
+38: echo Usage:
+39: echo   Run 'mcp-think-tank' to start the server
+40: echo   You can specify request timeout: set REQUEST_TIMEOUT=600 ^& mcp-think-tank
+41: echo.
+42: echo Claude Desktop Configuration:
+43: echo   Edit: %%APPDATA%%\Claude\claude_desktop_config.json
+44: echo.
+45: echo Add the following to your config:
+46: echo {
+47: echo   "mcpServers": {
+48: echo     "think-tool": {
+49: echo       "command": "mcp-think-tank",
+50: echo       "env": {
+51: echo         "REQUEST_TIMEOUT": "300"
+52: echo       }
+53: echo     }
+54: echo   }
+55: echo }
+56: echo.
+57: echo Cursor Configuration:
+58: echo   Settings ^> MCP Servers ^> Add New Server
+59: echo   Name: think-tool
+60: echo   Command: mcp-think-tank
+61: echo.
+62: 
+63: pause
+
+================
+File: install.sh
+================
+ 1: #!/bin/bash
+ 2: # Simple installation script for Think Tank MCP Server
+ 3: echo "Installing Think Tank MCP Server with optimized settings..."
+ 4: # Create directory for the server
+ 5: INSTALL_DIR="$HOME/.mcp-think-tank"
+ 6: mkdir -p "$INSTALL_DIR"
+ 7: # Clone or update the repository
+ 8: if [ ! -d "$INSTALL_DIR/repo/.git" ]; then
+ 9:   echo "Cloning repository..."
+10:   git clone https://github.com/flight505/mcp-think-tank.git "$INSTALL_DIR/repo"
+11: else
+12:   echo "Updating repository..."
+13:   cd "$INSTALL_DIR/repo"
+14:   git pull
+15: fi
+16: # Install dependencies and build
+17: cd "$INSTALL_DIR/repo"
+18: npm install
+19: npm run build
+20: # Create bin directory for executable
+21: BIN_DIR="$HOME/.local/bin"
+22: mkdir -p "$BIN_DIR"
+23: # Create executable shell script
+24: cat > "$BIN_DIR/mcp-think-tank" << EOF
+25: #!/bin/bash
+26: cd "$INSTALL_DIR/repo"
+27: # Use extended timeout (5 minutes default, can be overridden with REQUEST_TIMEOUT env var)
+28: REQUEST_TIMEOUT=\${REQUEST_TIMEOUT:-300}
+29: node dist/server.js --request-timeout="\$REQUEST_TIMEOUT" "\$@"
+30: EOF
+31: # Make executable
+32: chmod +x "$BIN_DIR/mcp-think-tank"
+33: # Check if BIN_DIR is in PATH
+34: if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
+35:   echo "Adding $BIN_DIR to PATH in your shell profile"
+36:   # Determine which shell profile to use
+37:   SHELL_PROFILE="$HOME/.bash_profile"
+38:   if [ -f "$HOME/.zshrc" ]; then
+39:     SHELL_PROFILE="$HOME/.zshrc"
+40:   elif [ -f "$HOME/.bashrc" ]; then
+41:     SHELL_PROFILE="$HOME/.bashrc"
+42:   fi
+43:   # Add to PATH
+44:   echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$SHELL_PROFILE"
+45:   echo "Please restart your terminal or run: source $SHELL_PROFILE"
+46: fi
+47: echo ""
+48: echo "Installation complete!"
+49: echo ""
+50: echo "Usage:"
+51: echo "  Run 'mcp-think-tank' to start the server"
+52: echo "  You can specify request timeout: REQUEST_TIMEOUT=600 mcp-think-tank"
+53: echo ""
+54: echo "Claude Desktop Configuration:"
+55: echo "  Edit: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)"
+56: echo "  Edit: %APPDATA%\\Claude\\claude_desktop_config.json (Windows)"
+57: echo ""
+58: echo "Add the following to your config:"
+59: echo '{
+60:   "mcpServers": {
+61:     "think-tool": {
+62:       "command": "mcp-think-tank",
+63:       "env": {
+64:         "REQUEST_TIMEOUT": "300"
+65:       }
+66:     }
+67:   }
+68: }'
+69: echo ""
+70: echo "Cursor Configuration:"
+71: echo "  Settings > MCP Servers > Add New Server"
+72: echo "  Name: think-tool"
+73: echo "  Command: mcp-think-tank"
+74: echo ""
+
+================
+File: src/memory/knowledgeGraph.ts
+================
+  1: /**
+  2:  * Entity interface
+  3:  */
+  4: export interface Entity {
+  5:   name: string;
+  6:   entityType: string;
+  7:   observations: string[];
+  8: }
+  9: /**
+ 10:  * Relation interface 
+ 11:  */
+ 12: export interface Relation {
+ 13:   from: string;
+ 14:   to: string;
+ 15:   relationType: string;
+ 16: }
+ 17: /**
+ 18:  * KnowledgeGraph class for managing entities and relations
+ 19:  */
+ 20: export class KnowledgeGraph {
+ 21:   entities: Map<string, Entity>;
+ 22:   relations: Map<string, Set<Relation>>;
+ 23:   constructor() {
+ 24:     this.entities = new Map();
+ 25:     this.relations = new Map();
+ 26:   }
+ 27:   /**
+ 28:    * Add a new entity to the graph
+ 29:    * @param entity - The entity to add
+ 30:    * @returns true if added, false if already exists
+ 31:    */
+ 32:   addEntity(entity: Entity): boolean {
+ 33:     if (this.entities.has(entity.name)) {
+ 34:       return false;
+ 35:     }
+ 36:     // Create a copy of the entity with all properties
+ 37:     const newEntity: Entity = {
+ 38:       name: entity.name,
+ 39:       entityType: entity.entityType,
+ 40:       observations: [...entity.observations]
+ 41:     };
+ 42:     this.entities.set(entity.name, newEntity);
+ 43:     return true;
+ 44:   }
+ 45:   /**
+ 46:    * Add a new relation between entities
+ 47:    * @param relation - The relation to add
+ 48:    * @returns true if added, false if invalid or already exists
+ 49:    */
+ 50:   addRelation(relation: Relation): boolean {
+ 51:     // Check if both entities exist
+ 52:     if (!this.entities.has(relation.from) || !this.entities.has(relation.to)) {
+ 53:       return false;
+ 54:     }
+ 55:     // Create relation set for source entity if it doesn't exist
+ 56:     if (!this.relations.has(relation.from)) {
+ 57:       this.relations.set(relation.from, new Set());
+ 58:     }
+ 59:     // Check if relation already exists
+ 60:     const relations = this.relations.get(relation.from);
+ 61:     const existingRelation = Array.from(relations!).find(r => 
+ 62:       r.from === relation.from && 
+ 63:       r.to === relation.to && 
+ 64:       r.relationType === relation.relationType
+ 65:     );
+ 66:     if (existingRelation) {
+ 67:       return false;
+ 68:     }
+ 69:     // Add the relation
+ 70:     relations!.add(relation);
+ 71:     return true;
+ 72:   }
+ 73:   /**
+ 74:    * Add observations to an entity
+ 75:    * @param entityName - The name of the entity
+ 76:    * @param observations - The observations to add
+ 77:    * @returns Array of added observations
+ 78:    */
+ 79:   addObservations(entityName: string, observations: string[]): string[] {
+ 80:     const entity = this.entities.get(entityName);
+ 81:     if (!entity) {
+ 82:       return [];
+ 83:     }
+ 84:     const added: string[] = [];
+ 85:     for (const observation of observations) {
+ 86:       if (!entity.observations.includes(observation)) {
+ 87:         entity.observations.push(observation);
+ 88:         added.push(observation);
+ 89:       }
+ 90:     }
+ 91:     return added;
+ 92:   }
+ 93:   /**
+ 94:    * Delete observations from an entity
+ 95:    * @param entityName - The name of the entity
+ 96:    * @param observations - The observations to delete
+ 97:    * @returns true if entity exists, false otherwise
+ 98:    */
+ 99:   deleteObservations(entityName: string, observations: string[]): boolean {
+100:     const entity = this.entities.get(entityName);
+101:     if (!entity) {
+102:       return false;
+103:     }
+104:     // Remove each observation if it exists
+105:     for (const observation of observations) {
+106:       const index = entity.observations.indexOf(observation);
+107:       if (index !== -1) {
+108:         entity.observations.splice(index, 1);
+109:       }
+110:     }
+111:     return true;
+112:   }
+113:   /**
+114:    * Delete an entity and its relations
+115:    * @param entityName - The name of the entity to delete
+116:    * @returns true if deleted, false if not found
+117:    */
+118:   deleteEntity(entityName: string): boolean {
+119:     if (!this.entities.has(entityName)) {
+120:       return false;
+121:     }
+122:     // Delete the entity
+123:     this.entities.delete(entityName);
+124:     // Delete relations where this entity is the source
+125:     this.relations.delete(entityName);
+126:     // Delete relations where this entity is the target
+127:     for (const [source, relations] of this.relations.entries()) {
+128:       const newRelations = Array.from(relations).filter(r => r.to !== entityName);
+129:       this.relations.set(source, new Set(newRelations));
+130:     }
+131:     return true;
+132:   }
+133:   /**
+134:    * Delete a relation
+135:    * @param relation - The relation to delete
+136:    * @returns true if deleted, false if not found
+137:    */
+138:   deleteRelation(relation: Relation): boolean {
+139:     // Check if source entity exists in relations
+140:     if (!this.relations.has(relation.from)) {
+141:       return false;
+142:     }
+143:     const relations = this.relations.get(relation.from);
+144:     // Find the relation to delete
+145:     const relationToDelete = Array.from(relations!).find(r => 
+146:       r.from === relation.from && 
+147:       r.to === relation.to && 
+148:       r.relationType === relation.relationType
+149:     );
+150:     if (!relationToDelete) {
+151:       return false;
+152:     }
+153:     // Delete the relation
+154:     relations!.delete(relationToDelete);
+155:     return true;
+156:   }
+157:   /**
+158:    * Search for entities based on a query
+159:    * @param query - The search query
+160:    * @returns Array of matching entities
+161:    */
+162:   searchNodes(query: string): Entity[] {
+163:     if (!query || query.trim() === '') {
+164:       return [];
+165:     }
+166:     const results: Entity[] = [];
+167:     const normalizedQuery = query.toLowerCase();
+168:     for (const entity of this.entities.values()) {
+169:       // Check if query matches entity name or type
+170:       if (
+171:         entity.name.toLowerCase().includes(normalizedQuery) ||
+172:         entity.entityType.toLowerCase().includes(normalizedQuery)
+173:       ) {
+174:         results.push(entity);
+175:         continue;
+176:       }
+177:       // Check if query matches any observations
+178:       for (const observation of entity.observations) {
+179:         if (observation.toLowerCase().includes(normalizedQuery)) {
+180:           results.push(entity);
+181:           break;
+182:         }
+183:       }
+184:     }
+185:     return results;
+186:   }
+187:   /**
+188:    * Get entities by name
+189:    * @param names - Array of entity names
+190:    * @returns Array of found entities
+191:    */
+192:   getEntities(names: string[]): Entity[] {
+193:     const results: Entity[] = [];
+194:     for (const name of names) {
+195:       const entity = this.entities.get(name);
+196:       if (entity) {
+197:         results.push(entity);
+198:       }
+199:     }
+200:     return results;
+201:   }
+202:   /**
+203:    * Convert the graph to a JSON-serializable object
+204:    * @returns The serialized graph
+205:    */
+206:   toJSON() {
+207:     return {
+208:       entities: Array.from(this.entities.values()),
+209:       relations: Array.from(this.relations.entries()).flatMap(([_, rels]) => Array.from(rels))
+210:     };
+211:   }
+212:   /**
+213:    * Create a knowledge graph from JSON data
+214:    * @param data - The JSON data
+215:    */
+216:   fromJSON(data: any): void {
+217:     // Clear existing data
+218:     this.entities.clear();
+219:     this.relations.clear();
+220:     // Add entities
+221:     if (data.entities && Array.isArray(data.entities)) {
+222:       for (const entity of data.entities) {
+223:         this.addEntity(entity);
+224:       }
+225:     }
+226:     // Add relations
+227:     if (data.relations && Array.isArray(data.relations)) {
+228:       for (const relation of data.relations) {
+229:         this.addRelation(relation);
+230:       }
+231:     }
+232:   }
+233: }
+
+================
+File: src/memory/tools.ts
+================
+  1: import { FastMCP } from 'fastmcp';
+  2: import { graph, graphStorage } from './storage.js';
+  3: import * as Schemas from '../utils/validation.js';
+  4: import { z } from 'zod'; 
+  5: // Batch size for processing large entity sets
+  6: const BATCH_SIZE = 20;
+  7: const MAX_OPERATION_TIME = 55000; // 55 seconds to allow for overhead
+  8: /**
+  9:  * Process entities in batches to prevent timeouts on large operations
+ 10:  * @param entities Array of entities to process
+ 11:  * @param processFn Function to process each entity
+ 12:  * @returns Object with created and existing entity names
+ 13:  */
+ 14: async function batchProcessEntities(entities: any[], processFn: (entity: any) => boolean) {
+ 15:   const results = {
+ 16:     created: [] as string[],
+ 17:     existing: [] as string[],
+ 18:     incomplete: false
+ 19:   };
+ 20:   const startTime = Date.now();
+ 21:   // Process in batches
+ 22:   for (let i = 0; i < entities.length; i += BATCH_SIZE) {
+ 23:     // Check if we're approaching timeout
+ 24:     if (Date.now() - startTime > MAX_OPERATION_TIME) {
+ 25:       results.incomplete = true;
+ 26:       console.log(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
+ 27:       break;
+ 28:     }
+ 29:     const batch = entities.slice(i, i + BATCH_SIZE);
+ 30:     // Process each entity in the batch
+ 31:     for (const entity of batch) {
+ 32:       const success = processFn(entity);
+ 33:       if (success) {
+ 34:         results.created.push(entity.name);
+ 35:       } else {
+ 36:         results.existing.push(entity.name);
+ 37:       }
+ 38:     }
+ 39:     // Save after each batch to ensure persistence
+ 40:     if (i + BATCH_SIZE < entities.length) {
+ 41:       graphStorage.save();
+ 42:     }
+ 43:     // If not the last batch, add a small delay to prevent CPU blocking
+ 44:     if (i + BATCH_SIZE < entities.length) {
+ 45:       await new Promise(resolve => setTimeout(resolve, 10));
+ 46:     }
+ 47:   }
+ 48:   return results;
+ 49: }
+ 50: /**
+ 51:  * Register all memory-related tools with the MCP server
+ 52:  * @param server The FastMCP server instance
+ 53:  */
+ 54: export function registerMemoryTools(server: FastMCP): void {
+ 55:   // Create entities
+ 56:   server.addTool({
+ 57:     name: 'create_entities',
+ 58:     description: 'Create multiple new entities in the knowledge graph',
+ 59:     parameters: Schemas.CreateEntitiesSchema,
+ 60:     execute: async (args) => {
+ 61:       // Process entities in batches
+ 62:       const total = args.entities.length;
+ 63:       if (total > BATCH_SIZE) {
+ 64:         console.log(`Processing ${total} entities in batches of ${BATCH_SIZE}...`);
+ 65:       }
+ 66:       const results = await batchProcessEntities(args.entities, (entity) => {
+ 67:         return graph.addEntity(entity);
+ 68:       });
+ 69:       // Save final changes
+ 70:       graphStorage.save();
+ 71:       // Return detailed results
+ 72:       return JSON.stringify({
+ 73:         created: results.created.length > 0 ? results.created : null,
+ 74:         existing: results.existing.length > 0 ? results.existing : null,
+ 75:         incomplete: results.incomplete,
+ 76:         message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.${
+ 77:           results.incomplete ? ` Operation incomplete due to timeout - ${results.created.length + results.existing.length} of ${total} entities processed.` : ''
+ 78:         }`,
+ 79:         imageEntities: results.created.filter(name => {
+ 80:           const entity = graph.entities.get(name);
+ 81:           return entity !== undefined;
+ 82:         }).length
+ 83:       });
+ 84:     }
+ 85:   });
+ 86:   // Create relations
+ 87:   server.addTool({
+ 88:     name: 'create_relations',
+ 89:     description: 'Create multiple new relations between entities in the knowledge graph. Relations should be in active voice',
+ 90:     parameters: Schemas.CreateRelationsSchema,
+ 91:     execute: async (args) => {
+ 92:       const results = {
+ 93:         created: [] as Array<{from: string, to: string, relationType: string}>,
+ 94:         failed: [] as Array<{from: string, to: string, relationType: string, reason: string}>
+ 95:       };
+ 96:       for (const relation of args.relations) {
+ 97:         const success = graph.addRelation(relation);
+ 98:         if (success) {
+ 99:           results.created.push(relation);
+100:         } else {
+101:           // Determine failure reason
+102:           let reason = "Unknown error";
+103:           if (!graph.entities.has(relation.from)) {
+104:             reason = `Source entity '${relation.from}' doesn't exist`;
+105:           } else if (!graph.entities.has(relation.to)) {
+106:             reason = `Target entity '${relation.to}' doesn't exist`;
+107:           } else {
+108:             reason = "Relation already exists";
+109:           }
+110:           results.failed.push({...relation, reason});
+111:         }
+112:       }
+113:       // Save changes
+114:       graphStorage.save();
+115:       // Return as string
+116:       return JSON.stringify({
+117:         created: results.created.length > 0 ? results.created : null,
+118:         failed: results.failed.length > 0 ? results.failed : null,
+119:         message: `Created ${results.created.length} new relations. ${results.failed.length} relations failed.`
+120:       });
+121:     }
+122:   });
+123:   // Add observations
+124:   server.addTool({
+125:     name: 'add_observations',
+126:     description: 'Add new observations to existing entities in the knowledge graph',
+127:     parameters: Schemas.AddObservationsSchema,
+128:     execute: async (args) => {
+129:       const results = {
+130:         updated: [] as Array<{entityName: string, added: string[]}>,
+131:         failed: [] as Array<{entityName: string, reason: string}>
+132:       };
+133:       for (const item of args.observations) {
+134:         const added = graph.addObservations(item.entityName, item.contents);
+135:         if (added.length > 0 || graph.entities.has(item.entityName)) {
+136:           results.updated.push({
+137:             entityName: item.entityName,
+138:             added
+139:           });
+140:         } else {
+141:           results.failed.push({
+142:             entityName: item.entityName,
+143:             reason: `Entity '${item.entityName}' doesn't exist`
+144:           });
+145:         }
+146:       }
+147:       // Save changes
+148:       graphStorage.save();
+149:       // Return as string
+150:       return JSON.stringify({
+151:         updated: results.updated.length > 0 ? results.updated : null,
+152:         failed: results.failed.length > 0 ? results.failed : null,
+153:         message: `Added observations to ${results.updated.length} entities. Failed for ${results.failed.length} entities.`
+154:       });
+155:     }
+156:   });
+157:   // Delete entities
+158:   server.addTool({
+159:     name: 'delete_entities',
+160:     description: 'Delete multiple entities and their associated relations from the knowledge graph',
+161:     parameters: Schemas.DeleteEntitiesSchema,
+162:     execute: async (args) => {
+163:       const results = {
+164:         deleted: [] as string[],
+165:         notFound: [] as string[]
+166:       };
+167:       for (const entityName of args.entityNames) {
+168:         const success = graph.deleteEntity(entityName);
+169:         if (success) {
+170:           results.deleted.push(entityName);
+171:         } else {
+172:           results.notFound.push(entityName);
+173:         }
+174:       }
+175:       // Save changes
+176:       graphStorage.save();
+177:       // Return as string
+178:       return JSON.stringify({
+179:         deleted: results.deleted.length > 0 ? results.deleted : null,
+180:         notFound: results.notFound.length > 0 ? results.notFound : null,
+181:         message: `Deleted ${results.deleted.length} entities. ${results.notFound.length} entities not found.`
+182:       });
+183:     }
+184:   });
+185:   // Delete observations
+186:   server.addTool({
+187:     name: 'delete_observations',
+188:     description: 'Delete specific observations from entities in the knowledge graph',
+189:     parameters: Schemas.DeleteObservationsSchema,
+190:     execute: async (args) => {
+191:       const results = {
+192:         updated: [] as string[],
+193:         notFound: [] as string[]
+194:       };
+195:       for (const item of args.deletions) {
+196:         const success = graph.deleteObservations(item.entityName, item.observations);
+197:         if (success) {
+198:           results.updated.push(item.entityName);
+199:         } else {
+200:           results.notFound.push(item.entityName);
+201:         }
+202:       }
+203:       // Save changes
+204:       graphStorage.save();
+205:       // Return as string
+206:       return JSON.stringify({
+207:         updated: results.updated.length > 0 ? results.updated : null,
+208:         notFound: results.notFound.length > 0 ? results.notFound : null,
+209:         message: `Removed observations from ${results.updated.length} entities. ${results.notFound.length} entities not found.`
+210:       });
+211:     }
+212:   });
+213:   // Delete relations
+214:   server.addTool({
+215:     name: 'delete_relations',
+216:     description: 'Delete multiple relations from the knowledge graph',
+217:     parameters: Schemas.DeleteRelationsSchema,
+218:     execute: async (args) => {
+219:       const results = {
+220:         deleted: [] as Array<{from: string, to: string, relationType: string}>,
+221:         notFound: [] as Array<{from: string, to: string, relationType: string}>
+222:       };
+223:       for (const relation of args.relations) {
+224:         const success = graph.deleteRelation(relation);
+225:         if (success) {
+226:           results.deleted.push(relation);
+227:         } else {
+228:           results.notFound.push(relation);
+229:         }
+230:       }
+231:       // Save changes
+232:       graphStorage.save();
+233:       // Return as string
+234:       return JSON.stringify({
+235:         deleted: results.deleted.length > 0 ? results.deleted : null,
+236:         notFound: results.notFound.length > 0 ? results.notFound : null,
+237:         message: `Deleted ${results.deleted.length} relations. ${results.notFound.length} relations not found.`
+238:       });
+239:     }
+240:   });
+241:   // Read graph
+242:   server.addTool({
+243:     name: 'read_graph',
+244:     description: 'Read the entire knowledge graph',
+245:     parameters: z.object({
+246:       dummy: z.string().describe("Returns the complete knowledge graph with entities and relationships").optional()
+247:     }),
+248:     execute: async () => {
+249:       // Return as string
+250:       return JSON.stringify(graph.toJSON());
+251:     }
+252:   });
+253:   // Search nodes
+254:   server.addTool({
+255:     name: 'search_nodes',
+256:     description: 'Search for nodes in the knowledge graph based on a query',
+257:     parameters: Schemas.SearchNodesSchema,
+258:     execute: async (args) => {
+259:       const results = graph.searchNodes(args.query);
+260:       // Return as string
+261:       return JSON.stringify({
+262:         entities: results,
+263:         count: results.length,
+264:         message: `Found ${results.length} matching entities.`
+265:       });
+266:     }
+267:   });
+268:   // Open nodes
+269:   server.addTool({
+270:     name: 'open_nodes',
+271:     description: 'Open specific nodes in the knowledge graph by their names',
+272:     parameters: Schemas.OpenNodesSchema,
+273:     execute: async (args) => {
+274:       const results = graph.getEntities(args.names);
+275:       const found = results.map(entity => entity.name);
+276:       const notFound = args.names.filter(name => !found.includes(name));
+277:       // Return as string
+278:       return JSON.stringify({
+279:         entities: results,
+280:         found,
+281:         notFound: notFound.length > 0 ? notFound : null,
+282:         message: `Found ${found.length} entities. ${notFound.length} entities not found.`
+283:       });
+284:     }
+285:   });
+286:   // Update entities
+287:   server.addTool({
+288:     name: 'update_entities',
+289:     description: 'Update multiple existing entities in the knowledge graph',
+290:     parameters: Schemas.UpdateEntitiesSchema,
+291:     execute: async (args) => {
+292:       const results = {
+293:         updated: [] as string[],
+294:         notFound: [] as string[]
+295:       };
+296:       for (const updateEntity of args.entities) {
+297:         const entity = graph.entities.get(updateEntity.name);
+298:         if (!entity) {
+299:           results.notFound.push(updateEntity.name);
+300:           continue;
+301:         }
+302:         // Update entity type if provided
+303:         if (updateEntity.entityType !== undefined) {
+304:           entity.entityType = updateEntity.entityType;
+305:         }
+306:         // Update observations if provided
+307:         if (updateEntity.observations !== undefined) {
+308:           entity.observations = [...updateEntity.observations];
+309:         }
+310:         results.updated.push(updateEntity.name);
+311:       }
+312:       // Save changes
+313:       graphStorage.save();
+314:       // Return as string
+315:       return JSON.stringify({
+316:         updated: results.updated.length > 0 ? results.updated : null,
+317:         notFound: results.notFound.length > 0 ? results.notFound : null,
+318:         message: `Updated ${results.updated.length} entities. ${results.notFound.length} entities not found.`
+319:       });
+320:     }
+321:   });
+322:   // Update relations
+323:   server.addTool({
+324:     name: 'update_relations',
+325:     description: 'Update multiple existing relations in the knowledge graph',
+326:     parameters: Schemas.UpdateRelationsSchema,
+327:     execute: async (args) => {
+328:       const results = {
+329:         updated: [] as Array<{from: string, to: string, relationType: string}>,
+330:         created: [] as Array<{from: string, to: string, relationType: string}>,
+331:         failed: [] as Array<{from: string, to: string, relationType: string, reason: string}>
+332:       };
+333:       for (const relation of args.relations) {
+334:         // Try to delete the relation first (if it exists)
+335:         const deleted = graph.deleteRelation(relation);
+336:         // Then add it
+337:         const added = graph.addRelation(relation);
+338:         if (!added) {
+339:           // If we couldn't add it, determine the reason
+340:           let reason = "Unknown error";
+341:           if (!graph.entities.has(relation.from)) {
+342:             reason = `Source entity '${relation.from}' doesn't exist`;
+343:           } else if (!graph.entities.has(relation.to)) {
+344:             reason = `Target entity '${relation.to}' doesn't exist`;
+345:           }
+346:           results.failed.push({...relation, reason});
+347:         } else if (deleted) {
+348:           // If we deleted and added, it was an update
+349:           results.updated.push(relation);
+350:         } else {
+351:           // If we just added (didn't delete first), it was a creation
+352:           results.created.push(relation);
+353:         }
+354:       }
+355:       // Save changes
+356:       graphStorage.save();
+357:       // Return as string
+358:       return JSON.stringify({
+359:         updated: results.updated.length > 0 ? results.updated : null,
+360:         created: results.created.length > 0 ? results.created : null,
+361:         failed: results.failed.length > 0 ? results.failed : null,
+362:         message: `Updated ${results.updated.length} relations. Created ${results.created.length} relations. Failed for ${results.failed.length} relations.`
+363:       });
+364:     }
+365:   });
+366: }
+
+================
+File: src/utils/validation.ts
+================
+ 1: import { z } from 'zod';
+ 2: // Entity validation schema
+ 3: const EntitySchema = z.object({
+ 4:   name: z.string().min(1).describe('Unique identifier for the entity'),
+ 5:   entityType: z.string().min(1).describe('Type classification of the entity'),
+ 6:   observations: z.array(z.string()).describe('Facts or observations about the entity')
+ 7: });
+ 8: // Relation validation schema
+ 9: const RelationSchema = z.object({
+10:   from: z.string().min(1).describe('Source entity name'),
+11:   to: z.string().min(1).describe('Target entity name'),
+12:   relationType: z.string().min(1).describe('Type of relationship (in active voice)')
+13: });
+14: // Create entities schema
+15: export const CreateEntitiesSchema = z.object({
+16:   entities: z.array(EntitySchema).describe('Array of entities to create')
+17: });
+18: // Create relations schema
+19: export const CreateRelationsSchema = z.object({
+20:   relations: z.array(RelationSchema).describe('Array of relations to create')
+21: });
+22: // Add observations schema
+23: export const AddObservationsSchema = z.object({
+24:   observations: z.array(z.object({
+25:     entityName: z.string().min(1).describe('Name of the entity to add observations to'),
+26:     contents: z.array(z.string()).describe('Observations to add to the entity')
+27:   })).describe('Array of entity observations to add')
+28: });
+29: // Delete entities schema
+30: export const DeleteEntitiesSchema = z.object({
+31:   entityNames: z.array(z.string().min(1)).describe('Array of entity names to delete')
+32: });
+33: // Delete observations schema
+34: export const DeleteObservationsSchema = z.object({
+35:   deletions: z.array(z.object({
+36:     entityName: z.string().min(1).describe('Name of the entity to remove observations from'),
+37:     observations: z.array(z.string()).describe('Observations to remove from the entity')
+38:   })).describe('Array of entity observations to delete')
+39: });
+40: // Delete relations schema
+41: export const DeleteRelationsSchema = z.object({
+42:   relations: z.array(RelationSchema).describe('Array of relations to delete')
+43: });
+44: // Search nodes schema
+45: export const SearchNodesSchema = z.object({
+46:   query: z.string().min(1).describe('Search query to find matching entities')
+47: });
+48: // Open nodes schema
+49: export const OpenNodesSchema = z.object({
+50:   names: z.array(z.string().min(1)).describe('Array of entity names to retrieve')
+51: });
+52: // Update entities schema
+53: export const UpdateEntitiesSchema = z.object({
+54:   entities: z.array(z.object({
+55:     name: z.string().min(1).describe('Name of the entity to update'),
+56:     entityType: z.string().optional().describe('New entity type (optional)'),
+57:     observations: z.array(z.string()).optional().describe('New observations to replace existing ones (optional)')
+58:   })).describe('Array of entities to update')
+59: });
+60: // Update relations schema
+61: export const UpdateRelationsSchema = z.object({
+62:   relations: z.array(RelationSchema).describe('Array of relations to update')
+63: });
+
+================
+File: smithery.yaml
+================
+ 1: # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+ 2: name: "@flight505/mcp-think-tank"
+ 3: description: "A structured reasoning tool for AI assistants that provides a dedicated space for complex thinking and analysis"
+ 4: version: "1.0.5"
+ 5: startCommand:
+ 6:   type: stdio
+ 7:   configSchema:
+ 8:     type: "object"
+ 9:     title: "Think Tool Configuration"
+10:     description: "Configuration options for the Think Tool MCP server"
+11:     properties: {}
+12:     required: []
+13:   commandFunction: |-
+14:     (config) => ({
+15:       command: 'node',
+16:       args: ['dist/server.js'],
+17:       env: {
+18:         NODE_ENV: 'production'
+19:       }
+20:     })
+21: clients:
+22:   - claude
+23:   - cursor
+24:   - windsurf
+25:   - cline
+
+================
+File: src/memory/storage.ts
+================
+ 1: import * as fs from 'fs';
+ 2: import * as path from 'path';
+ 3: import * as os from 'os';
+ 4: import { KnowledgeGraph } from './knowledgeGraph.js';
+ 5: import { logger } from '../utils/logger.js';
+ 6: /**
+ 7:  * Class responsible for persisting the knowledge graph to disk
+ 8:  */
+ 9: export class GraphStorage {
+10:   private filePath: string;
+11:   private graph: KnowledgeGraph;
+12:   /**
+13:    * Create a new GraphStorage instance
+14:    * @param filePath - Path to the storage file
+15:    * @param graph - Knowledge graph to persist
+16:    */
+17:   constructor(filePath: string, graph: KnowledgeGraph) {
+18:     this.filePath = filePath;
+19:     this.graph = graph;
+20:     this.load();
+21:   }
+22:   /**
+23:    * Load the graph from the file
+24:    */
+25:   load(): void {
+26:     try {
+27:       if (fs.existsSync(this.filePath)) {
+28:         const data = fs.readFileSync(this.filePath, 'utf8');
+29:         const jsonData = JSON.parse(data);
+30:         this.graph.fromJSON(jsonData);
+31:         logger.info(`Loaded graph from ${this.filePath}`);
+32:       } else {
+33:         logger.info(`No existing graph found at ${this.filePath}, starting with empty graph`);
+34:       }
+35:     } catch (error) {
+36:       logger.error(`Error loading graph: ${error}`);
+37:     }
+38:   }
+39:   /**
+40:    * Save the graph to the file
+41:    */
+42:   save(): void {
+43:     try {
+44:       const data = JSON.stringify(this.graph.toJSON(), null, 2);
+45:       fs.writeFileSync(this.filePath, data, 'utf8');
+46:       logger.info(`Saved graph to ${this.filePath}`);
+47:     } catch (error) {
+48:       logger.error(`Error saving graph: ${error}`);
+49:     }
+50:   }
+51:   /**
+52:    * Log an operation for debugging
+53:    * @param operation - The operation being performed
+54:    * @param details - Details about the operation
+55:    */
+56:   logOperation(operation: string, details: any): void {
+57:     logger.debug(`[${operation}] ${JSON.stringify(details)}`);
+58:   }
+59: }
+60: // Create a default graph instance
+61: const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
+62: // Export the graph and storage for use in tools
+63: export const graph = new KnowledgeGraph();
+64: export const graphStorage = new GraphStorage(memoryPath, graph);
+65: // We'll look at the file first to understand its implementation
+
+================
+File: src/config.ts
+================
+ 1: import { existsSync, mkdirSync } from 'fs';
+ 2: import { join } from 'path';
+ 3: import { homedir } from 'os';
+ 4: import minimist from 'minimist';
+ 5: // Parse command line arguments
+ 6: const argv = minimist(process.argv.slice(2));
+ 7: // Default memory path
+ 8: const DEFAULT_MEMORY_PATH = join(homedir(), '.mcp-think-tank', 'memory');
+ 9: // Create default directories if they don't exist
+10: if (!existsSync(DEFAULT_MEMORY_PATH)) {
+11:   mkdirSync(DEFAULT_MEMORY_PATH, { recursive: true });
+12: }
+13: // Export configuration object
+14: export const config = {
+15:   // Memory path from command line or default
+16:   memoryPath: argv['memory-path'] || DEFAULT_MEMORY_PATH,
+17:   // Request timeout in milliseconds (default: 300 seconds = 5 minutes)
+18:   requestTimeout: argv['request-timeout'] ? 
+19:                  parseInt(argv['request-timeout'] as string, 10) * 1000 : 
+20:                  process.env.REQUEST_TIMEOUT ? 
+21:                  parseInt(process.env.REQUEST_TIMEOUT, 10) * 1000 : 
+22:                  300000,
+23:   // Other config options
+24:   debug: !!argv.debug,
+25:   version: '1.0.5', // Should match package.json
+26: };
+27: export default config;
+
+================
+File: kg-think-mcp.md
+================
+  1: # Knowledge Graph Memory Implementation for Think MCP Server
+  2: 
+  3: ## Project Overview
+  4: 
+  5: This implementation plan outlines the process for enhancing the MCP Think Server with persistent memory capabilities using a knowledge graph. The enhanced server will enable Claude to:
+  6: 
+  7: - Store and retrieve information across conversations
+  8: - Build semantic connections between pieces of information
+  9: - Access previous reasoning and conclusions
+ 10: - Maintain contextual awareness of user preferences and past interactions
+ 11: 
+ 12: ## System Architecture
+ 13: 
+ 14: The knowledge graph memory system will be implemented with the following components:
+ 15: 
+ 16: - **Core Data Model**: Entity-relation model for knowledge representation
+ 17: - **Storage Layer**: File-based persistence for the knowledge graph
+ 18: - **Tool Interfaces**: MCP tools for interacting with the knowledge graph
+ 19: - **Integration**: Seamless connection with the existing "think" tool
+ 20: 
+ 21: ## Implementation Tasks
+ 22: 
+ 23: ### Phase 1: Project Setup and Core Infrastructure
+ 24: 
+ 25: - [x] Create branch for knowledge graph implementation
+ 26: - [x] Update `package.json` with required dependencies
+ 27: - [x] Setup TypeScript interfaces for knowledge graph components
+ 28: - [x] Create knowledge graph file structure
+ 29:   - [x] `src/memory/knowledgeGraph.ts`
+ 30:   - [x] `src/memory/storage.ts`
+ 31:   - [x] `src/memory/tools.ts`
+ 32:   - [x] `src/utils/validation.ts`
+ 33:   - [x] `src/config.ts`
+ 34: - [x] Implement command-line argument handling for memory path configuration
+ 35: 
+ 36: ### Phase 2: Knowledge Graph Core Implementation
+ 37: 
+ 38: - [x] Implement knowledge graph data structures
+ 39:   - [x] Entity management
+ 40:   - [x] Relation management
+ 41:   - [x] Observation handling
+ 42: - [x] Implement persistence layer
+ 43:   - [x] JSON file storage
+ 44:   - [x] Automatic saving on changes
+ 45:   - [x] Loading from existing files
+ 46: - [x] Add basic in-memory query functionality
+ 47:   - [x] Entity lookup
+ 48:   - [x] Relation traversal
+ 49:   - [x] Text search
+ 50: 
+ 51: ### Phase 3: MCP Tool Implementation
+ 52: 
+ 53: - [x] Implement entity management tools
+ 54:   - [x] `create_entities` - Create multiple entities
+ 55:   - [x] `update_entities` - Update entity properties
+ 56:   - [x] `delete_entities` - Remove entities
+ 57: - [x] Implement relation management tools
+ 58:   - [x] `create_relations` - Create connections between entities
+ 59:   - [x] `update_relations` - Update relation properties
+ 60:   - [x] `delete_relations` - Remove relations
+ 61: - [x] Implement observation tools
+ 62:   - [x] `add_observations` - Add new observations to entities
+ 63:   - [x] `delete_observations` - Remove observations
+ 64: 
+ 65: ### Phase 4: Query and Retrieval Tools
+ 66: 
+ 67: - [x] Implement graph reading tools
+ 68:   - [x] `read_graph` - Get entire knowledge graph
+ 69:   - [x] `open_nodes` - Retrieve specific entities
+ 70: - [x] Implement search functionality
+ 71:   - [x] `search_nodes` - Find entities by query
+ 72: 
+ 73: ### Phase 4.1: knowledge about current file tree
+ 74: 
+ 75: We don't want to interrupt the creative flow of code generation with constant index updates and checks. Let me think about how to make this more flow-friendly.
+ 76: 
+ 77: Ran tool
+ 78: Now I see a better approach! Here's a refined proposal:
+ 79: 
+ 80: Implement a "smart context" system:
+ 81: 
+ 82: 1. Simple File Context Tracker:
+ 83:    - Tracks only SAVED/COMMITTED files
+ 84:    - Ignores files currently being edited
+ 85:    - Updates on file save/commit
+ 86:    - Focuses on:
+ 87:      - Imported modules
+ 88:      - External function calls
+ 89:      - Shared types/interfaces
+ 90:      - Public APIs
+ 91: 
+ 92: 2. Usage Pattern:
+ 93:    - When writing new code:
+ 94:      ✓ Complete freedom to create functions
+ 95:      ✓ No validation interruptions
+ 96:      ✓ Natural code flow maintained
+ 97:    
+ 98:    - When referencing existing code:
+ 99:      ✓ Quick check if module exists
+100:      ✓ Verify imported functions
+101:      ✓ Validate shared type usage
+102: 
+103: 3. Benefits:
+104:    - Prevents most common hallucinations (invalid imports/references)
+105:    - Doesn't slow down new code generation
+106:    - Updates happen at natural break points (save/commit)
+107:    - Lightweight and unintrusive
+108: 
+109: 
+110: This approach is much more flow-friendly because:
+111: 1. It doesn't interrupt the creative process of writing new code
+112: 2. Only validates references to existing code
+113: 3. Updates happen at natural break points
+114: 4. Focuses on preventing the most problematic hallucinations (invalid imports and external references)
+115: 
+116: For example:
+117: - When writing a new component with multiple new functions: No interruptions or validation
+118: - When importing from another file: Quick check if the import exists
+119: - When calling an existing utility function: Verify it exists in the saved codebase
+120: 
+121: Would this approach better align with your vision of maintaining code flow while still preventing the most problematic hallucinations?
+122: 
+123: 
+124: ### Phase 5: Integration with Think Tool
+125: 
+126: - [x] Enhance existing think tool
+127:   - [x] Add optional memory parameters
+128:   - [x] Implement memory saving functionality
+129:   - [x] Ensure backward compatibility
+130:   - [x] Improve think tool description for better self-reflection and reasoning guidance
+131:   - [ ] 
+132: 
+133:   ### Phase 5.1: logging issues
+134:   <chatName="Fix excessive logging in MCP Think Tank"/>
+135: 
+136: Let me analyze the logging issue and propose a solution:
+137: 
+138: 1. Problem Analysis:
+139: - Current logging system writes to both stderr and log file for every operation
+140: - No rate limiting or log rotation implemented
+141: - Debug mode appears to be too verbose
+142: - Log file path is in home directory which can fill up disk space quickly
+143: 
+144: 2. Root Causes:
+145: - The Logger class in `src/utils/logger.ts` writes to file unconditionally
+146: - No size limits or rotation for log files
+147: - Debug logging may be too aggressive in memory operations
+148: 
+149: 3. Solution Components:
+150: 
+151: a) Logger Class Modifications (src/utils/logger.ts):
+152: - Add log rotation with maximum file size
+153: - Implement log level filtering
+154: - Add daily log rotation
+155: - Make file logging optional
+156: 
+157: ```typescript
+158: // Proposed changes to Logger class
+159: class Logger {
+160:   private maxFileSize = 10 * 1024 * 1024; // 10MB
+161:   private maxFiles = 5;
+162:   private logToFile = true; // Configurable
+163:   
+164:   private rotateLogs() {
+165:     if (fs.existsSync(this.logFile) {
+166:       const stats = fs.statSync(this.logFile);
+167:       if (stats.size > this.maxFileSize) {
+168:         // Rotate logs
+169:         for (let i = this.maxFiles - 1; i > 0; i--) {
+170:           const oldFile = `${this.logFile}.${i}`;
+171:           const newFile = `${this.logFile}.${i + 1}`;
+172:           if (fs.existsSync(oldFile)) {
+173:             fs.renameSync(oldFile, newFile);
+174:           }
+175:         }
+176:         fs.renameSync(this.logFile, `${this.logFile}.1`);
+177:       }
+178:     }
+179:   }
+180: 
+181:   private writeToFile(message: string) {
+182:     if (!this.logToFile) return;
+183:     
+184:     try {
+185:       this.rotateLogs();
+186:       const timestamp = new Date().toISOString();
+187:       fs.appendFileSync(this.logFile, `${timestamp} - ${message}\n`);
+188:     } catch (err) {
+189:       // Fallback to console if file writing fails
+190:       console.error(`Failed to write to log file: ${err.message}`);
+191:     }
+192:   }
+193: }
+194: ```
+195: 
+196: b) Configuration Updates (src/config.ts):
+197: - Add logging configuration options
+198: - Set reasonable defaults
+199: 
+200: ```typescript
+201: export const config = {
+202:   // Add these new properties
+203:   logging: {
+204:     enabled: true,
+205:     maxFileSize: 10 * 1024 * 1024, // 10MB
+206:     maxFiles: 5,
+207:     level: process.env.MCP_LOG_LEVEL || 'info' // 'error', 'warn', 'info', 'debug'
+208:   }
+209: };
+210: ```
+211: 
+212: c) Memory Tools Logging (src/memory/tools.ts):
+213: - Reduce debug logging frequency
+214: - Add batch logging for bulk operations
+215: 
+216: 4. Implementation Steps:
+217: 
+218: 1. Modify Logger class:
+219:    - Add log rotation
+220:    - Implement size limits
+221:    - Add configurable log levels
+222:    - Make file logging optional
+223: 
+224: 2. Update config.ts:
+225:    - Add logging configuration options
+226:    - Set sensible defaults
+227: 
+228: 3. Modify memory tools:
+229:    - Reduce verbose logging
+230:    - Batch log messages where possible
+231: 
+232: 4. Update server.ts:
+233:    - Initialize logger with config
+234:    - Add startup logging configuration
+235: 
+236: 5. Update documentation:
+237:    - Document new logging configuration options
+238:    - Add troubleshooting section for logging
+239: 
+240: 5. Impact Analysis:
+241: - Will significantly reduce disk usage
+242: - Prevents system slowdowns from excessive logging
+243: - Maintains ability to debug when needed
+244: - Backward compatible with existing installations
+245: 
+246: 6. Additional Recommendations:
+247: - Add periodic log cleanup (e.g., delete logs older than 30 days)
+248: - Consider adding a `flushLogs()` method for critical errors
+249: - Add warning when log directory is approaching capacity
+250: 
+251: Would you like me to elaborate on any specific part of this solution?
+252:  
+253: 
+254: 
+255: ### Phase 6: Testing and Documentation
+256: 
+257: - [ ] Create unit tests
+258:   - [ ] Knowledge graph operations
+259:   - [ ] Storage functionality
+260:   - [ ] Tool implementations
+261: - [ ] Create integration tests
+262:   - [ ] End-to-end server operation
+263:   - [ ] Tool interaction patterns
+264:   - [ ] Persistence across server restarts
+265: - [x] Update documentation
+266:   - [x] Update README.md with memory capabilities
+267:   - [x] Create usage examples
+268:   - [x] Document API and tool interfaces
+269: 
+270: ### Phase 7: Deployment and Distribution
+271: 
+272: - [ ] Update installation scripts
+273:   - [ ] `install.sh` for Unix-based systems
+274:   - [ ] `install.bat` for Windows
+275: - [ ] Update Smithery configuration
+276: - [ ] Update npm package configurations
+277: 
+278: ## Dependencies
+279: 
+280: - **Required Dependencies**:
+281:   - [x] TypeScript and related type definitions
+282:   - [x] FastMCP for server functionality
+283:   - [x] Storage solution (JSON-based)
+284:   - [x] Zod for validation
+285: 
+286: ## Technical Specifications
+287: 
+288: ### Knowledge Graph Data Model
+289: 
+290: ```typescript
+291: // Entity structure
+292: interface Entity {
+293:   name: string;            // Unique identifier
+294:   entityType: string;      // Type classification
+295:   observations: string[];  // Facts/observations
+296: }
+297: 
+298: // Relation structure
+299: interface Relation {
+300:   from: string;            // Source entity name
+301:   to: string;              // Target entity name  
+302:   relationType: string;    // Relationship type (active voice)
+303: }
+304: 
+305: // Knowledge Graph
+306: interface KnowledgeGraph {
+307:   entities: Map<string, Entity>;
+308:   relations: Map<string, Set<Relation>>;
+309: }
+310: ```
+311: 
+312: ### Tool Specifications
+313: 
+314: 1. **create_entities**
+315:    - Input: Array of entity objects
+316:    - Behavior: Creates new entities if they don't exist
+317:    - Output: Confirmation or error
+318: 
+319: 2. **create_relations**
+320:    - Input: Array of relation objects
+321:    - Behavior: Creates relations between existing entities
+322:    - Output: Confirmation or error
+323: 
+324: 3. **add_observations**
+325:    - Input: Entity name and array of observations
+326:    - Behavior: Adds observations to an entity
+327:    - Output: Confirmation or error
+328: 
+329: 4. **read_graph**
+330:    - Input: None
+331:    - Behavior: Returns the entire knowledge graph
+332:    - Output: Knowledge graph structure
+333: 
+334: 5. **search_nodes**
+335:    - Input: Search query
+336:    - Behavior: Searches for matching entities
+337:    - Output: Array of matching entities
+338: 
+339: 6. **open_nodes**
+340:    - Input: Array of entity names
+341:    - Behavior: Retrieves specific entities
+342:    - Output: Array of entity objects
+343: 
+344: ## Future Enhancements
+345: 
+346: - [ ] Add proper smithery config (need to ask me to create account at smithery.com)
+347: - [x] We have multiple tools can we improuve the way they cross-talk to each other? - we should research this it they are not already connected. 
+348:   - [x] Implement event-based communication pattern
+349:   - [x] Use shared memory for efficient data exchange
+350:   - [x] Add batched operations to reduce overhead
+351: - [ ] Add a task-master tool into this project based on the same pattern as https://github.com/eyaltoledano/claude-task-master
+352: - [ ] Add memory visualization tools
+353: - [ ] Memory visualization tools
+
+================
+File: src/server.ts
+================
+ 1: import { FastMCP } from 'fastmcp';
+ 2: import { registerMemoryTools } from './memory/tools.js';
+ 3: import { registerThinkTool } from './think/tools.js';
+ 4: import { createDirectory } from './utils/fs.js';
+ 5: import path from 'path';
+ 6: import * as os from 'os';
+ 7: import { config } from './config.js';
+ 8: import { logger } from './utils/logger.js';
+ 9: // Get configuration from environment
+10: const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
+11: // Log configuration
+12: logger.info(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
+13: // Create necessary directories
+14: const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
+15: createDirectory(path.dirname(memoryPath));
+16: logger.info(`Memory path: ${memoryPath}`);
+17: // Create FastMCP server
+18: const server = new FastMCP({
+19:   name: "MCP Think Tank",
+20:   version: "1.0.5"
+21: });
+22: // Register memory tools
+23: registerMemoryTools(server);
+24: // Add the 'think' tool for structured reasoning
+25: registerThinkTool(server);
+26: // Start the server
+27: server.start();
+28: // Error handling
+29: process.on('uncaughtException', (error: Error) => {
+30:   logger.error(`Uncaught exception: ${error.stack || error.message}`);
+31: });
+32: process.on('unhandledRejection', (reason: unknown) => {
+33:   logger.error(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
+34: });
+
+================
+File: package.json
+================
+ 1: {
+ 2:   "name": "mcp-think-tank",
+ 3:   "version": "1.1.1",
+ 4:   "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
+ 5:   "type": "module",
+ 6:   "main": "dist/server.js",
+ 7:   "bin": {
+ 8:     "mcp-think-tank": "bin/mcp-think-tank.js"
+ 9:   },
+10:   "scripts": {
+11:     "build": "tsc",
+12:     "start": "node dist/server.js",
+13:     "dev": "node --loader ts-node/esm src/server.ts",
+14:     "inspect": "npx fastmcp inspect src/server.ts",
+15:     "prepublishOnly": "npm run build"
+16:   },
+17:   "keywords": [
+18:     "mcp",
+19:     "ai",
+20:     "claude",
+21:     "think-tool",
+22:     "reasoning",
+23:     "structured-thinking",
+24:     "cursor",
+25:     "anthropic",
+26:     "knowledge-graph",
+27:     "memory"
+28:   ],
+29:   "author": "flight505",
+30:   "license": "MIT",
+31:   "homepage": "https://github.com/flight505/mcp-think-tank",
+32:   "repository": {
+33:     "type": "git",
+34:     "url": "git+https://github.com/flight505/mcp-think-tank.git"
+35:   },
+36:   "bugs": {
+37:     "url": "https://github.com/flight505/mcp-think-tank/issues"
+38:   },
+39:   "dependencies": {
+40:     "@types/node": "^22.13.17",
+41:     "dotenv": "^16.5.0",
+42:     "fastmcp": "^1.21.0",
+43:     "minimist": "^1.2.8",
+44:     "ts-node": "^10.9.2",
+45:     "typescript": "^5.8.2",
+46:     "zod": "^3.24.2"
+47:   },
+48:   "devDependencies": {
+49:     "@types/minimist": "^1.2.5",
+50:     "nodemon": "^3.1.9"
+51:   },
+52:   "engines": {
+53:     "node": ">=18.0.0"
+54:   },
+55:   "files": [
+56:     "dist",
+57:     "bin",
+58:     "src",
+59:     "Readme.md",
+60:     "LICENSE"
+61:   ],
+62:   "publishConfig": {
+63:     "access": "public"
+64:   }
+65: }
+
+================
+File: Readme.md
+================
+  1: # MCP Think Tank
+  2: 
+  3: <div align="center">
+  4:   
+  5: <picture>
+  6:   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_dark.png" width="320">
+  7:   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_light.png" width="320">
+  8:   <img alt="MCP Think Tank Logo" src="https://raw.githubusercontent.com/flight505/mcp-think-tank/main/assets/MCP_Think_Tank_light.png" width="320">
+  9: </picture>
+ 10: 
+ 11: [![npm version](https://img.shields.io/npm/v/mcp-think-tank.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-tank)
+ 12: [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+ 13: [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+ 14: [![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
+ 15: [![Model Context Protocol](https://img.shields.io/badge/MCP-Tank-orange.svg)](https://github.com/modelcontextprotocol)
+ 16: [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+ 17: 
+ 18: </div>
+ 19: 
+ 20: ## Overview
+ 21: 
+ 22: MCP Think Tank provides Claude with a dedicated space for structured reasoning and self-reflection. Through elegant simplicity, it enhances Claude's natural capabilities for systematic problem-solving while maintaining persistent memory through a knowledge graph.
+ 23: 
+ 24: ## 🎯 Philosophy
+ 25: 
+ 26: MCP Think Tank is built on three core principles:
+ 27: 
+ 28: 1. **Elegant Simplicity**: We believe in the power of minimal, well-designed tools that work with Claude's natural capabilities rather than trying to replicate or override them.
+ 29: 
+ 30: 2. **Enhanced Reflection**: By providing gentle guidance rather than rigid structure, we enable better reasoning and self-reflection without constraining Claude's thinking process.
+ 31: 
+ 32: 3. **Persistent Context**: The knowledge graph provides memory across conversations while maintaining simplicity in both storage and retrieval.
+ 33: 
+ 34: ## 🧠 The Power of Structured Thinking
+ 35: 
+ 36: The think tool provides a dedicated space for systematic reasoning, encouraging:
+ 37: - Clear problem definition
+ 38: - Relevant context gathering
+ 39: - Step-by-step analysis
+ 40: - Self-reflection on reasoning
+ 41: - Well-formed conclusions
+ 42: 
+ 43: Recent studies show significant improvements when using structured thinking:
+ 44: - **54% relative improvement** in complex decision-making tasks
+ 45: - **Enhanced consistency** across multiple trials
+ 46: - **Improved performance** on software engineering benchmarks
+ 47: 
+ 48: ## 🚀 Key Features
+ 49: 
+ 50: - 💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection
+ 51: - 🧩 **Knowledge Graph**: Simple but effective persistent memory
+ 52: - 🔍 **Memory Tools**: Easy-to-use tools for storing and retrieving information
+ 53: - 🤝 **Client Support**: Seamless integration with Claude, Cursor, and other MCP clients
+ 54: 
+ 55: ## 📦 Installation
+ 56: 
+ 57: ### NPX (Recommended)
+ 58: 
+ 59: The easiest way to use MCP Think Tank is via NPX:
+ 60: 
+ 61: ```bash
+ 62: npx mcp-think-tank
+ 63: ```
+ 64: 
+ 65: ### Global Installation
+ 66: 
+ 67: ```bash
+ 68: npm install -g mcp-think-tank
+ 69: mcp-think-tank
+ 70: ```
+ 71: 
+ 72: ### Unix-based Systems (MacOS/Linux)
+ 73: 
+ 74: ```bash
+ 75: curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.sh | bash
+ 76: ```
+ 77: 
+ 78: ### Windows
+ 79: 
+ 80: ```bash
+ 81: curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.bat && install.bat
+ 82: ```
+ 83: 
+ 84: ## ⚙️ Configuration
+ 85: 
+ 86: ### Memory Path Configuration
+ 87: 
+ 88: By default, the knowledge graph is stored in `~/.mcp-think-tank/memory.jsonl`. For custom paths, you can:
+ 89: 
+ 90: 1. Use command-line arguments:
+ 91: ```bash
+ 92: mcp-think-tank --memory-path=/absolute/path/to/your/memory.jsonl
+ 93: ```
+ 94: 
+ 95: 2. Set the MEMORY_PATH environment variable:
+ 96: ```bash
+ 97: MEMORY_PATH=/absolute/path/to/your/memory.jsonl mcp-think-tank
+ 98: ```
+ 99: 
+100: 3. In your MCP client configuration, create a new memory.jsonl file in the root of your project. If you don't, it will use the default memory.jsonl file across all projects, which can lead to suboptimal memories for each project.:
+101: 
+102: #### Cursor Example
+103: 
+104: In your `~/.cursor/mcp.json`:
+105: ```json
+106: {
+107:   "mcpServers": {
+108:     "think-tool": {
+109:       "command": "npx",
+110:       "args": ["-y", "mcp-think-tank"],
+111:       "type": "stdio",
+112:       "env": {
+113:         "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl"
+114:       },
+115:       "enabled": true
+116:     }
+117:   }
+118: }
+119: ```
+120: 
+121: #### Claude Desktop Example
+122: 
+123: In your `claude_desktop_config.json`:
+124: ```json
+125: {
+126:   "mcpServers": {
+127:     "think-tool": {
+128:       "command": "mcp-think-tank",
+129:       "env": {
+130:         "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl" 
+131:       }
+132:     }
+133:   }
+134: }
+135: ```
+136: 
+137: **Important Notes:**
+138: - Always use absolute paths for file references
+139: - The directory will be created automatically if it doesn't exist
+140: - If the file doesn't exist, an empty knowledge graph will be initialized
+141: - The `.jsonl` extension is recommended for the storage file
+142: 
+143: ## 📝 Cursor Rules
+144: 
+145: To get the most out of MCP Think Tank, you can add custom rules to guide Cursor's behavior. Create these files in your `.cursor/rules` directory:
+146: 
+147: ### Global Rules (instructions.mdc)
+148: 
+149: ```markdown
+150: # Global MCP Think Tank Instructions
+151: 
+152: You are working with a codebase that uses MCP Think Tank for enhanced reasoning and persistent memory. Follow these guidelines:
+153: 
+154: ## Thinking Process
+155: - Use structured reasoning for complex decisions
+156: - Break down problems into clear steps
+157: - Consider both immediate and long-term implications
+158: - Reflect on your reasoning process
+159: 
+160: ## Memory Usage
+161: - Commit important decisions to memory
+162: - Store reusable patterns and solutions
+163: - Create meaningful relations between concepts
+164: - Reference previous decisions when relevant
+165: 
+166: ## Development Patterns
+167: - Document architectural decisions with rationale
+168: - Maintain consistent coding patterns
+169: - Build on previous solutions
+170: - Review and reflect on implementation choices
+171: 
+172: ## Best Practices
+173: - Start complex tasks with structured thinking
+174: - Commit design decisions to memory
+175: - Reference previous solutions before creating new ones
+176: - Reflect on implementation choices
+177: - Build relationships between related concepts
+178: 
+179: Remember to:
+180: 1. Think through complex problems systematically
+181: 2. Store important decisions and patterns
+182: 3. Reference and build upon previous knowledge
+183: 4. Reflect on and improve solutions
+184: ```
+185: 
+186: ### Project-Specific Rules (project.mdc)
+187: 
+188: ```markdown
+189: # Project-Specific MCP Think Tank Guidelines
+190: 
+191: This project uses MCP Think Tank for maintaining consistent development patterns and architectural decisions.
+192: 
+193: ## Development Workflow
+194: 1. Architecture Decisions:
+195:    - Use structured thinking to evaluate options
+196:    - Document decisions with clear rationale
+197:    - Commit important decisions to memory
+198:    - Create relations to existing patterns
+199: 
+200: 2. Implementation:
+201:    - Reference previous decisions
+202:    - Maintain consistent patterns
+203:    - Document key design choices
+204:    - Reflect on trade-offs
+205: 
+206: 3. Code Review:
+207:    - Compare against stored patterns
+208:    - Evaluate consistency with previous decisions
+209:    - Consider long-term maintainability
+210:    - Document significant changes
+211: 
+212: ## Patterns to Maintain
+213: - Store reusable code patterns
+214: - Document component interfaces
+215: - Track technical debt decisions
+216: - Maintain dependency relationships
+217: 
+218: ## Memory Guidelines
+219: - Tag decisions with relevant categories
+220: - Create meaningful entity relationships
+221: - Add clear, actionable observations
+222: - Update existing patterns when improved
+223: 
+224: Remember: Build on existing knowledge rather than reinventing solutions.
+225: ```
+226: 
+227: These rules help Cursor better assist you by:
+228: - Encouraging systematic thinking
+229: - Promoting consistent memory usage
+230: - Maintaining development patterns
+231: - Building on accumulated knowledge
+232: 
+233: ## 🔌 Client Integration
+234: 
+235: ### Claude Desktop
+236: 
+237: Add to your `claude_desktop_config.json`:
+238: 
+239: ```json
+240: {
+241:   "mcpServers": {
+242:     "think-tool": {
+243:       "command": "mcp-think-tank"
+244:     }
+245:   }
+246: }
+247: ```
+248: 
+249: Important notes:
+250: - Use absolute paths for any file references
+251: - The server inherits only basic environment variables (USER, HOME, PATH)
+252: - For custom environment variables, use the `env` field:
+253: ```json
+254: {
+255:   "mcpServers": {
+256:     "think-tool": {
+257:       "command": "mcp-think-tank",
+258:       "env": {
+259:         "NODE_ENV": "production"
+260:       }
+261:     }
+262:   }
+263: }
+264: ```
+265: 
+266: ### Cursor
+267: 
+268: In Cursor's MCP Server settings:
+269: 
+270: ```json
+271: {
+272:   "mcpServers": {
+273:     "think-tool": {
+274:       "command": "npx",
+275:       "args": ["-y", "mcp-think-tank"],
+276:       "type": "stdio"
+277:     }
+278:   }
+279: }
+280: ```
+281: 
+282: ## 🔍 Debugging
+283: 
+284: ### Logging Configuration
+285: 
+286: MCP Think Tank uses a dedicated logging system that writes to both a file and stderr (when debug mode is enabled). Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log`.
+287: 
+288: To enable debug logging, set the `MCP_DEBUG` environment variable:
+289: 
+290: ```bash
+291: MCP_DEBUG=true mcp-think-tank
+292: ```
+293: 
+294: Or in your configuration:
+295: 
+296: ```json
+297: {
+298:   "mcpServers": {
+299:     "think-tool": {
+300:       "command": "mcp-think-tank",
+301:       "env": {
+302:         "MCP_DEBUG": "true"
+303:       }
+304:     }
+305:   }
+306: }
+307: ```
+308: 
+309: To view server logs:
+310: ```bash
+311: tail -n 20 -F ~/.mcp-think-tank/logs/mcp-think-tank.log
+312: ```
+313: 
+314: Common issues to check:
+315: 1. Working directory issues - use absolute paths
+316: 2. Missing environment variables
+317: 3. Permission problems
+318: 4. Invalid configuration syntax
+319: 
+320: ## 🧰 Available Tools
+321: 
+322: ### Think Tool
+323: The core tool for structured reasoning:
+324: 
+325: ```typescript
+326: think(structuredReasoning: string, options?: {
+327:   category?: string,
+328:   tags?: string[],
+329:   associateWithEntity?: string,
+330:   storeInMemory?: boolean
+331: })
+332: ```
+333: 
+334: The tool provides a dedicated space for systematic thinking, encouraging:
+335: - Problem definition
+336: - Context gathering
+337: - Analysis steps
+338: - Self-reflection
+339: - Clear conclusions
+340: 
+341: ### Memory Tools
+342: - `create_entities`: Create new entities in the knowledge graph
+343: - `create_relations`: Create relationships between entities
+344: - `add_observations`: Add new observations to existing entities
+345: - `update_entities`: Update existing entity properties
+346: - `update_relations`: Update existing relationships
+347: - `delete_entities`: Remove entities from the knowledge graph
+348: - `delete_observations`: Remove specific observations from entities
+349: - `delete_relations`: Remove relationships between entities
+350: - `read_graph`: Get the entire knowledge graph
+351: - `open_nodes`: Retrieve specific entities by name
+352: - `search_nodes`: Find entities using text-based search
+353: 
+354: ## 📝 Example Usage
+355: 
+356: Here's a series of examples showing how to effectively use the think and memory tools during development:
+357: 
+358: ### 1. Making Architecture Decisions
+359: 
+360: ```
+361: User: I need to design the authentication system for our new microservices architecture. Please think through this and commit the decision to memory.
+362: 
+363: [Claude uses the think tool]
+364: 
+365: Problem Definition:
+366: Design a secure, scalable authentication system for a microservices architecture.
+367: 
+368: Relevant Context:
+369: - Multiple services need authentication
+370: - Mix of internal and external clients
+371: - Compliance requirements for sensitive data
+372: - Need to support future service additions
+373: 
+374: Analysis Steps:
+375: 1. Authentication approaches:
+376:    - Centralized auth service with JWT
+377:    - Distributed auth with service mesh
+378:    - Hybrid approach with cached tokens
+379:    
+380: 2. Key considerations:
+381:    - Token validation overhead
+382:    - Service-to-service auth
+383:    - Secret management
+384:    - Scalability impact
+385: 
+386: Self-Reflection:
+387: I notice I'm biasing towards complexity when simpler solutions might work. Let me reconsider from first principles.
+388: 
+389: Conclusion:
+390: Recommend centralized auth service approach:
+391: 1. Single OAuth2/OIDC service with JWT
+392: 2. Redis-backed token cache
+393: 3. Service-specific public keys
+394: 4. Sidecar pattern for validation
+395: 
+396: [Claude commits to memory]
+397: Creating entity 'AuthSystem' with observations about the decision and rationale...
+398: Creating relations to 'Microservices' and 'Security' entities...
+399: ```
+400: 
+401: ### 2. Implementation Reference
+402: 
+403: ```
+404: User: I'm starting to implement the auth service we discussed. Can you recall our architecture decision?
+405: 
+406: [Claude checks memory]
+407: Found entity 'AuthSystem' with related decisions...
+408: 
+409: Based on our previous analysis, we decided on a centralized auth service using:
+410: - OAuth2/OIDC protocol
+411: - JWT tokens with service-specific signing
+412: - Redis cache for token validation
+413: - Sidecar pattern for service integration
+414: 
+415: Let me think through the implementation approach...
+416: 
+417: Problem Definition:
+418: Plan the implementation phases for our chosen auth system.
+419: 
+420: Analysis Steps:
+421: 1. Core Components:
+422:    ```typescript
+423:    interface AuthService {
+424:      issueToken(credentials: UserCredentials): Promise<JWT>;
+425:      validateToken(token: string): Promise<TokenClaims>;
+426:      rotateServiceKeys(): Promise<void>;
+427:    }
+428:    ```
+429: 
+430: 2. Implementation Phases:
+431:    - Core token issuance and validation
+432:    - Redis cache integration
+433:    - Service key management
+434:    - Sidecar implementation
+435: 
+436: Self-Reflection:
+437: The interface design aligns well with our architecture decision while keeping the implementation flexible.
+438: 
+439: [Claude commits implementation details to memory]
+440: Adding observations to 'AuthSystem' about implementation structure...
+441: ```
+442: 
+443: ### 3. Code Review and Reflection
+444: 
+445: ```
+446: User: Can you review this auth service implementation and reflect on how it aligns with our original design?
+447: 
+448: [Code shown...]
+449: 
+450: [Claude uses think tool]
+451: 
+452: Problem Definition:
+453: Evaluate current implementation against our architectural decisions and best practices.
+454: 
+455: Relevant Context:
+456: - Previous architecture decisions (loaded from memory)
+457: - Implementation details (loaded from memory)
+458: - Current code review
+459: 
+460: Analysis Steps:
+461: 1. Alignment Check:
+462:    ✅ Centralized OAuth2 implementation
+463:    ✅ JWT with proper signing
+464:    ❌ Missing Redis cache integration
+465:    ⚠️ Sidecar pattern partially implemented
+466: 
+467: 2. Code Quality:
+468:    - Good separation of concerns
+469:    - Clear interface definitions
+470:    - Missing error handling in key rotation
+471:    - Need more logging for audit trail
+472: 
+473: Self-Reflection:
+474: I see we've drifted from our original caching strategy. This could impact performance under load.
+475: 
+476: Conclusion:
+477: Recommended changes:
+478: 1. Implement Redis cache as planned
+479: 2. Add comprehensive error handling
+480: 3. Enhance logging for security audit
+481: 4. Complete sidecar implementation
+482: 
+483: [Claude commits review findings]
+484: Adding observations about implementation review...
+485: Creating relation between 'AuthSystem' and 'CodeQuality'...
+486: ```
+487: 
+488: ### 4. Using Accumulated Knowledge
+489: 
+490: ```
+491: User: We're seeing performance issues in the auth service. Can you think through potential optimizations based on our experience?
+492: 
+493: [Claude loads relevant memory entries]
+494: Analyzing previous decisions, implementation details, and review findings...
+495: 
+496: Problem Definition:
+497: Optimize auth service performance based on our accumulated knowledge.
+498: 
+499: Analysis Steps:
+500: 1. Known Issues (from memory):
+501:    - Missing Redis cache implementation
+502:    - Token validation overhead
+503:    - Incomplete sidecar pattern
+504: 
+505: 2. Performance Data:
+506:    - High latency in token validation
+507:    - Increased load on main auth service
+508:    - Service-to-service call overhead
+509: 
+510: Self-Reflection:
+511: Our original architecture correctly anticipated these issues, but we didn't fully implement the solutions.
+512: 
+513: Conclusion:
+514: Prioritized optimizations:
+515: 1. Implement Redis cache (as originally planned):
+516:    ```typescript
+517:    class CachedAuthService implements AuthService {
+518:      constructor(
+519:        private redis: Redis,
+520:        private tokenTTL: number
+521:      ) {}
+522: 
+523:      async validateToken(token: string): Promise<TokenClaims> {
+524:        const cached = await this.redis.get(token);
+525:        if (cached) return JSON.parse(cached);
+526:        
+527:        const claims = await this.validateTokenSignature(token);
+528:        await this.redis.setex(token, this.tokenTTL, JSON.stringify(claims));
+529:        return claims;
+530:      }
+531:    }
+532:    ```
+533: 
+534: 2. Complete sidecar implementation for local validation
+535: 3. Add token pre-fetching for known high-traffic patterns
+536: 
+537: [Claude commits optimization details]
+538: Adding observations about performance optimization...
+539: Updating 'AuthSystem' entity with optimization findings...
+540: ```
+541: 
+542: These examples demonstrate:
+543: - Explicit memory commits for important decisions
+544: - Natural reference to previous decisions
+545: - Structured reflection on implementation
+546: - Using accumulated knowledge for improvements
+547: - Progressive refinement through self-reflection
+548: 
+549: The key to effective tool usage is:
+550: 1. Commit important decisions and patterns to memory
+551: 2. Request reflection on previous decisions when needed
+552: 3. Build on accumulated knowledge for better solutions
+553: 4. Use structured thinking for complex problems
+554: 
+555: ## 🤝 Contributing
+556: 
+557: Contributions are welcome! Please feel free to submit a Pull Request.
+558: 
+559: 1. Fork the repository
+560: 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+561: 3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+562: 4. Push to the branch (`git push origin feature/amazing-feature`)
+563: 5. Open a Pull Request
+564: 
+565: ## 📄 License
+566: 
+567: This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+568: 
+569: ## 📚 Related Projects
+570: 
+571: - [Model Context Protocol](https://github.com/modelcontextprotocol/typescript-sdk)
+572: - [FastMCP](https://github.com/jlowin/fastmcp)
+573: - [Claude 3.7 Sonnet](https://www.anthropic.com/claude)
+574: 
+575: ## 📚 Further Reading
+576: 
+577: - [Anthropic's Research on Structured Thinking](https://www.anthropic.com/research)
+578: - [Model Context Protocol Documentation](https://github.com/modelcontextprotocol)
+579: - [Claude Desktop Integration Guide](https://docs.anthropic.com/claude/docs)
+580: 
+581: ---
+582: 
+583: <div align="center">
+584:   <p>Developed by <a href="https://github.com/flight505">flight505</a></p>
+585:   <p>Give a ⭐️ if this project helped you!</p>
+586: </div>
+
+
+
+================================================================
+End of Codebase
+================================================================

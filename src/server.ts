@@ -1,6 +1,8 @@
 import { FastMCP } from 'fastmcp';
 import { registerMemoryTools } from './memory/tools.js';
 import { registerThinkTool } from './think/tools.js';
+import { registerTaskTools } from './tasks/tools.js';
+import { registerUtilityTools } from './utils/tools.js';
 import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
@@ -30,6 +32,12 @@ registerMemoryTools(server);
 
 // Add the 'think' tool for structured reasoning
 registerThinkTool(server);
+
+// Register task management tools
+registerTaskTools(server);
+
+// Register utility tools
+registerUtilityTools(server);
 
 // Start the server
 server.start();
