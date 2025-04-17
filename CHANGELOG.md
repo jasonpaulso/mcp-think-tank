@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 (Unreleased)
+
+### Improved
+- Replaced custom logger with Pino for better performance and reliability
+- Added log rotation and configurable log levels via environment variables
+- Reduced stdout/stderr pollution for better FastMCP compatibility
+
 ## 1.3.0 (Unreleased)
 
 ### Added

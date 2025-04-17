@@ -22,6 +22,8 @@ async function batchProcessEntities(entities: any[], processFn: (entity: any) =>
 
   const startTime = Date.now();
 
+  if (logger.levelVal <= 20) logger.debug(`Processing ${entities.length} entities in batches`);
+
   // Process in batches
   for (let i = 0; i < entities.length; i += BATCH_SIZE) {
     // Check if we're approaching timeout

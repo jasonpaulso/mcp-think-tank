@@ -13,41 +13,35 @@ import { execSync } from 'child_process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distPath = join(__dirname, '../dist/server.js');
 
-// Helper for consistent error formatting
-const logError = (message) => {
-  const timestamp = new Date().toISOString();
-  process.stderr.write(`${timestamp} [ERROR] ${message}\n`);
-};
-
 // Check if dist/server.js exists, if not, try to compile TypeScript files
 if (!existsSync(distPath)) {
   try {
-    process.stderr.write(`[INFO] Compiled files not found at ${distPath}, attempting to build...\n`);
+    logger.info(`[INFO] Compiled files not found at ${distPath}, attempting to build...`);
     execSync('npm run build', { 
       cwd: join(__dirname, '..'), 
       stdio: 'inherit' 
     });
   } catch (err) {
-    logError(`Failed to build the project: ${err.message}`);
-    logError('Attempting to run from source using ts-node...');
+    logger.error(`Failed to build the project: ${err.message}`);
+    logger.info('Attempting to run from source using ts-node...');
   }
 }
 
 // Import the server module (will use ts-node as fallback if compilation fails)
 if (existsSync(distPath)) {
   import('../dist/server.js').catch(err => {
-    logError(`Failed to start the Think Tank server: ${err.stack || err.message}`);
+    logger.error(`Failed to start the Think Tank server: ${err.stack || err.message}`);
     process.exit(1);
   });
 } else {
   // Fallback to ts-node
   import('ts-node/register/index.js').then(() => {
     import('../src/server.ts').catch(err => {
-      logError(`Failed to start the Think Tank server: ${err.stack || err.message}`);
+      logger.error(`Failed to start the Think Tank server: ${err.stack || err.message}`);
       process.exit(1);
     });
   }).catch(err => {
-    logError(`Failed to load ts-node: ${err.stack || err.message}`);
+    logger.error(`Failed to load ts-node: ${err.stack || err.message}`);
     process.exit(1);
   });
 } 

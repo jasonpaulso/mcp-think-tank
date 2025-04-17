@@ -95,7 +95,7 @@ export class TaskStorage {
         stream.end();
         stream.on('finish', () => {
           fs.renameSync(tempPath, tasksPath);
-          logger.info(`Saved ${this.tasks.size} tasks to storage`);
+          logger.debug(`Saved ${this.tasks.size} tasks to storage`);
         });
       } catch (err) {
         logger.error(`Error batch saving tasks: ${err}`);

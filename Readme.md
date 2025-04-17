@@ -140,6 +140,23 @@ In your `claude_desktop_config.json`:
 - If the file doesn't exist, an empty knowledge graph will be initialized
 - The `.jsonl` extension is recommended for the storage file
 
+## Logging Configuration
+
+MCP Think Tank uses Pino for high-performance logging. You can control logging behavior with these environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCP_LOG_LEVEL` | `info` | Set log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
+| `MCP_DEBUG` | `false` | When `true`, sets log level to `debug` and enables stderr output |
+| `MCP_LOG_FILE` | `true` | Set to `false` to disable file logging (useful in CI) |
+
+For production, we recommend:
+```bash
+MCP_LOG_LEVEL=warn mcp-think-tank
+```
+
+Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation.
+
 ## 📝 Cursor Rules
 
 To get the most out of MCP Think Tank, you can add custom rules to guide Cursor's behavior. Create these files in your `.cursor/rules` directory:

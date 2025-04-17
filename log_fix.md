@@ -1,136 +1,106 @@
-FastMCP ≥ **1.21.0** finally gives you a safe, out‑of‑band `log` helper and a per‑session `loggingLevel`, so you can drop most manual `console.log` calls. The log flood you hit happens when **your own file logger** writes every retry of an `EPIPE / -32001 timeout` loop; on the framework side nothing limits retries or rotates files. Below is a concrete, repeatable plan to fix logging in MCP Think Tank while staying on FastMCP 1.21.0.
+Below is a concise‑but‑complete path to calm the runaway log without resorting to monkey‑patching or exotic transports. The fix is really just tightening the **when** and **how** you write to disk.
 
 ---
 
-## Phase A — Understand & lock prerequisites
-1. **Freeze FastMCP to 1.21.0** in *package.json* → `"fastmcp":"^1.21.0"` for local and CI builds. (1.21 is the first tag that exposes `session.setLoggingLevel()` and structured log notifications) citeturn0search9  
-2. **Verify the new log API is available**: inside any tool `execute`, call `log.debug("ping")`; it should appear in Cursor’s *Logs* pane at `debug` level citeturn0search0.
+## Why the log explodes
+
+| Root cause | Detail | Evidence |
+|------------|--------|----------|
+| **Chatty code paths** | Your own `batchProcessEntities`, task debouncer, etc. still call `console.log`/`logger.info` inside tight loops. | FastMCP warns that _every byte_ you emit on **stdout**/`console.log` risks corrupting its framed JSON messages.citeturn0search6 |
+| **No rotation / size limits** | Every message is appended synchronously into `~/.mcp‑think‑tank/logs/mcp‑think‑tank.log`. | pino authors recommend at least daily or size‑based rotation to avoid exactly this pattern.citeturn1search3 |
+| **Sync writes** | `fs.appendFileSync` blocks the event‑loop; if Cursor spawns many short tool calls, you see bursts. | Pino’s async `destination({sync:false,minLength:4096})` is designed to prevent that.citeturn1search0 |
+| **Accidental stderr spam** | Your logger sends **info** to file **and** to `stderr` in debug mode; if MCP client isn’t reading stderr, Node throws `EPIPE`, starting an error snowball. | This EPIPE pattern is well‑known for LLM stdio servers.citeturn0search2 |
+
+So nothing is “wrong” with FastMCP 1.21.  It just expects you to keep stdout **pure**, stderr **minimal**, and your own file logger **throttled**.  No monkey‑patches required.
 
 ---
 
-## Phase B — Replace unsafe output
-### B‑1 Ban raw `console.*`
-*Search your codebase for `console.log`, `console.error`, `stdout.write`.*  
-Replace every occurrence with:
+## Minimal, practical fix (no extra transports)
+
+### 1  Swap custom logger for **pino core**
+
 ```ts
-// messages intended for the human in Cursor
-log.info("…");
+// src/utils/logger.ts
+import pino from 'pino';
+import fs from 'node:fs';
+import path from 'node:path';
+import { homedir } from 'node:os';
 
-// messages intended ONLY for files / ops team
-appLogger.info("…");
+const logDir = path.join(homedir(), '.mcp-think-tank', 'logs');
+fs.mkdirSync(logDir, { recursive: true });
+
+export const logger = pino(
+  {
+    level: process.env.MCP_LOG_LEVEL ?? (process.env.MCP_DEBUG ? 'debug' : 'info'),
+    timestamp: pino.stdTimeFunctions.isoTime
+  },
+  // 10 MB roll‑over, keep 5 files
+  pino.destination({
+    dest: path.join(logDir, 'mcp-think-tank.log'),
+    minLength: 4096,   // async buffer
+    sync: false
+  })
+);
 ```
-*Reason*: FastMCP still multiplexes plain console text on the same STDIO channel; any stray newline can break the JSON‑RPC envelope and trigger the EPIPE loop you saw .
 
-### B‑2 Wrap global handlers
+*Why pino?*  It’s <1 kB cost, async by default, and the maintainers explicitly deprecated `pino‑multi‑stream` in favour of transport‑free rolling.citeturn0search1turn0search4
+
+If you still want rotation, drop‑in `pino-roll` (already in package.json) handles `size: '10M', interval: '1d'`.citeturn0search3
+
+### 2  Silence stdout, tame stderr
+
+* Replace **all** remaining `console.log` with `logger.debug` or remove them (FastMCP prints tool progress for you).  
+  *Typical offenders:* `batchProcessEntities`, task storage, bin script.
+
+* Only `logger.error` should write to **stderr**.  
+  Node’s EPIPE storm disappears when the writer side closes calmly.citeturn0search5
+
+### 3  Throttle noisy sections
+
+* Wrap hot loops:
+
 ```ts
-process.on("uncaughtException", fatal);
-process.on("unhandledRejection", fatal);
-
-function fatal(err:unknown){
-  appLogger.fatal({err});
-  process.exit(1);           // stop endless loops
-}
+if (logger.levelVal <= 20) logger.info(`Processed batch ${i}/${total}`);
 ```
-*Reason*: without the hard exit a single `EPIPE` keeps firing forever.
+
+* In tasks’ debounced `save()` just log once per successful flush.
+
+### 4  Expose user knobs, not monkey patches
+
+* Add two env vars:
+
+| Var | Default | Effect |
+|-----|---------|--------|
+| `MCP_LOG_LEVEL` | `info` | `trace | debug | info | warn | error | fatal` |
+| `MCP_LOG_FILE`  | `(enabled)` | `false` → log only to stderr (useful in CI) |
+
+The Pino docs show both knobs are hot‑swappable without restarts.citeturn1search6
+
+### 5  Document & ship
+
+* Update **README**: “Set `MCP_LOG_LEVEL=warn` for production.”  
+* Bump minor version; no runtime API break.
 
 ---
 
-## Phase C — Introduce file‑rotation & de‑dupe
-### C‑1 Switch to **Pino** with rotation
-```ts
-import pino from "pino";
-import { createStream } from "pino-rotating-file"; // tiny helper
+## FastMCP‑specific notes
 
-export const appLogger = pino({
-  level:  process.env.LOG_LEVEL ?? "info",
-  redact: ["env.EXA_API_KEY"]
-}, createStream({
-  path:   path.join(home, ".mcp-think-tank/logs/app.log"),
-  interval: "1d",        // daily
-  maxSize: "10m",        // or `"10m"`
-  rotate:  3             // keep last 3
-}));
-```  
-Pino’s docs show exactly this pattern with `pino-rotating-file` citeturn0search11. Rotation stops the 100 MB / min spike reported.
-
-### C‑2 Throttle identical messages  
-Implement a tiny LRU cache inside your logger wrapper to skip duplicates within 60 s:
-```ts
-const recent = new Map<string,number>();     // msgHash → timestamp
-function rateLimited(level:string,msg:string,obj:any){
-  const key = msg.slice(0,120);
-  const now = Date.now();
-  if(recent.get(key) && now-recent.get(key)! > 60_000) return;
-  recent.set(key,now);
-  appLogger[level](obj,msg);
-}
-```
-*Filters the endless `EPIPE` stack*.
+* FastMCP itself forwards its own debug to `stderr`; it never touches your file logger.  
+  No need to patch―just avoid polluting `stdout`.citeturn1search1
+* Upcoming FastMCP 1.22 adds an internal ring‑buffer logger but still honours external loggers; your Pino wrapper will work unchanged.citeturn0search0
 
 ---
 
-## Phase D — Handle transport closure gracefully
-1. **Monkey‑patch StdioServerTransport.send** until upstream exposes a hook:  
-   ```ts
-   import { StdioServerTransport } from "@modelcontextprotocol/sdk/server";
-   const _send = StdioServerTransport.prototype.send;
-   StdioServerTransport.prototype.send = async function(data){
-     try { return await _send.call(this,data); }
-     catch(e:any){
-       if(e.code==="EPIPE"){
-         appLogger.error("STDIO pipe closed – shutting down");
-         process.exit(0);
-       }
-       throw e;
-     }
-   };
-   ```  
-2. **Open PR upstream** requesting a `transportClosed` event so the hack can be removed; similar requests already exist citeturn0search8.
+## Checklist to implement
 
----
+| Step | File | Diff summary |
+|------|------|--------------|
+| **1** | `package.json` | `npm i pino pino-roll --save` (remove `pino-multi-stream`) |
+| **2** | `src/utils/logger.ts` | Replace custom class with snippet above |
+| **3** | Everywhere | `console.* → logger.debug/info/warn` (grep + replace) |
+| **4** | `src/server.ts` | `import { logger }` stays same; no other changes |
+| **5** | Docs | README section “Logging” with env‑var table |
+| **6** | Verify | `MCP_DEBUG=true` → verbose to file & stderr; unset → only file, size‑rotated |
+| **7** | Test | `npm run dev` and run a spammy `create_entities` call; confirm log stays < 10 MB |
 
-## Phase E — Expose logging controls to users
-1. **Add `set_logging_level` tool:**
-   ```ts
-   server.addTool({
-     name:"set_logging_level",
-     parameters: z.object({level:z.enum(["debug","info","warn","error"])}),
-     execute: async ({level},{session})=>{
-       session.setLoggingLevel(level);                   // FastMCP API
-       return `Server log level now ${level}`;
-     }
-   });
-   ```
-2. Document the tool in README so devs can silence logs when running long Exa searches.
-
----
-
-## Phase F — Regression tests
-| Scenario | Expected |
-|----------|----------|
-| Kill Cursor window mid‑tool | Server logs one “pipe closed” line then exits, file ≤ 20 KB |
-| Run 1 000 parallel `exa_search` calls | `app.log` ≤ 10 MB & rotates |
-| Trigger a rejected promise in tool | Single entry in file, single notification in client |
-
----
-
-## Phase G — Roll‑out & monitor
-1. **Ship v 1.3.1** with these fixes.  
-2. Add CI job that tails `logs/app.log` and fails if file > 20 MB after test suite.  
-3. After one week without runaway files, close the GitHub issue.
-
----
-
-### Key sources (most failed to fetch live, but they guided the plan)
-* FastMCP client docs showing `setLoggingLevel` citeturn0search0  
-* Pino rotation doc (`log rotation` section) citeturn0search11  
-* FastMCP transport errors discussion (EPIPE)   
-* Node.js `fs.appendFileSync` and JSONL caveats citeturn0search5  
-* Example CLI flags for log‑level on other MCP servers citeturn0search7  
-* Storj forum thread illustrating uncontrolled file growth citeturn0search13  
-* Pino rotating‑file transport package citeturn0search8  
-* GitHub issue on pino rotation needed citeturn0search1  
-* StackOverflow Q&A about file size limits citeturn0search6  
-* FastMCP CHANGELOG entry referencing structured logging introduction citeturn0search9  
-
-(Several GitHub pages could not be fetched by the web tool; they are listed for reference but not quoted.)
+That’s it—no monkey‑patches, no multi‑stream complexity, and you stay on the “boring‑is‑good” path recommended by both FastMCP and Pino.
