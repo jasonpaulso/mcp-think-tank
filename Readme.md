@@ -410,6 +410,25 @@ update_tasks({
 - `open_nodes`: Retrieve specific entities by name
 - `search_nodes`: Find entities using text-based search
 
+### Research Tools
+- `exa_search`: Search the web using Exa API
+```typescript
+exa_search({
+  query: "Latest advancements in LLM training",
+  num_results: 5,
+  category: "research paper",
+  type: "neural"
+})
+```
+
+- `exa_answer`: Get a sourced answer to a question
+```typescript
+exa_answer({
+  question: "What are the latest developments in AI safety?",
+  max_citations: 5
+})
+```
+
 ### Utility Tools
 - `show_memory_path`: Get the absolute path of the active knowledge graph file
 
@@ -653,6 +672,63 @@ Now let's check what's next:
 
 [Claude uses next_task tool]
 Next task: Implement core CRUD operations
+```
+
+### 6. Web Research and Knowledge Building
+
+```
+User: I need to research the latest developments in quantum computing for a presentation.
+
+[Claude uses exa_search tool]
+Searching for: "latest developments quantum computing"
+
+Results:
+1. "Recent Breakthroughs in Quantum Computing" (arXiv)
+2. "IBM's Latest 1000+ Qubit Quantum Processor" (IBM Research)
+3. "Google Claims Quantum Supremacy with New Error-Correction Method" (Nature)
+4. "Commercial Applications of Quantum Computing in 2024" (MIT Technology Review)
+5. "Quantum Computing Market Report 2024" (Gartner)
+
+Let me get detailed information on these developments:
+
+[Claude uses exa_answer tool]
+Question: What are the most significant quantum computing breakthroughs in the past year?
+
+Answer:
+The most significant quantum computing breakthroughs in the past year include:
+
+1. Error Correction: IBM and Google have made substantial progress in quantum error correction, with IBM demonstrating a 121-qubit error-corrected logical qubit and Google achieving 99.8% fidelity with their Sycamore processor.
+
+2. Qubit Scaling: IBM released their 1,121-qubit "Condor" processor, breaking the 1,000-qubit barrier, while PsiQuantum announced progress toward their million-qubit photonic quantum computer.
+
+3. Quantum Advantage: Several research groups demonstrated quantum advantage in specific applications, including optimization problems and material science simulations.
+
+4. Algorithm Development: New quantum algorithms for machine learning, cryptography, and simulation have been published, expanding the potential applications.
+
+5. Hardware Diversity: Multiple qubit technologies are advancing in parallel, with superconducting, ion trap, photonic, and neutral atom approaches all seeing significant improvements.
+
+These breakthroughs are pushing quantum computing closer to practical applications in drug discovery, materials science, financial modeling, and cryptography.
+
+[Sources: Nature (Mar 2024), IBM Research Blog (Jan 2024), arXiv:2312.09248, Quantum Science and Technology Journal]
+
+Let me organize this information for your presentation:
+
+[Claude uses think tool]
+Problem Definition:
+Structure key quantum computing breakthroughs for a presentation format.
+
+Analysis:
+The information can be organized into these categories:
+1. Hardware Advancements (qubit scaling, error rates)
+2. Error Correction Breakthroughs
+3. Algorithmic Improvements
+4. Practical Applications Emerging
+5. Industry Developments (companies, investments)
+
+This structure focuses on both technical aspects and business relevance.
+
+[Claude uses create_entities tool]
+Creating knowledge graph entities for key quantum computing concepts and breakthroughs...
 ```
 
 These examples demonstrate:

@@ -3,6 +3,7 @@ import { registerMemoryTools } from './memory/tools.js';
 import { registerThinkTool } from './think/tools.js';
 import { registerTaskTools } from './tasks/tools.js';
 import { registerUtilityTools } from './utils/tools.js';
+import { registerResearchTools } from './research/index.js';
 import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
@@ -24,7 +25,7 @@ logger.info(`Memory path: ${memoryPath}`);
 // Create FastMCP server
 const server = new FastMCP({
   name: "MCP Think Tank",
-  version: "1.0.5"
+  version: "1.2.0"
 });
 
 // Register memory tools
@@ -38,6 +39,9 @@ registerTaskTools(server);
 
 // Register utility tools
 registerUtilityTools(server);
+
+// Register research tools
+registerResearchTools(server);
 
 // Start the server
 server.start();

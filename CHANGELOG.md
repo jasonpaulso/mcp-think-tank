@@ -1,6 +1,16 @@
 # Changelog
 
-## 1.2.0 (Unreleased)
+## 1.3.0 (Unreleased)
+
+### Added
+- Exa API Integration for web research
+  - Added `exa_search` tool for searching the web
+  - Added `exa_answer` tool for getting sourced answers
+  - Prepared optional streaming answer implementation (commented out by default)
+- Added unit tests for Exa API tools
+- Added environment variable checks and improved error handling
+
+## 1.2.0 (2024-04-16)
 
 ### Added
 - Task Management System with Knowledge Graph integration
