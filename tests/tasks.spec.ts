@@ -48,7 +48,7 @@ declare module '../src/tasks/storage.js' {
 }
 
 TaskStorage.prototype.clearAllTasks = function () {
-  (this as any).tasks.clear();
+  (this as unknown as { tasks: Map<string, Task> }).tasks.clear();
 };
 
 describe('Task Management', () => {

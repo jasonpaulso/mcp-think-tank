@@ -41,8 +41,12 @@ vi.mock('exa-js', () => {
   };
 });
 
+interface MockServer {
+  addTool: (...args: unknown[]) => unknown;
+}
+
 describe('Research Tools', () => {
-  let mockServer: any;
+  let mockServer: MockServer;
   
   beforeEach(() => {
     // Reset mocks
@@ -77,7 +81,7 @@ describe('Research Tools', () => {
       });
       
       // Parse the result
-      const parsedResult = JSON.parse(result);
+      const parsedResult = JSON.parse(result) as { results: { title: string; url: string; text: string }[] };
       
       // Check the result
       expect(parsedResult.results).toBeDefined();
@@ -101,7 +105,7 @@ describe('Research Tools', () => {
       });
       
       // Parse the result
-      const parsedResult = JSON.parse(result);
+      const parsedResult = JSON.parse(result) as { error: string };
       
       // Check the result
       expect(parsedResult.error).toBeDefined();
@@ -132,7 +136,7 @@ describe('Research Tools', () => {
       });
       
       // Parse the result
-      const parsedResult = JSON.parse(result);
+      const parsedResult = JSON.parse(result) as { answer: string; citations: { url: string; quote: string }[] };
       
       // Check the result
       expect(parsedResult.answer).toBeDefined();

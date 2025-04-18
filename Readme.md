@@ -132,24 +132,16 @@ curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/m
 - If the file doesn't exist, an empty knowledge graph will be initialized.
 - The `.jsonl` extension is recommended for the storage file.
 
-## Logging Configuration
+## Logging
 
-MCP Think Tank uses Pino for high-performance logging. Logs are written asynchronously to `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation (daily or when the file exceeds 10MB, using [pino-roll](https://github.com/arthurint/pino-roll)).
+MCP Think Tank uses a minimal, stable logging approach designed for FastMCP and production best practices:
 
-You can control logging behavior with these environment variables:
+- Logs are written to a single file at `~/.mcp-think-tank/logs/mcp-think-tank.log`.
+- Before each log write, the file size is checked. If it exceeds 10MB, the log file is deleted and a new one is started.
+- No log rotation, backups, or extra dependencies are used—only Node.js built-in modules.
+- This ensures logs never grow unbounded, prevents disk exhaustion, and keeps logging simple and reliable.
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MCP_LOG_LEVEL` | `info` | Set log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
-| `MCP_DEBUG` | `false` | When `true`, sets log level to `debug` and enables stderr output |
-| `MCP_LOG_FILE` | `true` | Set to `false` to disable file logging (useful in CI) |
-
-For production, we recommend:
-```bash
-MCP_LOG_LEVEL=warn mcp-think-tank
-```
-
-Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation. If you set `MCP_LOG_FILE=false`, file logging is disabled and only stderr output is used (if debug mode is enabled).
+This approach is intentional to keep the focus on core MCP server tools and avoid unnecessary complexity.
 
 ## 📝 MCP Think Tank: Project Rule Setup
 

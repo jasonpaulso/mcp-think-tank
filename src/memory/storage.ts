@@ -23,29 +23,13 @@ export class GraphStorage {
   }
 
   /**
-   * Load the graph from the file
+   * Load the graph from the file (JSONL only)
    */
   load(): void {
     try {
       if (fs.existsSync(this.filePath)) {
         const data = fs.readFileSync(this.filePath, 'utf8');
-        // Try to detect if it's a single JSON object (old format)
-        let lines = data.split('\n').filter(Boolean);
-        if (lines.length === 1) {
-          try {
-            const jsonData = JSON.parse(lines[0]);
-            if (jsonData.entities && jsonData.relations) {
-              // Old format: migrate to JSONL
-              this.graph.fromJSON(jsonData);
-              this.save(); // Overwrite with new format
-              logger.info(`Migrated old JSON format to JSONL at ${this.filePath}`);
-              return;
-            }
-          } catch {
-            // Not a single JSON object, fall through
-          }
-        }
-        // New format: JSONL
+        const lines = data.split('\n').filter(Boolean);
         this.graph.entities.clear();
         this.graph.relations.clear();
         for (const line of lines) {
@@ -96,7 +80,7 @@ export class GraphStorage {
    * @param details - Details about the operation
    */
   logOperation(operation: string, details: unknown): void {
-    logger.debug(`[${operation}] ${JSON.stringify(details)}`);
+    logger.info(`[${operation}] ${JSON.stringify(details)}`);
   }
 }
 

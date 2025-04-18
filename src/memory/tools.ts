@@ -27,8 +27,6 @@ async function batchProcessEntities<T extends { name: string }>(entities: T[], p
 
   const startTime = Date.now();
 
-  if (logger.levelVal <= 20) logger.debug(`Processing ${entities.length} entities in batches`);
-
   // Process in batches
   for (let i = 0; i < entities.length; i += BATCH_SIZE) {
     // Check if we're approaching timeout
@@ -77,9 +75,6 @@ export function registerMemoryTools(server: FastMCP): void {
     execute: async (args) => {
       // Process entities in batches
       const total = args.entities.length;
-      if (total > BATCH_SIZE) {
-        logger.debug(`Processing ${total} entities in batches of ${BATCH_SIZE}...`);
-      }
       
       const results = await batchProcessEntities(args.entities, (entity) => {
         return graph.addEntity(entity);
