@@ -57,22 +57,23 @@ Recent studies show significant improvements when using structured thinking:
 
 ## 📦 Installation
 
-> ⚠️ **Important:**
-> MCP Think Tank requires a pre-built server. Do **not** use on-the-fly TypeScript compilation. Always ensure `dist/server.js` exists before running. Use the `--built` flag if available, and do not use `npx mcp-think-tank` without a pre-built dist.
+> ⚠️ **Important:** MCP Think Tank requires a pre-built server.
+> The package is automatically built before publishing, so users
+> do not need to take any extra steps. Just install and run!
 
 ### NPX (Recommended)
 
 The easiest way to use MCP Think Tank is via NPX:
 
 ```bash
-npx mcp-think-tank@1.3.4 --built
+npx mcp-think-tank@latest
 ```
 
 ### Global Installation
 
 ```bash
-npm install -g mcp-think-tank@1.3.4
-mcp-think-tank --built
+npm install -g mcp-think-tank
+mcp-think-tank
 ```
 
 ### Unix-based Systems (MacOS/Linux)
