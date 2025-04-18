@@ -10,4 +10,4 @@ import { dirname, resolve } from "path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const server = resolve(here, "..", "dist", "server.js");
-import("node:" + server); 
+import(server); 

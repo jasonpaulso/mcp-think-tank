@@ -65,13 +65,13 @@ Recent studies show significant improvements when using structured thinking:
 The easiest way to use MCP Think Tank is via NPX:
 
 ```bash
-npx mcp-think-tank@1.3.2 --built
+npx mcp-think-tank@1.3.3 --built
 ```
 
 ### Global Installation
 
 ```bash
-npm install -g mcp-think-tank@1.3.2
+npm install -g mcp-think-tank@1.3.3
 mcp-think-tank --built
 ```
 
