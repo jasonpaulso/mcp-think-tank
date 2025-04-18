@@ -28,7 +28,7 @@ export const config = {
   
   // Other config options
   debug: !!argv.debug,
-  version: '1.0.5', // Should match package.json
+  version: '1.3.1', // Should match package.json
 };
 
 export default config; 

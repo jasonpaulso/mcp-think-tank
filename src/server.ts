@@ -25,7 +25,7 @@ logger.info(`Memory path: ${memoryPath}`);
 // Create FastMCP server
 const server = new FastMCP({
   name: "MCP Think Tank",
-  version: "1.2.0"
+  version: "1.3.1"
 });
 
 // Register memory tools

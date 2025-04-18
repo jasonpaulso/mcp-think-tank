@@ -41,13 +41,9 @@ vi.mock('exa-js', () => {
   };
 });
 
-interface MockServer {
-  addTool: (...args: unknown[]) => unknown;
-}
+let mockServer: any;
 
 describe('Research Tools', () => {
-  let mockServer: MockServer;
-  
   beforeEach(() => {
     // Reset mocks
     vi.resetAllMocks();

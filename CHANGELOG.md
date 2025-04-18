@@ -1,11 +1,12 @@
 # Changelog
 
-## 1.3.1 (Unreleased)
+## 1.3.1
 
-### Improved
-- Replaced custom logger with Pino for better performance and reliability
-- Added log rotation and configurable log levels via environment variables
-- Reduced stdout/stderr pollution for better FastMCP compatibility
+- Published to NPM as mcp-think-tank@1.3.1
+- Logging system simplified and dependencies removed
+- Fully committed to JSONL for knowledge graph and tasks
+- Lint and test suite cleaned up
+- Version fields updated for consistency
 
 ## 1.3.0 (2024-06-13)
 
