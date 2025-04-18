@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Task, TaskSchema } from '../src/tasks/schemas.js';
+import { Task } from '../src/tasks/schemas.js';
 import { TaskStorage } from '../src/tasks/storage.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -40,14 +40,6 @@ vi.mock('fastmcp', () => ({
   }
 }));
 
-// Mock for the knowledge graph
-const mockKnowledgeGraph = {
-  addEntity: vi.fn(),
-  addRelation: vi.fn(),
-  addObservation: vi.fn(),
-  getEntity: vi.fn()
-};
-
 describe('Task Management', () => {
   let taskStorage: TaskStorage;
   
@@ -56,7 +48,7 @@ describe('Task Management', () => {
     // Create a new instance for each test
     taskStorage = new TaskStorage();
     // Reset the tasks map
-    (taskStorage as any).tasks = new Map();
+    (taskStorage as { tasks: Map<string, Task> }).tasks = new Map();
   });
   
   afterEach(() => {

@@ -1,9 +1,11 @@
+/// <reference types="node" />
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { Task } from './schemas.js';
 import { createDirectory } from '../utils/fs.js';
 import { logger } from '../utils/logger.js';
+import type { Timeout } from 'node:timers';
 
 // Get tasks path from environment or use default
 const tasksPath = process.env.TASKS_PATH || path.join(os.homedir(), '.mcp-think-tank/tasks.jsonl');
@@ -13,7 +15,7 @@ createDirectory(path.dirname(tasksPath));
 
 export class TaskStorage {
   private tasks: Map<string, Task> = new Map();
-  private saveTimeout: NodeJS.Timeout | null = null;
+  private saveTimeout: Timeout | null = null;
   private saveDebounceMs = 5000; // 5 seconds debounce
   
   constructor() {

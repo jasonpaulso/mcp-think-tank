@@ -243,7 +243,7 @@ export class KnowledgeGraph {
   toJSON() {
     return {
       entities: Array.from(this.entities.values()),
-      relations: Array.from(this.relations.entries()).flatMap(([_, rels]) => Array.from(rels))
+      relations: Array.from(this.relations.entries()).flatMap(([, rels]) => Array.from(rels))
     };
   }
 
@@ -251,7 +251,7 @@ export class KnowledgeGraph {
    * Create a knowledge graph from JSON data
    * @param data - The JSON data
    */
-  fromJSON(data: any): void {
+  fromJSON(data: {entities?: Entity[], relations?: Relation[]}): void {
     // Clear existing data
     this.entities.clear();
     this.relations.clear();

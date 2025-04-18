@@ -41,7 +41,7 @@ export class GraphStorage {
               logger.info(`Migrated old JSON format to JSONL at ${this.filePath}`);
               return;
             }
-          } catch (e) {
+          } catch {
             // Not a single JSON object, fall through
           }
         }
@@ -56,8 +56,8 @@ export class GraphStorage {
             } else if (obj._type === 'relation') {
               this.graph.addRelation(obj);
             }
-          } catch (e) {
-            logger.warn(`Skipping invalid JSONL line: ${e}`);
+          } catch (err) {
+            logger.warn(`Skipping invalid JSONL line: ${err}`);
           }
         }
         logger.info(`Loaded graph from ${this.filePath}`);
@@ -95,7 +95,7 @@ export class GraphStorage {
    * @param operation - The operation being performed
    * @param details - Details about the operation
    */
-  logOperation(operation: string, details: any): void {
+  logOperation(operation: string, details: unknown): void {
     logger.debug(`[${operation}] ${JSON.stringify(details)}`);
   }
 }

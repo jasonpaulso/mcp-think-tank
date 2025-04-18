@@ -7,7 +7,7 @@ import { registerResearchTools } from './research/index.js';
 import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
-import { config } from './config.js';
+import './config.js';
 import { logger } from './utils/logger.js';
 
 // Get configuration from environment

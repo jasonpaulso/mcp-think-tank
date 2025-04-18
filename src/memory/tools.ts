@@ -18,7 +18,7 @@ const MAX_OPERATION_TIME = process.env.REQUEST_TIMEOUT
  * @param processFn Function to process each entity
  * @returns Object with created and existing entity names
  */
-async function batchProcessEntities(entities: any[], processFn: (entity: any) => boolean) {
+async function batchProcessEntities<T extends { name: string }>(entities: T[], processFn: (entity: T) => boolean) {
   const results = {
     created: [] as string[],
     existing: [] as string[],
