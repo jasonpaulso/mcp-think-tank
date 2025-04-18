@@ -6,7 +6,11 @@ import { logger } from '../utils/logger.js';
 
 // Batch size for processing large entity sets
 const BATCH_SIZE = 20;
-const MAX_OPERATION_TIME = 55000; // 55 seconds to allow for overhead
+// MAX_OPERATION_TIME controls how long Think Tank tools will run before aborting a batch operation.
+// It does NOT affect the FastMCP server timeout. Advanced users can override with REQUEST_TIMEOUT (in seconds).
+const MAX_OPERATION_TIME = process.env.REQUEST_TIMEOUT
+  ? parseInt(process.env.REQUEST_TIMEOUT, 10) * 1000
+  : 55000; // 55 seconds default for all users
 
 /**
  * Process entities in batches to prevent timeouts on large operations

@@ -18,7 +18,6 @@ export function registerExaSearchTool(server: FastMCP): void {
       end_published_date: z.string().optional(),
       include_domains: z.array(z.string()).optional(),
       exclude_domains: z.array(z.string()).optional(),
-      max_content_length: z.number().default(3000),
       category: z.enum([
         'general',
         'company',

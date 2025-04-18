@@ -159,4 +159,9 @@ export class TaskStorage {
 }
 
 // Export singleton instance
-export const taskStorage = new TaskStorage(); 
+export const taskStorage = new TaskStorage();
+
+// Ensure all tasks are saved on process exit to prevent data loss
+process.once('beforeExit', () => {
+  taskStorage.save();
+}); 
