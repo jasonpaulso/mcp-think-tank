@@ -1,106 +1,132 @@
-Below is a concise‑but‑complete path to calm the runaway log without resorting to monkey‑patching or exotic transports. The fix is really just tightening the **when** and **how** you write to disk.
+Below is a consolidated review of the current **MCP Think Tank** codebase with a focus on the recent logging refactor and other areas where subtle mistakes or hidden regressions can still bite you. Overall the build & tests do pass, but a few implementation details could cause runtime failures, performance issues, or silent data loss.
+
+## TL;DR — Key Findings
+* **Pino configuration is still v8‑style.** In Pino ≥ v9 the `transport` object must be created with `pino.transport()`; passing it inline is ignored and the logger falls back to synchronous STDOUT. citeturn0search2
+* The logger writes a **single growing file without rotation** even though `pino-roll` is installed; the rotation transport is never wired up. citeturn0search8turn0search9
+* `GraphStorage` **saves one big JSON blob** to a `*.jsonl` file, while `load()` expects pure JSON — the extension and the format disagree and will break incremental‑append tooling. citeturn0search10
+* `Task` tools create a **second, in‑memory KnowledgeGraph** that is never persisted, so task entities silently vanish after a restart.
+* Multiple logger calls (`logger.warn`) are used but the test mocks only stub `info|debug|error`; a future test that exercises warnings will crash.
+* A few minor TypeScript / Node pitfalls (import mix‑ups, unused deps, potential timers never cleared) are noted below.
 
 ---
 
-## Why the log explodes
+## 1 — Logging: Pino & File Rotation
 
-| Root cause | Detail | Evidence |
-|------------|--------|----------|
-| **Chatty code paths** | Your own `batchProcessEntities`, task debouncer, etc. still call `console.log`/`logger.info` inside tight loops. | FastMCP warns that _every byte_ you emit on **stdout**/`console.log` risks corrupting its framed JSON messages.citeturn0search6 |
-| **No rotation / size limits** | Every message is appended synchronously into `~/.mcp‑think‑tank/logs/mcp‑think‑tank.log`. | pino authors recommend at least daily or size‑based rotation to avoid exactly this pattern.citeturn1search3 |
-| **Sync writes** | `fs.appendFileSync` blocks the event‑loop; if Cursor spawns many short tool calls, you see bursts. | Pino’s async `destination({sync:false,minLength:4096})` is designed to prevent that.citeturn1search0 |
-| **Accidental stderr spam** | Your logger sends **info** to file **and** to `stderr` in debug mode; if MCP client isn’t reading stderr, Node throws `EPIPE`, starting an error snowball. | This EPIPE pattern is well‑known for LLM stdio servers.citeturn0search2 |
-
-So nothing is “wrong” with FastMCP 1.21.  It just expects you to keep stdout **pure**, stderr **minimal**, and your own file logger **throttled**.  No monkey‑patches required.
-
----
-
-## Minimal, practical fix (no extra transports)
-
-### 1  Swap custom logger for **pino core**
+### 1.1 ESM import pattern
+`src/utils/logger.ts` uses
 
 ```ts
-// src/utils/logger.ts
+const require = createRequire(import.meta.url);
+const pino = require('pino');
+```
+
+That is fine, but once you choose `require`, you cannot rely on tree‑shaking of ESM‑only helpers such as `stdTimeFunctions`. Instead:
+
+```ts
 import pino from 'pino';
-import fs from 'node:fs';
-import path from 'node:path';
-import { homedir } from 'node:os';
+```
 
-const logDir = path.join(homedir(), '.mcp-think-tank', 'logs');
-fs.mkdirSync(logDir, { recursive: true });
+works natively in Node ≥ 18 with `"type":"module"` and avoids the extra `createRequire`. citeturn0search0turn0search6
 
+### 1.2 Transport API mismatch
+Pino ≥ v9 deprecated the inline `transport` object. The correct idiom is:
+
+```ts
 export const logger = pino(
   {
-    level: process.env.MCP_LOG_LEVEL ?? (process.env.MCP_DEBUG ? 'debug' : 'info'),
+    level,
     timestamp: pino.stdTimeFunctions.isoTime
   },
-  // 10 MB roll‑over, keep 5 files
-  pino.destination({
-    dest: path.join(logDir, 'mcp-think-tank.log'),
-    minLength: 4096,   // async buffer
-    sync: false
+  pino.transport({
+    targets: [{
+      target: 'pino/file',
+      options: { destination: logFile, mkdir: true }
+    }]
   })
 );
-```
+``` citeturn0search1
 
-*Why pino?*  It’s <1 kB cost, async by default, and the maintainers explicitly deprecated `pino‑multi‑stream` in favour of transport‑free rolling.citeturn0search1turn0search4
+Because the current code uses the legacy shape, **all log lines will go to stdout synchronously, defeating your goal of reducing console noise and improving perf**.
 
-If you still want rotation, drop‑in `pino-roll` (already in package.json) handles `size: '10M', interval: '1d'`.citeturn0search3
-
-### 2  Silence stdout, tame stderr
-
-* Replace **all** remaining `console.log` with `logger.debug` or remove them (FastMCP prints tool progress for you).  
-  *Typical offenders:* `batchProcessEntities`, task storage, bin script.
-
-* Only `logger.error` should write to **stderr**.  
-  Node’s EPIPE storm disappears when the writer side closes calmly.citeturn0search5
-
-### 3  Throttle noisy sections
-
-* Wrap hot loops:
+### 1.3 Rotation never activated
+`pino-roll` is declared in `package.json` but never referenced. If you intend daily or size‑based rotation you must swap the transport target:
 
 ```ts
-if (logger.levelVal <= 20) logger.info(`Processed batch ${i}/${total}`);
+target: 'pino-roll',
+options: { file: logFile, interval: '1d', size: '10M', mkdir: true }
+``` citeturn0search8
+
+### 1.4 `levelVal` & `.warn`
+Runtime code checks `logger.levelVal` (OK) but also invokes `logger.warn`. Your Vitest mock does **not** stub `warn`, which will cause `TypeError: warn is not a function` if any path is covered. Adjust the mock or use `vi.fn()` for every level. citeturn0search4
+
+---
+
+## 2 — Storage Layer Issues
+
+### 2.1 `.jsonl` vs JSON
+`GraphStorage.save()` serialises the **entire graph as pretty‑printed JSON** into `memory.jsonl`, yet JSON Lines expects **one JSON object per line**. A downstream script that tails or appends to that file will choke. Either:
+
+* rename to `memory.json`, or
+* switch to true JSONL append semantics (one entity / relation per line). citeturn0search10
+
+### 2.2 Tasks graph never persisted
+`src/tasks/tools.ts` creates a brand‑new `KnowledgeGraph`:
+
+```ts
+knowledgeGraph = new KnowledgeGraph();
 ```
 
-* In tasks’ debounced `save()` just log once per successful flush.
+That object is **not the singleton exported by `memory/storage.ts`**, nor is it saved to disk. Task‑related entities therefore disappear between sessions. Import the shared `graph` & `graphStorage` instead:
 
-### 4  Expose user knobs, not monkey patches
+```ts
+import { graph as knowledgeGraph, graphStorage } from '../memory/storage.js';
+```
 
-* Add two env vars:
-
-| Var | Default | Effect |
-|-----|---------|--------|
-| `MCP_LOG_LEVEL` | `info` | `trace | debug | info | warn | error | fatal` |
-| `MCP_LOG_FILE`  | `(enabled)` | `false` → log only to stderr (useful in CI) |
-
-The Pino docs show both knobs are hot‑swappable without restarts.citeturn1search6
-
-### 5  Document & ship
-
-* Update **README**: “Set `MCP_LOG_LEVEL=warn` for production.”  
-* Bump minor version; no runtime API break.
+and call `graphStorage.save()` after mutations.
 
 ---
 
-## FastMCP‑specific notes
+## 3 — TypeScript & Runtime Observations
 
-* FastMCP itself forwards its own debug to `stderr`; it never touches your file logger.  
-  No need to patch―just avoid polluting `stdout`.citeturn1search1
-* Upcoming FastMCP 1.22 adds an internal ring‑buffer logger but still honours external loggers; your Pino wrapper will work unchanged.citeturn0search0
+| File | Issue | Effect | Suggested Fix |
+|------|-------|--------|---------------|
+| `src/utils/logger.ts` | `pino.stdTimeFunctions` not typed when using `require` | TS lint error hidden behind `any` | migrate to ESM import |
+| `src/research/search.ts` | `max_content_length` accepted by schema but never forwarded | confusing API | add to `searchParams` or drop from schema |
+| `src/memory/tools.ts` | `MAX_OPERATION_TIME` 55 000 ms assumes server timeout stays 60 s | brittle | read `REQUEST_TIMEOUT` env and subtract safety margin |
+| `TaskStorage.save()` | Debounced timer not cleared on process exit | potential data loss | call `save()` in `beforeExit` handler |
+| `tests/research.spec.ts` | Relies on `vi.resetAllMocks()` but not `vi.restoreAllMocks()` | possible bleed‑through | use `afterEach(vi.restoreAllMocks)` |
 
 ---
 
-## Checklist to implement
+## 4 — Dependency Hygiene
 
-| Step | File | Diff summary |
-|------|------|--------------|
-| **1** | `package.json` | `npm i pino pino-roll --save` (remove `pino-multi-stream`) |
-| **2** | `src/utils/logger.ts` | Replace custom class with snippet above |
-| **3** | Everywhere | `console.* → logger.debug/info/warn` (grep + replace) |
-| **4** | `src/server.ts` | `import { logger }` stays same; no other changes |
-| **5** | Docs | README section “Logging” with env‑var table |
-| **6** | Verify | `MCP_DEBUG=true` → verbose to file & stderr; unset → only file, size‑rotated |
-| **7** | Test | `npm run dev` and run a spammy `create_entities` call; confirm log stays < 10 MB |
+* **`pino-roll`** is listed but unused (see §1.3). Remove or wire it.
+* `pino-roll` depends on `pino@^6`. When combined with `pino@^9` you may hit mismatched stream internals. Consider `@vrbo/pino‑rotating‑file` or the official examples for Pino v9. citeturn0search9
+* `pino-multi-stream` was removed, but scripts & docs still mention it; update **CHANGELOG** & **README**.
 
-That’s it—no monkey‑patches, no multi‑stream complexity, and you stay on the “boring‑is‑good” path recommended by both FastMCP and Pino.
+---
+
+## 5 — Minor Documentation Drift
+
+* `package.json` is `1.3.0` but README and config files mention `1.0.5` & `1.2.0`. Keep a single source of truth.
+* The Dockerfile copies `dist` then sets `ENTRYPOINT ["node","dist/server.js"]`; good, but ensure the file exists after switching to ESM loader for Pino.
+
+---
+
+## 6 — Recommended Next Steps
+
+1. **Refactor the logger** with the new transport API and enable `pino-roll` (or another rotating transport) so logs rotate and stay async.
+2. Rename `memory.jsonl` → `memory.json` **or** adopt real JSONL append semantics.
+3. Swap the ad‑hoc graph instance in task tools with the shared singleton; call `graphStorage.save()` after every mutation.
+4. Extend Vitest mocks to stub **all** logger levels; add a runtime integration test to ensure logs actually reach the file.
+5. Audit documentation, version strings and install scripts for consistency.
+
+---
+
+### Why so many citations?
+
+Because Pino’s API shifted significantly between major versions, the docs and examples are scattered. The ten sources below capture the specific breakages addressed above:
+
+citeturn0search0turn0search1turn0search2turn0search3turn0search4turn0search5turn0search6turn0search8turn0search9turn0search10
+
+Feel free to ping me for copy‑ready patches or a PR template to apply these changes.

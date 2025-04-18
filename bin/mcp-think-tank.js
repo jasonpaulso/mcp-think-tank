@@ -13,10 +13,16 @@ import { execSync } from 'child_process';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const distPath = join(__dirname, '../dist/server.js');
 
+// Simple fallback logger for startup before main logger is available
+const logger = {
+  info: (msg) => console.error(`[INFO] ${msg}`),
+  error: (msg) => console.error(`[ERROR] ${msg}`)
+};
+
 // Check if dist/server.js exists, if not, try to compile TypeScript files
 if (!existsSync(distPath)) {
   try {
-    logger.info(`[INFO] Compiled files not found at ${distPath}, attempting to build...`);
+    logger.info(`Compiled files not found at ${distPath}, attempting to build...`);
     execSync('npm run build', { 
       cwd: join(__dirname, '..'), 
       stdio: 'inherit' 

@@ -29,8 +29,37 @@ export class GraphStorage {
     try {
       if (fs.existsSync(this.filePath)) {
         const data = fs.readFileSync(this.filePath, 'utf8');
-        const jsonData = JSON.parse(data);
-        this.graph.fromJSON(jsonData);
+        // Try to detect if it's a single JSON object (old format)
+        let lines = data.split('\n').filter(Boolean);
+        if (lines.length === 1) {
+          try {
+            const jsonData = JSON.parse(lines[0]);
+            if (jsonData.entities && jsonData.relations) {
+              // Old format: migrate to JSONL
+              this.graph.fromJSON(jsonData);
+              this.save(); // Overwrite with new format
+              logger.info(`Migrated old JSON format to JSONL at ${this.filePath}`);
+              return;
+            }
+          } catch (e) {
+            // Not a single JSON object, fall through
+          }
+        }
+        // New format: JSONL
+        this.graph.entities.clear();
+        this.graph.relations.clear();
+        for (const line of lines) {
+          try {
+            const obj = JSON.parse(line);
+            if (obj._type === 'entity') {
+              this.graph.addEntity(obj);
+            } else if (obj._type === 'relation') {
+              this.graph.addRelation(obj);
+            }
+          } catch (e) {
+            logger.warn(`Skipping invalid JSONL line: ${e}`);
+          }
+        }
         logger.info(`Loaded graph from ${this.filePath}`);
       } else {
         logger.info(`No existing graph found at ${this.filePath}, starting with empty graph`);
@@ -41,12 +70,20 @@ export class GraphStorage {
   }
 
   /**
-   * Save the graph to the file
+   * Save the graph to the file in JSONL format
    */
   save(): void {
     try {
-      const data = JSON.stringify(this.graph.toJSON(), null, 2);
-      fs.writeFileSync(this.filePath, data, 'utf8');
+      const lines: string[] = [];
+      for (const entity of this.graph.entities.values()) {
+        lines.push(JSON.stringify({ ...entity, _type: 'entity' }));
+      }
+      for (const relSet of this.graph.relations.values()) {
+        for (const relation of relSet) {
+          lines.push(JSON.stringify({ ...relation, _type: 'relation' }));
+        }
+      }
+      fs.writeFileSync(this.filePath, lines.join('\n') + '\n', 'utf8');
       logger.info(`Saved graph to ${this.filePath}`);
     } catch (error) {
       logger.error(`Error saving graph: ${error}`);

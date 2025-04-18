@@ -2,6 +2,7 @@ import { FastMCP } from 'fastmcp';
 import { graph, graphStorage } from './storage.js';
 import * as Schemas from '../utils/validation.js';
 import { z } from 'zod'; 
+import { logger } from '../utils/logger.js';
 
 // Batch size for processing large entity sets
 const BATCH_SIZE = 20;
@@ -29,7 +30,7 @@ async function batchProcessEntities(entities: any[], processFn: (entity: any) =>
     // Check if we're approaching timeout
     if (Date.now() - startTime > MAX_OPERATION_TIME) {
       results.incomplete = true;
-      console.log(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
+      logger.warn(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
       break;
     }
 
@@ -73,7 +74,7 @@ export function registerMemoryTools(server: FastMCP): void {
       // Process entities in batches
       const total = args.entities.length;
       if (total > BATCH_SIZE) {
-        console.log(`Processing ${total} entities in batches of ${BATCH_SIZE}...`);
+        logger.debug(`Processing ${total} entities in batches of ${BATCH_SIZE}...`);
       }
       
       const results = await batchProcessEntities(args.entities, (entity) => {

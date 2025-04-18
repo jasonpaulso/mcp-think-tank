@@ -142,7 +142,9 @@ In your `claude_desktop_config.json`:
 
 ## Logging Configuration
 
-MCP Think Tank uses Pino for high-performance logging. You can control logging behavior with these environment variables:
+MCP Think Tank uses Pino for high-performance logging. Logs are written asynchronously to `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation (daily or when the file exceeds 10MB, using [pino-roll](https://github.com/arthurint/pino-roll)).
+
+You can control logging behavior with these environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -155,7 +157,7 @@ For production, we recommend:
 MCP_LOG_LEVEL=warn mcp-think-tank
 ```
 
-Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation.
+Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation. If you set `MCP_LOG_FILE=false`, file logging is disabled and only stderr output is used (if debug mode is enabled).
 
 ## 📝 Cursor Rules
 
@@ -300,30 +302,16 @@ In Cursor's MCP Server settings:
 
 ### Logging Configuration
 
-MCP Think Tank uses a dedicated logging system that writes to both a file and stderr (when debug mode is enabled). Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log`.
+MCP Think Tank uses a dedicated logging system that writes asynchronously to a log file by default. Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` and are automatically rotated daily or when the file exceeds 10MB. File logging can be disabled by setting `MCP_LOG_FILE=false`.
 
-To enable debug logging, set the `MCP_DEBUG` environment variable:
+To enable debug logging (which also outputs to stderr), set the `MCP_DEBUG` environment variable:
 
 ```bash
 MCP_DEBUG=true mcp-think-tank
 ```
 
-Or in your configuration:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-tank",
-      "env": {
-        "MCP_DEBUG": "true"
-      }
-    }
-  }
-}
-```
-
 To view server logs:
+
 ```bash
 tail -n 20 -F ~/.mcp-think-tank/logs/mcp-think-tank.log
 ```

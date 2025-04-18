@@ -4,24 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { TaskSchema, Task } from './schemas.js';
 import { taskStorage } from './storage.js';
 import { logger } from '../utils/logger.js';
-import { KnowledgeGraph } from '../memory/knowledgeGraph.js';
-
-// Create a KnowledgeGraph instance for our task management
-let knowledgeGraph: KnowledgeGraph | null = null;
-
-// We'll try to create a new instance to use later
-const initializeKnowledgeGraph = async (server: FastMCP) => {
-  try {
-    knowledgeGraph = new KnowledgeGraph();
-    logger.info('Created knowledge graph instance for task integration');
-  } catch (err) {
-    logger.error(`Failed to create knowledge graph: ${err}`);
-  }
-};
+import { graph as knowledgeGraph, graphStorage } from '../memory/storage.js';
 
 export function registerTaskTools(server: FastMCP): void {
-  // Initialize knowledge graph
-  initializeKnowledgeGraph(server);
+  // No need to initialize, use shared persistent knowledge graph
   
   // 1. Plan tasks - Create multiple tasks at once
   server.addTool({
@@ -66,10 +52,9 @@ export function registerTaskTools(server: FastMCP): void {
       if (entities.length > 0) {
         try {
           for (const entity of entities) {
-            if (knowledgeGraph) {
-              knowledgeGraph.addEntity(entity);
-            }
+            knowledgeGraph.addEntity(entity);
           }
+          graphStorage.save();
           logger.info(`Created ${entities.length} task entities in knowledge graph`);
         } catch (err) {
           logger.error(`Failed to sync tasks with knowledge graph: ${err}`);
@@ -143,6 +128,7 @@ export function registerTaskTools(server: FastMCP): void {
         try {
           const observation = `Started: ${new Date().toISOString()}`;
           knowledgeGraph.addObservations(`Task-${updatedTask.id}`, [observation]);
+          graphStorage.save();
           logger.info(`Added observation to task entity: ${observation}`);
         } catch (err) {
           logger.error(`Failed to update task in knowledge graph: ${err}`);
@@ -178,6 +164,7 @@ export function registerTaskTools(server: FastMCP): void {
         try {
           const observation = `Completed: ${new Date().toISOString()}`;
           knowledgeGraph.addObservations(`Task-${id}`, [observation]);
+          graphStorage.save();
           logger.info(`Added completion observation to task entity: ${observation}`);
         } catch (err) {
           logger.error(`Failed to update task completion in knowledge graph: ${err}`);
@@ -230,6 +217,7 @@ export function registerTaskTools(server: FastMCP): void {
               if (changes.status) observations.push(`Status: ${changes.status}`);
               
               knowledgeGraph.addObservations(`Task-${id}`, observations);
+              graphStorage.save();
               logger.info(`Updated task entity: ${id}`);
             } catch (err) {
               logger.error(`Failed to update task entity in knowledge graph: ${err}`);
