@@ -13,7 +13,7 @@ function writeLog(level: string, message: string) {
     if (fs.existsSync(logFile)) {
       const stats = fs.statSync(logFile);
       if (stats.size > MAX_LOG_SIZE) {
-        fs.unlinkSync(logFile); // Delete the log if too big
+        fs.renameSync(logFile, `${logFile}.${Date.now()}.old`);
       }
     }
     const timestamp = new Date().toISOString();

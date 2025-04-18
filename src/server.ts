@@ -10,6 +10,9 @@ import * as os from 'os';
 import './config.js';
 import { logger } from './utils/logger.js';
 
+// Hijack console.log to stderr to prevent accidental stdout noise
+console.log = (...args) => console.error(...args);
+
 // Get configuration from environment
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
@@ -25,7 +28,7 @@ logger.info(`Memory path: ${memoryPath}`);
 // Create FastMCP server
 const server = new FastMCP({
   name: "MCP Think Tank",
-  version: "1.3.1"
+  version: "1.3.2"
 });
 
 // Register memory tools
