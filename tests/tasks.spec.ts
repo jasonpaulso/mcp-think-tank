@@ -40,6 +40,17 @@ vi.mock('fastmcp', () => ({
   }
 }));
 
+// Add a helper to clear all tasks for testing
+declare module '../src/tasks/storage.js' {
+  interface TaskStorage {
+    clearAllTasks(): void;
+  }
+}
+
+TaskStorage.prototype.clearAllTasks = function () {
+  (this as any).tasks.clear();
+};
+
 describe('Task Management', () => {
   let taskStorage: TaskStorage;
   
@@ -47,8 +58,8 @@ describe('Task Management', () => {
     vi.resetAllMocks();
     // Create a new instance for each test
     taskStorage = new TaskStorage();
-    // Reset the tasks map
-    (taskStorage as { tasks: Map<string, Task> }).tasks = new Map();
+    // Use the public helper to clear tasks
+    taskStorage.clearAllTasks();
   });
   
   afterEach(() => {

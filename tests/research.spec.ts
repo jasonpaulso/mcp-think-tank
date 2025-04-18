@@ -41,8 +41,8 @@ vi.mock('exa-js', () => {
   };
 });
 
-describe('Exa Research Tools', () => {
-  let mockServer;
+describe('Research Tools', () => {
+  let mockServer: any;
   
   beforeEach(() => {
     // Reset mocks
