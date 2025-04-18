@@ -11,6 +11,7 @@
 [![npm version](https://img.shields.io/npm/v/mcp-think-tank.svg?style=flat-square)](https://www.npmjs.com/package/mcp-think-tank)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Cursor Compatible](https://img.shields.io/badge/Cursor-Compatible-4B8DF8?logo=cursor&logoColor=white&style=flat-square)](https://www.cursor.so/)
 [![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Tank-orange.svg)](https://github.com/modelcontextprotocol)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -19,7 +20,7 @@
 
 ## Overview
 
-MCP Think Tank provides Claude with a dedicated space for structured reasoning and self-reflection. Through elegant simplicity, it enhances Claude's natural capabilities for systematic problem-solving while maintaining persistent memory through a knowledge graph.
+MCP Think Tank provides **Cursor** and **Claude @Web** with a dedicated space for structured reasoning, persistent memory, advanced task management, and web research via Exa. It enhances these clients' natural capabilities for systematic problem-solving, project planning, and knowledge building, all while maintaining a persistent knowledge graph.
 
 ## 🎯 Philosophy
 
@@ -49,8 +50,10 @@ Recent studies show significant improvements when using structured thinking:
 
 - 💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection
 - 🧩 **Knowledge Graph**: Simple but effective persistent memory
+- 📝 **Task Management Tools**: Plan, track, and update tasks with full knowledge graph integration
+- 🌐 **Web Research Tools (Exa)**: Search the web and get sourced answers using Exa API
 - 🔍 **Memory Tools**: Easy-to-use tools for storing and retrieving information
-- 🤝 **Client Support**: Seamless integration with Claude, Cursor, and other MCP clients
+- 🤝 **Client Support**: Seamless integration with Cursor, Claude @Web, and other MCP clients
 
 ## 📦 Installation
 

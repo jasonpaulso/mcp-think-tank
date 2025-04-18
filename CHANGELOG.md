@@ -7,7 +7,7 @@
 - Added log rotation and configurable log levels via environment variables
 - Reduced stdout/stderr pollution for better FastMCP compatibility
 
-## 1.3.0 (Unreleased)
+## 1.3.0 (2024-06-13)
 
 ### Added
 - Exa API Integration for web research
@@ -16,6 +16,11 @@
   - Prepared optional streaming answer implementation (commented out by default)
 - Added unit tests for Exa API tools
 - Added environment variable checks and improved error handling
+
+### Improved
+- Enhanced integration between tools for cross-communication
+- Added debounced saving for better performance on batch operations
+- Improved error handling and logging for task operations
 
 ## 1.2.0 (2024-04-16)
 
@@ -29,11 +34,6 @@
 - Implemented persistent task storage with append-only JSONL format
 - Added `show_memory_path` utility tool to help locate knowledge graph file
 - Added comprehensive test suite with Vitest
-
-### Improved
-- Enhanced integration between tools for cross-communication
-- Added debounced saving for better performance on batch operations
-- Improved error handling and logging for task operations
 
 ## 1.1.1 (2024-04-14)
 

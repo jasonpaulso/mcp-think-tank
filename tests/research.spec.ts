@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { registerExaSearchTool } from '../src/research/search.js';
 import { registerExaAnswerTool } from '../src/research/answer.js';
 
@@ -140,5 +140,9 @@ describe('Exa Research Tools', () => {
       expect(parsedResult.citations).toBeDefined();
       expect(parsedResult.citations.length).toBe(1);
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 }); 

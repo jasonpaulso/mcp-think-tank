@@ -61,6 +61,7 @@ describe('Task Management', () => {
   
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
   
   it('should create a new task', () => {
