@@ -40,5 +40,8 @@ coverage/
 
 # Optional eslint cache
 .eslintcache 
+
+# Cursor rules and specific files
 blog-post.md
 blog-rubric.md
+.cursor/rules/mcp-think-tank.mdc
