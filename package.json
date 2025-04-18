@@ -14,6 +14,7 @@
     "inspect": "npx fastmcp inspect src/server.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint": "eslint . --ext .ts",
     "prepack": "npm run build"
   },
   "keywords": [

@@ -41,7 +41,7 @@ vi.mock('exa-js', () => {
   };
 });
 
-let mockServer: any;
+let mockServer: { addTool: ReturnType<typeof vi.fn> };
 
 describe('Research Tools', () => {
   beforeEach(() => {

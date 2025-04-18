@@ -4,6 +4,10 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
 export default [
+  {
+    // Global ignores for all configurations
+    ignores: ["dist/", "vitest.config.ts"],
+  },
   js.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
