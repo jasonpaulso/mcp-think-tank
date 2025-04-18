@@ -86,25 +86,13 @@ curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/m
 
 ## ⚙️ Configuration
 
-### Memory Path Configuration
+### Quick Start: Essential Setup
 
-By default, the knowledge graph is stored in `~/.mcp-think-tank/memory.jsonl`. For custom paths, you can:
+1. **Install MCP Think Tank** (see Installation above)
+2. **Get your Exa API Key** (required for web search):
+   - Sign up at [exa.ai](https://exa.ai/) and copy your API key.
+3. **Configure your MCP server** (for Cursor, add to `.cursor/mcp.json`):
 
-1. Use command-line arguments:
-```bash
-mcp-think-tank --memory-path=/absolute/path/to/your/memory.jsonl
-```
-
-2. Set the MEMORY_PATH environment variable:
-```bash
-MEMORY_PATH=/absolute/path/to/your/memory.jsonl mcp-think-tank
-```
-
-3. In your MCP client configuration, create a new memory.jsonl file in the root of your project. If you don't, it will use the default memory.jsonl file across all projects, which can lead to suboptimal memories for each project.:
-
-#### Cursor Example
-
-In your `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -113,35 +101,36 @@ In your `~/.cursor/mcp.json`:
       "args": ["-y", "mcp-think-tank"],
       "type": "stdio",
       "env": {
-        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl"
-      },
-      "enabled": true
-    }
-  }
-}
-```
-
-#### Claude Desktop Example
-
-In your `claude_desktop_config.json`:
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-tank",
-      "env": {
-        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl" 
+        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl",
+        "EXA_API_KEY": "your-exa-api-key-here"
       }
     }
   }
 }
 ```
 
-**Important Notes:**
-- Always use absolute paths for file references
-- The directory will be created automatically if it doesn't exist
-- If the file doesn't exist, an empty knowledge graph will be initialized
-- The `.jsonl` extension is recommended for the storage file
+
+> ⚠️ **Important:**
+> Always set a unique `MEMORY_PATH` for each project!
+> 
+> Using the default (centralized) memory path can cause knowledge graph conflicts between projects. For best results and to keep your project memories isolated, specify a custom `MEMORY_PATH` in your configuration for every project.
+> If omitted, defaults to `~/.mcp-think-tank/memory.jsonl`.
+
+- `EXA_API_KEY` (**required for Exa web search**): Enables `exa_search` and `exa_answer` tools. Without it, web search will not work.
+
+> For more details, see [exa.ai](https://exa.ai/) and [Cursor MCP documentation](https://docs.cursor.com/context/model-context-protocol).
+
+---
+
+### Advanced: Other Configuration Options
+
+- You can also set `MEMORY_PATH` or `EXA_API_KEY` as environment variables when running the server directly:
+  ```bash
+  EXA_API_KEY=your-exa-api-key-here mcp-think-tank --memory-path=/absolute/path/to/your/memory.jsonl
+  ```
+- The directory for `MEMORY_PATH` will be created automatically if it doesn't exist.
+- If the file doesn't exist, an empty knowledge graph will be initialized.
+- The `.jsonl` extension is recommended for the storage file.
 
 ## Logging Configuration
 
@@ -162,595 +151,136 @@ MCP_LOG_LEVEL=warn mcp-think-tank
 
 Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` with automatic rotation. If you set `MCP_LOG_FILE=false`, file logging is disabled and only stderr output is used (if debug mode is enabled).
 
-## 📝 Cursor Rules
+## 📝 MCP Think Tank: Project Rule Setup
 
-To get the most out of MCP Think Tank, you can add custom rules to guide Cursor's behavior. Create these files in your `.cursor/rules` directory:
+To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a **single, always-on project rule** as follows:
 
-### Global Rules (instructions.mdc)
+### Exa Web Search API Key Required
 
-```markdown
-# Global MCP Think Tank Instructions
+> **Note:** To use Exa-based web research tools (`exa_search`, `exa_answer`), you must provide an Exa API key. Without it, web search will not work.
+>
+> 1. **Get your API key:** Sign up and obtain an API key at [exa.ai](https://exa.ai/).
+> 2. **Set the key in your MCP server config:** Add `EXA_API_KEY` to the `env` section of your MCP server configuration. Example for `.cursor/mcp.json`:
+>
+> ```json
+> {
+>   "mcpServers": {
+>     "think-tool": {
+>       "command": "npx",
+>       "args": ["-y", "mcp-think-tank"],
+>       "type": "stdio",
+>       "env": {
+>         "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl",
+>         "EXA_API_KEY": "your-exa-api-key-here"
+>       }
+>     }
+>   }
+> }
+> ```
+>
+> For more details, see [exa.ai](https://exa.ai/) and [Cursor MCP documentation](https://docs.cursor.com/context/model-context-protocol).
 
-You are working with a codebase that uses MCP Think Tank for enhanced reasoning and persistent memory. Follow these guidelines:
+### 1. Add a New Rule in Cursor
 
-## Thinking Process
-- Use structured reasoning for complex decisions
-- Break down problems into clear steps
-- Consider both immediate and long-term implications
-- Reflect on your reasoning process
+1. Open Cursor.
+2. Go to the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
+3. Select **"New Cursor Rule"**.
+4. Name the rule (e.g., `mcp-think-tank.mdc`).
+5. In the rule editor, set the metadata as shown below and paste the rule content.
 
-## Memory Usage
-- Commit important decisions to memory
-- Store reusable patterns and solutions
-- Create meaningful relations between concepts
-- Reference previous decisions when relevant
+### 2. Example Rule File (`.cursor/rules/mcp-think-tank.mdc`)
 
-## Development Patterns
-- Document architectural decisions with rationale
-- Maintain consistent coding patterns
-- Build on previous solutions
-- Review and reflect on implementation choices
+```mdc
+---
+description: >
+  Unified guidance for using MCP Think Tank tools in this project.
+  Always apply this rule to provide agents and users with structured reasoning, memory, task management, and research capabilities.
+globs: 
+alwaysApply: true
+---
 
-## Best Practices
-- Start complex tasks with structured thinking
-- Commit design decisions to memory
-- Reference previous solutions before creating new ones
-- Reflect on implementation choices
-- Build relationships between related concepts
+# MCP Think Tank: Unified Project Rule
 
-Remember to:
-1. Think through complex problems systematically
-2. Store important decisions and patterns
-3. Reference and build upon previous knowledge
-4. Reflect on and improve solutions
+This project uses MCP Think Tank for structured reasoning, persistent memory, advanced task management, and web research.  
+**All agents and users should follow these guidelines to ensure consistent, effective use of the MCP server and its tools.**
+
+---
+
+## 1. Thinking & Reasoning
+
+- Use the `think` tool for all complex decisions, architecture planning, and problem-solving.
+- Break down problems into clear steps and reflect on reasoning.
+- Store important decisions and patterns in memory for future reference.
+
+## 2. Memory & Knowledge Graph
+
+- Use memory tools (`create_entities`, `add_observations`, `create_relations`, etc.) to:
+  - Commit key decisions, reusable patterns, and architectural choices.
+  - Build relationships between concepts and reference previous knowledge.
+- Before creating new solutions, search memory for relevant prior work.
+
+## 3. Task Management
+
+- Use the task tools (`plan_tasks`, `list_tasks`, `next_task`, `complete_task`, `update_tasks`) to:
+  - Plan, track, and update project tasks.
+  - Mark tasks as complete when finished and update their status as work progresses.
+  - Use task dependencies and priorities to organize work.
+
+## 4. Web Research
+
+- Use the Exa tools (`exa_search`, `exa_answer`) for all web research and fact-finding.
+- Always cite sources and summarize findings in memory when relevant.
+- **Note:** Exa tools require a valid `EXA_API_KEY` in your MCP server configuration.
+
+## 5. Logging & Debugging
+
+- Use the logging system for all operational events.
+- Check logs for troubleshooting and ensure log rotation is configured.
+
+## 6. General Workflow
+
+- Reference and build upon previous decisions and patterns.
+- Document all significant changes and rationale.
+- Maintain consistent coding and architectural patterns.
+- Update this rule as new tools or workflows are added.
+
+---
+
+## 🛠️ Available Tools (with Example Usage)
+
+| Tool         | Purpose                                      | Example Usage                                                                 |
+|--------------|----------------------------------------------|-------------------------------------------------------------------------------|
+| `think`      | Structured reasoning & reflection            | `think("Design auth system for microservices...")`                            |
+| `create_entities` | Add new concepts to memory              | `create_entities([{name: "AuthSystem", ...}])`                                |
+| `add_observations` | Add facts to existing entities         | `add_observations([{entityName: "AuthSystem", contents: ["Uses JWT"]}])`      |
+| `create_relations` | Link concepts in the knowledge graph   | `create_relations([{from: "AuthSystem", to: "Security", relationType: "enhances"}])` |
+| `plan_tasks` | Create multiple project tasks                | `plan_tasks([{description: "Implement login", priority: "high"}])`            |
+| `list_tasks` | List tasks by status/priority                | `list_tasks({status: "todo"})`                                                |
+| `next_task`  | Get and start the next highest priority task | `next_task({})`                                                               |
+| `complete_task` | Mark a task as done                       | `complete_task({id: "task-uuid"})`                                            |
+| `exa_search` | Web search via Exa API                       | `exa_search({query: "latest in LLMs"})`                                       |
+| `exa_answer` | Get sourced answers from the web             | `exa_answer({question: "What is quantum advantage?"})`                        |
+
+---
+
+## 🤖 Agent/IDE Instructions
+
+- When a user requests research, use `exa_search` or `exa_answer`.
+- For complex reasoning, always use the `think` tool and commit important findings to memory.
+- Use task tools to manage and update project tasks.
+- Reference memory before proposing new solutions.
+- Follow the workflow and update this rule as needed.
+
+---
+
+**Keep this rule up to date as new tools or workflows are added.**
 ```
 
-### Project-Specific Rules (project.mdc)
-
-```markdown
-# Project-Specific MCP Think Tank Guidelines
-
-This project uses MCP Think Tank for maintaining consistent development patterns and architectural decisions.
-
-## Development Workflow
-1. Architecture Decisions:
-   - Use structured thinking to evaluate options
-   - Document decisions with clear rationale
-   - Commit important decisions to memory
-   - Create relations to existing patterns
-
-2. Implementation:
-   - Reference previous decisions
-   - Maintain consistent patterns
-   - Document key design choices
-   - Reflect on trade-offs
-
-3. Code Review:
-   - Compare against stored patterns
-   - Evaluate consistency with previous decisions
-   - Consider long-term maintainability
-   - Document significant changes
-
-## Patterns to Maintain
-- Store reusable code patterns
-- Document component interfaces
-- Track technical debt decisions
-- Maintain dependency relationships
-
-## Memory Guidelines
-- Tag decisions with relevant categories
-- Create meaningful entity relationships
-- Add clear, actionable observations
-- Update existing patterns when improved
-
-Remember: Build on existing knowledge rather than reinventing solutions.
-```
-
-These rules help Cursor better assist you by:
-- Encouraging systematic thinking
-- Promoting consistent memory usage
-- Maintaining development patterns
-- Building on accumulated knowledge
-
-## 🔌 Client Integration
-
-### Claude Desktop
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-tank"
-    }
-  }
-}
-```
-
-Important notes:
-- Use absolute paths for any file references
-- The server inherits only basic environment variables (USER, HOME, PATH)
-- For custom environment variables, use the `env` field:
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "mcp-think-tank",
-      "env": {
-        "NODE_ENV": "production"
-      }
-    }
-  }
-}
-```
-
-### Cursor
-
-In Cursor's MCP Server settings:
-
-```json
-{
-  "mcpServers": {
-    "think-tool": {
-      "command": "npx",
-      "args": ["-y", "mcp-think-tank"],
-      "type": "stdio"
-    }
-  }
-}
-```
-
-## 🔍 Debugging
-
-### Logging Configuration
-
-MCP Think Tank uses a dedicated logging system that writes asynchronously to a log file by default. Logs are stored in `~/.mcp-think-tank/logs/mcp-think-tank.log` and are automatically rotated daily or when the file exceeds 10MB. File logging can be disabled by setting `MCP_LOG_FILE=false`.
-
-To enable debug logging (which also outputs to stderr), set the `MCP_DEBUG` environment variable:
-
-```bash
-MCP_DEBUG=true mcp-think-tank
-```
-
-To view server logs:
-
-```bash
-tail -n 20 -F ~/.mcp-think-tank/logs/mcp-think-tank.log
-```
-
-Common issues to check:
-1. Working directory issues - use absolute paths
-2. Missing environment variables
-3. Permission problems
-4. Invalid configuration syntax
-
-## 🧰 Available Tools
-
-### Think Tool
-The core tool for structured reasoning:
-
-```typescript
-think(structuredReasoning: string, options?: {
-  category?: string,
-  tags?: string[],
-  associateWithEntity?: string,
-  storeInMemory?: boolean
-})
-```
-
-The tool provides a dedicated space for systematic thinking, encouraging:
-- Problem definition
-- Context gathering
-- Analysis steps
-- Self-reflection
-- Clear conclusions
-
-### Task Management Tools
-A set of tools for tracking and managing tasks within projects:
-
-- `plan_tasks`: Create multiple tasks at once with automatic knowledge graph integration
-```typescript
-plan_tasks({
-  tasks: [
-    {
-      description: "Implement user authentication",
-      priority: "high",
-      due: "2024-05-15T09:00:00Z",
-      tags: ["auth", "security"]
-    },
-    {
-      description: "Write documentation",
-      priority: "medium",
-      due: "2024-05-20T09:00:00Z"
-    }
-  ]
-})
-```
-
-- `list_tasks`: Get tasks with optional filtering by status and priority
-```typescript
-list_tasks({
-  status: "todo",
-  priority: "high"
-})
-```
-
-- `next_task`: Get the highest priority todo task and mark it as in-progress
-```typescript
-next_task({})
-```
-
-- `complete_task`: Mark a task as done
-```typescript
-complete_task({
-  id: "task-uuid-here"
-})
-```
-
-- `update_tasks`: Update multiple tasks in batch
-```typescript
-update_tasks({
-  updates: [
-    {
-      id: "task-uuid-1",
-      description: "Updated description",
-      priority: "high"
-    },
-    {
-      id: "task-uuid-2",
-      status: "blocked"
-    }
-  ]
-})
-```
-
-### Memory Tools
-- `create_entities`: Create new entities in the knowledge graph
-- `create_relations`: Create relationships between entities
-- `add_observations`: Add new observations to existing entities
-- `update_entities`: Update existing entity properties
-- `update_relations`: Update existing relationships
-- `delete_entities`: Remove entities from the knowledge graph
-- `delete_observations`: Remove specific observations from entities
-- `delete_relations`: Remove relationships between entities
-- `read_graph`: Get the entire knowledge graph
-- `open_nodes`: Retrieve specific entities by name
-- `search_nodes`: Find entities using text-based search
-
-### Research Tools
-- `exa_search`: Search the web using Exa API
-```typescript
-exa_search({
-  query: "Latest advancements in LLM training",
-  num_results: 5,
-  category: "research paper",
-  type: "neural"
-})
-```
-
-- `exa_answer`: Get a sourced answer to a question
-```typescript
-exa_answer({
-  question: "What are the latest developments in AI safety?",
-  max_citations: 5
-})
-```
-
-### Utility Tools
-- `show_memory_path`: Get the absolute path of the active knowledge graph file
-
-## 📝 Example Usage
-
-Here's a series of examples showing how to effectively use the think and memory tools during development:
-
-### 1. Making Architecture Decisions
-
-```
-User: I need to design the authentication system for our new microservices architecture. Please think through this and commit the decision to memory.
-
-[Claude uses the think tool]
-
-Problem Definition:
-Design a secure, scalable authentication system for a microservices architecture.
-
-Relevant Context:
-- Multiple services need authentication
-- Mix of internal and external clients
-- Compliance requirements for sensitive data
-- Need to support future service additions
-
-Analysis Steps:
-1. Authentication approaches:
-   - Centralized auth service with JWT
-   - Distributed auth with service mesh
-   - Hybrid approach with cached tokens
-   
-2. Key considerations:
-   - Token validation overhead
-   - Service-to-service auth
-   - Secret management
-   - Scalability impact
-
-Self-Reflection:
-I notice I'm biasing towards complexity when simpler solutions might work. Let me reconsider from first principles.
-
-Conclusion:
-Recommend centralized auth service approach:
-1. Single OAuth2/OIDC service with JWT
-2. Redis-backed token cache
-3. Service-specific public keys
-4. Sidecar pattern for validation
-
-[Claude commits to memory]
-Creating entity 'AuthSystem' with observations about the decision and rationale...
-Creating relations to 'Microservices' and 'Security' entities...
-```
-
-### 2. Implementation Reference
-
-```
-User: I'm starting to implement the auth service we discussed. Can you recall our architecture decision?
-
-[Claude checks memory]
-Found entity 'AuthSystem' with related decisions...
-
-Based on our previous analysis, we decided on a centralized auth service using:
-- OAuth2/OIDC protocol
-- JWT tokens with service-specific signing
-- Redis cache for token validation
-- Sidecar pattern for service integration
-
-Let me think through the implementation approach...
-
-Problem Definition:
-Plan the implementation phases for our chosen auth system.
-
-Analysis Steps:
-1. Core Components:
-   ```typescript
-   interface AuthService {
-     issueToken(credentials: UserCredentials): Promise<JWT>;
-     validateToken(token: string): Promise<TokenClaims>;
-     rotateServiceKeys(): Promise<void>;
-   }
-   ```
-
-2. Implementation Phases:
-   - Core token issuance and validation
-   - Redis cache integration
-   - Service key management
-   - Sidecar implementation
-
-Self-Reflection:
-The interface design aligns well with our architecture decision while keeping the implementation flexible.
-
-[Claude commits implementation details to memory]
-Adding observations to 'AuthSystem' about implementation structure...
-```
-
-### 3. Code Review and Reflection
-
-```
-User: Can you review this auth service implementation and reflect on how it aligns with our original design?
-
-[Code shown...]
-
-[Claude uses think tool]
-
-Problem Definition:
-Evaluate current implementation against our architectural decisions and best practices.
-
-Relevant Context:
-- Previous architecture decisions (loaded from memory)
-- Implementation details (loaded from memory)
-- Current code review
-
-Analysis Steps:
-1. Alignment Check:
-   ✅ Centralized OAuth2 implementation
-   ✅ JWT with proper signing
-   ❌ Missing Redis cache integration
-   ⚠️ Sidecar pattern partially implemented
-
-2. Code Quality:
-   - Good separation of concerns
-   - Clear interface definitions
-   - Missing error handling in key rotation
-   - Need more logging for audit trail
-
-Self-Reflection:
-I see we've drifted from our original caching strategy. This could impact performance under load.
-
-Conclusion:
-Recommended changes:
-1. Implement Redis cache as planned
-2. Add comprehensive error handling
-3. Enhance logging for security audit
-4. Complete sidecar implementation
-
-[Claude commits review findings]
-Adding observations about implementation review...
-Creating relation between 'AuthSystem' and 'CodeQuality'...
-```
-
-### 4. Using Accumulated Knowledge
-
-```
-User: We're seeing performance issues in the auth service. Can you think through potential optimizations based on our experience?
-
-[Claude loads relevant memory entries]
-Analyzing previous decisions, implementation details, and review findings...
-
-Problem Definition:
-Optimize auth service performance based on our accumulated knowledge.
-
-Analysis Steps:
-1. Known Issues (from memory):
-   - Missing Redis cache implementation
-   - Token validation overhead
-   - Incomplete sidecar pattern
-
-2. Performance Data:
-   - High latency in token validation
-   - Increased load on main auth service
-   - Service-to-service call overhead
-
-Self-Reflection:
-Our original architecture correctly anticipated these issues, but we didn't fully implement the solutions.
-
-Conclusion:
-Prioritized optimizations:
-1. Implement Redis cache (as originally planned):
-   ```typescript
-   class CachedAuthService implements AuthService {
-     constructor(
-       private redis: Redis,
-       private tokenTTL: number
-     ) {}
-
-     async validateToken(token: string): Promise<TokenClaims> {
-       const cached = await this.redis.get(token);
-       if (cached) return JSON.parse(cached);
-       
-       const claims = await this.validateTokenSignature(token);
-       await this.redis.setex(token, this.tokenTTL, JSON.stringify(claims));
-       return claims;
-     }
-   }
-   ```
-
-2. Complete sidecar implementation for local validation
-3. Add token pre-fetching for known high-traffic patterns
-
-[Claude commits optimization details]
-Adding observations about performance optimization...
-Updating 'AuthSystem' entity with optimization findings...
-```
-
-### 5. Task Planning and Execution
-
-```
-User: I need to plan the development tasks for our new API. Can you help me set this up?
-
-[Claude uses plan_tasks tool]
-
-I've created a development plan with the following tasks:
-
-1. High Priority Tasks:
-   - Design API schema and endpoints
-   - Implement core CRUD operations
-   - Add authentication middleware
-
-2. Medium Priority Tasks:
-   - Write integration tests
-   - Setup CI/CD pipeline
-   - Create API documentation
-
-Let's get the most important task to start:
-
-[Claude uses next_task tool]
-Next task: Design API schema and endpoints (high priority)
-
-Let me think through this task first...
-
-[Claude uses think tool]
-Problem Definition: Plan the API schema design with appropriate endpoints
-
-Analysis Steps:
-1. Resource Identification:
-   - Users (authentication)
-   - Projects (main business object)
-   - Tasks (within projects)
-   
-2. Endpoint Design:
-   - RESTful approach for basic CRUD
-   - GraphQL for complex queries
-   - Versioned paths (/v1/...)
-
-Self-Reflection:
-This schema aligns with our microservices architecture while keeping tight domain boundaries.
-
-After design review, let's mark this as complete:
-
-[Claude uses complete_task tool]
-Task completed: Design API schema and endpoints
-
-Now let's check what's next:
-
-[Claude uses next_task tool]
-Next task: Implement core CRUD operations
-```
-
-### 6. Web Research and Knowledge Building
-
-```
-User: I need to research the latest developments in quantum computing for a presentation.
-
-[Claude uses exa_search tool]
-Searching for: "latest developments quantum computing"
-
-Results:
-1. "Recent Breakthroughs in Quantum Computing" (arXiv)
-2. "IBM's Latest 1000+ Qubit Quantum Processor" (IBM Research)
-3. "Google Claims Quantum Supremacy with New Error-Correction Method" (Nature)
-4. "Commercial Applications of Quantum Computing in 2024" (MIT Technology Review)
-5. "Quantum Computing Market Report 2024" (Gartner)
-
-Let me get detailed information on these developments:
-
-[Claude uses exa_answer tool]
-Question: What are the most significant quantum computing breakthroughs in the past year?
-
-Answer:
-The most significant quantum computing breakthroughs in the past year include:
-
-1. Error Correction: IBM and Google have made substantial progress in quantum error correction, with IBM demonstrating a 121-qubit error-corrected logical qubit and Google achieving 99.8% fidelity with their Sycamore processor.
-
-2. Qubit Scaling: IBM released their 1,121-qubit "Condor" processor, breaking the 1,000-qubit barrier, while PsiQuantum announced progress toward their million-qubit photonic quantum computer.
-
-3. Quantum Advantage: Several research groups demonstrated quantum advantage in specific applications, including optimization problems and material science simulations.
-
-4. Algorithm Development: New quantum algorithms for machine learning, cryptography, and simulation have been published, expanding the potential applications.
-
-5. Hardware Diversity: Multiple qubit technologies are advancing in parallel, with superconducting, ion trap, photonic, and neutral atom approaches all seeing significant improvements.
-
-These breakthroughs are pushing quantum computing closer to practical applications in drug discovery, materials science, financial modeling, and cryptography.
-
-[Sources: Nature (Mar 2024), IBM Research Blog (Jan 2024), arXiv:2312.09248, Quantum Science and Technology Journal]
-
-Let me organize this information for your presentation:
-
-[Claude uses think tool]
-Problem Definition:
-Structure key quantum computing breakthroughs for a presentation format.
-
-Analysis:
-The information can be organized into these categories:
-1. Hardware Advancements (qubit scaling, error rates)
-2. Error Correction Breakthroughs
-3. Algorithmic Improvements
-4. Practical Applications Emerging
-5. Industry Developments (companies, investments)
-
-This structure focuses on both technical aspects and business relevance.
-
-[Claude uses create_entities tool]
-Creating knowledge graph entities for key quantum computing concepts and breakthroughs...
-```
-
-These examples demonstrate:
-- Explicit memory commits for important decisions
-- Natural reference to previous decisions
-- Structured reflection on implementation
-- Using accumulated knowledge for improvements
-- Progressive refinement through self-reflection
-
-The key to effective tool usage is:
-1. Commit important decisions and patterns to memory
-2. Request reflection on previous decisions when needed
-3. Build on accumulated knowledge for better solutions
-4. Use structured thinking for complex problems
+### 3. Reference Links
+
+- [Cursor Rules Documentation](https://docs.cursor.com/context/rules)
+- [MCP Model Context Protocol](https://docs.cursor.com/context/model-context-protocol)
+- [Exa API](https://exa.ai/)
 
 ## 🤝 Contributing
 
