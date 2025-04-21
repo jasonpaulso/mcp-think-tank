@@ -26,9 +26,11 @@ export const config = {
                  parseInt(process.env.REQUEST_TIMEOUT, 10) * 1000 : 
                  300000,
   
-  // Other config options
-  debug: !!argv.debug,
-  version: '1.3.1', // Should match package.json
+  // Debug mode can be enabled with --debug flag or MCP_DEBUG=true env var
+  debug: !!argv.debug || process.env.MCP_DEBUG === 'true',
+  
+  // Version should match package.json
+  version: '1.3.5',
 };
 
 export default config; 

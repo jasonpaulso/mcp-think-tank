@@ -1,30 +1,36 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { homedir } from 'node:os';
+// src/utils/logger.ts
+import fs from "node:fs";
+import { homedir } from "node:os";
+import path from "node:path";
 
-const logDir = path.join(homedir(), '.mcp-think-tank', 'logs');
-fs.mkdirSync(logDir, { recursive: true });
+const LOG_FILE = process.env.MCP_LOG_FILE === "false"
+  ? null
+  : path.join(homedir(), ".mcp-think-tank", "logs", "mcp-think-tank.log");
+const MAX = 10 * 1024 * 1024;        // 10 MB cap
+const LEVEL = process.env.MCP_DEBUG === "true" ? "debug" : "info";
 
-const logFile = path.join(logDir, 'mcp-think-tank.log');
-const MAX_LOG_SIZE = 10 * 1024 * 1024; // 10MB
+function write(level: string, msg: string, data?: unknown) {
+  if (["debug","trace"].includes(level) && LEVEL !== "debug") return;
 
-function writeLog(level: string, message: string) {
-  try {
-    if (fs.existsSync(logFile)) {
-      const stats = fs.statSync(logFile);
-      if (stats.size > MAX_LOG_SIZE) {
-        fs.renameSync(logFile, `${logFile}.${Date.now()}.old`);
-      }
+  const line = `[${new Date().toISOString()}] [${level}] ${msg}` +
+               (data ? ` ${JSON.stringify(data)}` : "");
+  // 1) stderr for FastMCP / CLI
+  console.error(line);
+
+  // 2) optional rolling file
+  if (LOG_FILE) {
+    const dir = path.dirname(LOG_FILE);
+    fs.mkdirSync(dir, { recursive: true });
+    if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > MAX) {
+      fs.renameSync(LOG_FILE, `${LOG_FILE}.${Date.now()}.old`);
     }
-    const timestamp = new Date().toISOString();
-    fs.appendFileSync(logFile, `[${timestamp}] [${level.toUpperCase()}] ${message}\n`, { encoding: 'utf8' });
-  } catch {
-    // If logging fails, do nothing (avoid crashing the app)
+    fs.appendFileSync(LOG_FILE, line + "\n");
   }
 }
 
 export const logger = {
-  info: (msg: string) => writeLog('info', msg),
-  warn: (msg: string) => writeLog('warn', msg),
-  error: (msg: string) => writeLog('error', msg)
+  debug: write.bind(null, "debug"),
+  info : write.bind(null, "info"),
+  warn : write.bind(null, "warn"),
+  error: write.bind(null, "error"),
 };

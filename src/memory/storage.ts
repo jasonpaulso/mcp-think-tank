@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { KnowledgeGraph } from './knowledgeGraph.js';
 import { logger } from '../utils/logger.js';
+import { createDirectory } from '../utils/fs.js';
 
 /**
  * Class responsible for persisting the knowledge graph to disk
@@ -27,6 +28,9 @@ export class GraphStorage {
    */
   load(): void {
     try {
+      // Ensure directory exists
+      createDirectory(path.dirname(this.filePath));
+      
       if (fs.existsSync(this.filePath)) {
         const data = fs.readFileSync(this.filePath, 'utf8');
         const lines = data.split('\n').filter(Boolean);
@@ -46,7 +50,9 @@ export class GraphStorage {
         }
         logger.info(`Loaded graph from ${this.filePath}`);
       } else {
-        logger.info(`No existing graph found at ${this.filePath}, starting with empty graph`);
+        // Create an empty file if it doesn't exist
+        fs.writeFileSync(this.filePath, '', 'utf8');
+        logger.info(`Created empty graph file at ${this.filePath}`);
       }
     } catch (error) {
       logger.error(`Error loading graph: ${error}`);

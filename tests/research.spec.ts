@@ -41,16 +41,30 @@ vi.mock('exa-js', () => {
   };
 });
 
-let mockServer: { addTool: ReturnType<typeof vi.fn> };
+// Mock FastMCP class
+vi.mock('fastmcp', () => ({
+  FastMCP: class MockFastMCP {
+    addTool = vi.fn();
+    callTool = vi.fn();
+    start = vi.fn();
+    options = {};
+    sessions = [];
+    addResource = vi.fn();
+    // Add other required properties and methods
+  }
+}));
+
+let mockServer: any;
 
 describe('Research Tools', () => {
   beforeEach(() => {
     // Reset mocks
     vi.resetAllMocks();
     
-    // Mock server
+    // Mock server with just the methods we need
     mockServer = {
-      addTool: vi.fn()
+      addTool: vi.fn(),
+      // Add any other methods or properties needed for tests
     };
     
     // Mock environment variables
@@ -59,13 +73,13 @@ describe('Research Tools', () => {
   
   describe('Exa Search Tool', () => {
     it('should register the exa_search tool', () => {
-      registerExaSearchTool(mockServer);
+      registerExaSearchTool(mockServer as any);
       expect(mockServer.addTool).toHaveBeenCalledTimes(1);
       expect(mockServer.addTool.mock.calls[0][0].name).toBe('exa_search');
     });
     
     it('should handle search execution', async () => {
-      registerExaSearchTool(mockServer);
+      registerExaSearchTool(mockServer as any);
       
       // Get the execute function
       const { execute } = mockServer.addTool.mock.calls[0][0];
@@ -89,7 +103,7 @@ describe('Research Tools', () => {
       // Remove API key
       delete process.env.EXA_API_KEY;
       
-      registerExaSearchTool(mockServer);
+      registerExaSearchTool(mockServer as any);
       
       // Get the execute function
       const { execute } = mockServer.addTool.mock.calls[0][0];
@@ -111,7 +125,7 @@ describe('Research Tools', () => {
   
   describe('Exa Answer Tool', () => {
     it('should register the exa_answer tool', () => {
-      registerExaAnswerTool(mockServer);
+      registerExaAnswerTool(mockServer as any);
       expect(mockServer.addTool).toHaveBeenCalledTimes(1);
       expect(mockServer.addTool.mock.calls[0][0].name).toBe('exa_answer');
     });
@@ -120,7 +134,7 @@ describe('Research Tools', () => {
       // Restore API key
       process.env.EXA_API_KEY = 'test-api-key';
       
-      registerExaAnswerTool(mockServer);
+      registerExaAnswerTool(mockServer as any);
       
       // Get the execute function
       const { execute } = mockServer.addTool.mock.calls[0][0];

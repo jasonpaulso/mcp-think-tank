@@ -141,9 +141,10 @@ curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/m
 MCP Think Tank uses a minimal, stable logging approach designed for FastMCP and production best practices:
 
 - Logs are written to a single file at `~/.mcp-think-tank/logs/mcp-think-tank.log`.
-- Before each log write, the file size is checked. If it exceeds 10MB, the log file is deleted and a new one is started.
-- No log rotation, backups, or extra dependencies are used—only Node.js built-in modules.
-- This ensures logs never grow unbounded, prevents disk exhaustion, and keeps logging simple and reliable.
+- Before each log write, the file size is checked. If it exceeds 10MB, the log file is renamed with a timestamp and a new one is started.
+- Only Node.js built-in modules are used for logging.
+- Debug logging can be enabled by setting the environment variable `MCP_DEBUG=true`.
+- File logging can be disabled by setting `MCP_LOG_FILE=false`.
 
 This approach is intentional to keep the focus on core MCP server tools and avoid unnecessary complexity.
 
