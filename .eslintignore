@@ -1,6 +1,6 @@
 # Ignore compiled output
 dist/
-
+ 
 # Ignore configuration files
 vitest.config.ts
 # eslint.config.js 
