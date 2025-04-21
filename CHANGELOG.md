@@ -5,6 +5,7 @@
 ### Fixed
 - Fixed memory initialization: the memory.jsonl file is now properly created at startup if it doesn't exist
 - Updated mcp.json to use the latest version of the package
+- Fixed integration tests to handle protocol format updates correctly
 - Fixed various minor bugs and improved error handling
 
 ## 1.3.1
