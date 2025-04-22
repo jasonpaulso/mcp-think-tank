@@ -9,6 +9,6 @@ import { fileURLToPath, pathToFileURL } from "url";
 import { dirname, resolve } from "path";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const serverPath = resolve(here, "..", "dist", "server.js");
-const serverURL = pathToFileURL(serverPath).href;
-import(serverURL); 
+const bootstrapPath = resolve(here, "..", "dist", "bootstrap.mjs");
+const bootstrapURL = pathToFileURL(bootstrapPath).href;
+import(bootstrapURL); 
