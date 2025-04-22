@@ -12,16 +12,16 @@ import fs from 'fs';
 
 // Helper function to run the MCP server in dev mode
 function runMCPServer(): ChildProcess {
-  const serverProcess = spawn('node', ['--loader', 'ts-node/esm', 'src/server.ts'], {
+  const serverProcess = spawn('node', ['--loader', 'ts-node/esm', 'src/bootstrap.mjs'], {
     stdio: ['pipe', 'pipe', 'pipe']
   });
   
   // Handle server output for debugging
-  serverProcess.stdout.on('data', (data: Buffer) => {
+  serverProcess.stdout?.on('data', (data: Buffer) => {
     console.log(`[Server stdout]: ${data}`);
   });
   
-  serverProcess.stderr.on('data', (data: Buffer) => {
+  serverProcess.stderr?.on('data', (data: Buffer) => {
     console.log(`[Server stderr]: ${data}`);
   });
   
@@ -65,7 +65,7 @@ async function sendToolRequest(serverProcess: ChildProcess, toolName: string, pa
             // Check if this is a response to our request
             if (response.id === request.id) {
               // Remove event listener to prevent multiple resolutions
-              serverProcess.stdout.removeListener('data', handleData);
+              serverProcess.stdout?.removeListener('data', handleData);
               // Clear timeout
               clearTimeout(responseTimeout);
               // Resolve with the response
@@ -85,7 +85,7 @@ async function sendToolRequest(serverProcess: ChildProcess, toolName: string, pa
     
     // Set a timeout to prevent hanging tests
     responseTimeout = setTimeout(() => {
-      serverProcess.stdout.removeListener('data', handleData);
+      serverProcess.stdout?.removeListener('data', handleData);
       reject(new Error('Tool request timed out'));
     }, 5000);
     
