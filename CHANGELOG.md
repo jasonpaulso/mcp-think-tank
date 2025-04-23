@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.3.10 (2024-07-07)
+
+### Fixed
+- Fixed CLI launcher to directly import server.js
+- Updated package.json to correctly point to the compiled server.js file
+- Added validation during build to ensure all artifacts are present
+- Dynamically read version from package.json to ensure consistency
+- Added error handling around server startup
+- Improved robustness in FastMCP 1.2.4+ handshake protocol
+- Removed dependency on bootstrap.mjs to simplify startup flow
+
+## 1.3.9 (2024-07-07)
+
+### Fixed
+- Critical fix: Corrected import paths in bootstrap.mjs to properly resolve compiled files
+- Ensured compatibility with FastMCP 1.2.4+ handshake requirements
+- Fixed npm package structure to work correctly when installed via npx
+
+## 1.3.8 (2024-07-07)
+
+### Fixed
+- Fixed compatibility with FastMCP 1.2.4+ by adding proper resource and resourceTemplate handshake support
+- Fixed import paths in bootstrap.mjs to correctly locate compiled files in the dist directory
+- Pinned FastMCP dependency to version 1.2.4 for stability
+- Fixed console output redirection to prevent JSON message corruption
+- Improved error handling for the Exa API integration
+
 ## 1.3.5 (2024-07-01)
 
 ### Fixed
