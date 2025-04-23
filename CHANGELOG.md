@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.11 (2024-07-07)
+
+### Fixed
+- Critical fix: Console redirection now happens immediately at the top of files, before any imports
+- Fixed path resolution in bin/mcp-think-tank.js to correctly point to dist/src/server.js
+- Simplified version detection logic to be more robust across different environments
+- Added --show-memory-path CLI flag for better diagnostics and testing
+- Improved error handling in binary launcher and server startup
+- Added smoke-test and verify-publish npm scripts to prevent releasing broken packages
+- Restructured memory path handling for better error reporting
+- Followed all checkpoint fixes from the fix.md document
+
 ## 1.3.10 (2024-07-07)
 
 ### Fixed

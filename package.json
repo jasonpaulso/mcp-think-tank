@@ -1,6 +1,6 @@
 {
   "name": "mcp-think-tank",
-  "version": "1.3.10",
+  "version": "1.3.11",
   "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
   "type": "module",
   "main": "dist/src/server.js",
@@ -14,9 +14,14 @@
     "inspect": "npx fastmcp inspect dist/src/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:publish": "vitest run tests/publish-checks.spec.ts",
+    "test:integration": "vitest run tests/integration-checks.spec.ts",
     "lint": "eslint . --ext .ts",
     "prepack": "npm run build",
-    "postbuild": "node dist/src/server.js --version || exit 1"
+    "postbuild": "node dist/src/server.js --version || exit 1",
+    "smoke-test": "npm pack && TEMP_PKG=$(ls mcp-think-tank-*.tgz | sort -V | tail -n 1) && npx -y ./$TEMP_PKG --version && rm $TEMP_PKG",
+    "verify-publish": "npm run lint && npm test && npm run build && npm run test:publish && npm run smoke-test",
+    "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\""
   },
   "keywords": [
     "mcp",
@@ -45,7 +50,7 @@
     "@types/uuid": "^10.0.0",
     "dotenv": "^16.5.0",
     "exa-js": "^1.6.13",
-    "fastmcp": "1.2.4",
+    "fastmcp": "^1.22.0",
     "minimist": "^1.2.8",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",

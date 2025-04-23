@@ -1,5 +1,12 @@
 # Ignore compiled output
 dist/
+node_modules/
+*.js
+!.eslintrc.js
+bin/
+tests/**/*.js
+*.d.ts
+.cursor/
  
 # Ignore configuration files
 vitest.config.ts
