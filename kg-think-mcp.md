@@ -121,10 +121,10 @@ For example:
 Would this approach better align with your vision of maintaining code flow while still preventing the most problematic hallucinations?
 
 
-### Phase 4.2 – Task Manager Integration  
+### Phase 4.2 – Task Manager Integration  
 *(adds task queue, CRUD tools, graph sync)*  
 
-## 4.2.1 Project Scaffold  
+## 4.2.1 Project Scaffold  
 - **Create files / folders**  
   - `src/tasks/schemas.ts`  
   - `src/tasks/storage.ts`  
@@ -132,12 +132,12 @@ Would this approach better align with your vision of maintaining code flow while
   - `tests/tasks.spec.ts`  
   - ✅ *Done‑when*: files exist and compile (`npm run build`).  
 
-## 4.2.2 Task Data Model (`src/tasks/schemas.ts`)  
+## 4.2.2 Task Data Model (`src/tasks/schemas.ts`)  
 - **Import Zod**:  
   ```ts
   import { z } from "zod";
   ```  
-- **Define** `TaskSchema` – every field strictly typed for the LLM:  
+- **Define** `TaskSchema` – every field strictly typed for the LLM:  
   ```ts
   export const TaskSchema = z.object({
     id:          z.string().uuid(),
@@ -152,7 +152,7 @@ Would this approach better align with your vision of maintaining code flow while
   ```  
   - **Concern**: many assistants omit `.uuid()`. Be explicit.  
 
-## 4.2.3 Queue & Persistence (`src/tasks/storage.ts`)  
+## 4.2.3 Queue & Persistence (`src/tasks/storage.ts`)  
 - **Setup path** (re‑use memory folder):  
   ```ts
   const tasksPath = process.env.TASKS_PATH
@@ -162,19 +162,19 @@ Would this approach better align with your vision of maintaining code flow while
   1. `private tasks: Map<string, Task>` in‑memory.  
   2. `load()` – read file line‑by‑line, `JSON.parse`.  
   3. `save()` – **append** on every mutation (`fs.appendFileSync`).  
-  4. Batch‑save alternative: debounce 5 s with `setTimeout`.  
+  4. Batch‑save alternative: debounce 5 s with `setTimeout`.  
   5. `logOperation(op: string, task: Task)` – mirror logger pattern.  
   - **Concern**: Do **not** overwrite the file on every save → race in Cursor. Use append or tmp‑rename.  
 
-## 4.2.4 CRUD Tool Registration (`src/tasks/tools.ts`)  
+## 4.2.4 CRUD Tool Registration (`src/tasks/tools.ts`)  
 *(Import `FastMCP`, `TaskSchema`, storage instance, KG tools)*  
 
 | Tool | Parameters (Zod) | Logic outline | KG interaction |
 |------|------------------|---------------|----------------|
 | `plan_tasks` | `{ tasks: z.array(TaskSchema.omit({id:true,status:true}).extend({priority:z.enum([...]).default("medium")})) }` | - generate `uuidv4` for each<br>- push to storage | `create_entities` with `entityType:"task"` + description obs. |
 | `list_tasks` | `{ status?:string, priority?:string }` | filter storage | none |
-| `next_task` | `{}` | pop first `status==="todo"` → mark `in‑progress` | add observation “started <ISO>” |
-| `complete_task` | `{ id:string }` | set `status:"done"` | `add_observations`: “completed <ISO>” |
+| `next_task` | `{}` | pop first `status==="todo"` → mark `in‑progress` | add observation "started <ISO>" |
+| `complete_task` | `{ id:string }` | set `status:"done"` | `add_observations`: "completed <ISO>" |
 | `update_tasks` | `{ updates: z.array(TaskSchema.partial()) }` | merge fields | sync changed description/priority in KG (`update_entities`) |
 
 **Common concern:** after *every* mutation call `taskStorage.save()` **then** return tool result; else data loss on crash.
@@ -186,27 +186,27 @@ import { registerTaskTools } from "./tasks/tools.js";
 registerTaskTools(server);
 ```
 
-#### 4.2.5 Tests (`tests/tasks.spec.ts`)  
+#### 4.2.5 Tests (`tests/tasks.spec.ts`)  
 - mock graph & storage; test:  
   - plan→list length matches  
   - next_task changes status  
-  - complete_task writes “completed” observation  
+  - complete_task writes "completed" observation  
 - **Concern**: use `vi.useFakeTimers()` or Jest timers to test debounce.  
 
 ---
 
-### Phase 4.3 – Exa Integration  
+### Phase 4.3 – Exa Integration  
 
-## 4.3.1 Dependencies  
+## 4.3.1 Dependencies  
 ```bash
 npm i exa-js
 ```
 
-## 4.3.2 Keep `exa_search` (copy from egoist implementation)  
+## 4.3.2 Keep `exa_search` (copy from egoist implementation)  
 - Place in `src/research/search.ts`; register with same name.  
 - **Concern**: ensure `process.env.EXA_API_KEY` guard; throw descriptive FastMCP error if missing.
 
-## 4.3.3 Add `exa_answer` tool (`src/research/answer.ts`)  
+## 4.3.3 Add `exa_answer` tool (`src/research/answer.ts`)  
 ```ts
 import Exa from "exa-js";
 import { z } from "zod";
@@ -229,16 +229,16 @@ export const registerAnswerTool = (server:FastMCP)=>{
 - **Concern**: Assistants may forget `await`; ensure `return` is awaited JSON.  
 - **Concern**: `/answer` returns `{ answer, citations:[{url,quote}] }`; keep shape.  
 
-## 4.3.4 Streaming variant (optional)  
+## 4.3.4 Streaming variant (optional)  
 - Wrap `exa.streamAnswer(question)`; stream chunks via `yield` (FastMCP `stream` option).  
-- **Concern**: Cursor auto‑aborts after 20 s; set citation default to 3 for speed.
+- **Concern**: Cursor auto‑aborts after 20 s; set citation default to 3 for speed.
 
-## 4.3.5 Tests  
+## 4.3.5 Tests  
 - `mockedExa.answer` returns fixed payload; assert tool passes through.
 
 ---
 
-# Utility – show_memory_path Tool  
+# Utility – show_memory_path Tool  
 
 ```ts
 server.addTool({
@@ -256,7 +256,7 @@ server.addTool({
 # Release Checklist  
 
 1. **Version bump** `package.json` → `1.2.0`.  
-2. Update **CHANGELOG.md** with 4.2 & 4.3 entries.  
+2. Update **CHANGELOG.md** with 4.2 & 4.3 entries.  
 3. Update **README**:  
    - Task tools usage examples.  
    - `exa_answer` docs + pricing note.  
@@ -290,8 +290,8 @@ server.addTool({
 - **ESM imports**: project uses `"type":"module"` → use `import` not `require`.  
 - **Path handling**: always `path.join` for cross‑platform; avoid string concatenation.  
 - **UUID generation**: use `import { v4 as uuidv4 } from "uuid";` – add to deps.  
-- **Error messages**: write to **stderr** or throw; don’t `console.log` plain JSON (breaks FastMCP).  
-- **Timeout awareness**: FastMCP v1 hard‑codes request timeout (env `REQUEST_TIMEOUT`); keep Exa calls ≤ 10 s.  
+- **Error messages**: write to **stderr** or throw; don't `console.log` plain JSON (breaks FastMCP).  
+- **Timeout awareness**: FastMCP v1 hard‑codes request timeout (env `REQUEST_TIMEOUT`); keep Exa calls ≤ 10 s.  
 - **No global state leaks**: do not keep long promises un‑awaited; they survive into next tool call.  
 
 
@@ -323,9 +323,6 @@ server.addTool({
 
 ### Phase 7: Deployment and Distribution
 
-- [ ] Update installation scripts
-  - [ ] `install.sh` for Unix-based systems
-  - [ ] `install.bat` for Windows
 - [ ] Update Smithery configuration
 - [ ] Update npm package configurations
 

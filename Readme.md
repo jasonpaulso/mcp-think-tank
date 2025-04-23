@@ -76,18 +76,6 @@ npm install -g mcp-think-tank
 mcp-think-tank
 ```
 
-### Unix-based Systems (MacOS/Linux)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.sh | bash
-```
-
-### Windows
-
-```bash
-curl -o install.bat https://raw.githubusercontent.com/flight505/mcp-think-tank/main/install.bat && install.bat
-```
-
 ## ⚙️ Configuration
 
 ### Quick Start: Essential Setup

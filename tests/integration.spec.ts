@@ -12,7 +12,7 @@ import fs from 'fs';
 
 // Helper function to run the MCP server in dev mode
 function runMCPServer(): ChildProcess {
-  const serverProcess = spawn('node', ['--loader', 'ts-node/esm', 'src/bootstrap.mjs'], {
+  const serverProcess = spawn('node', ['--loader', 'ts-node/esm', 'src/server.ts'], {
     stdio: ['pipe', 'pipe', 'pipe']
   });
   

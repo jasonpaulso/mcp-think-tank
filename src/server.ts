@@ -15,9 +15,6 @@ import * as os from 'os';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
 
-// NOTE: Moving console.log redirection to bootstrap.mjs
-// This line will be removed after testing bootstrap.mjs is working
-
 // Get configuration from environment
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
