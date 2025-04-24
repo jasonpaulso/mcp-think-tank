@@ -1,5 +1,19 @@
 # Changelog
 
+
+## 1.3.14 (2024-06-11)
+- All versions of `mcp-think-tank` less than or equal to 1.3.14 have been deprecated on npm.
+- **Reason:** Critical logging bu$g fixed in 1.3.14. Older versions may generate excessive log files and should not be used.
+
+## 1.3.13 (2024-07-10)
+
+### Added
+- Made `context` a first-class feature in the think tool: when `storeInMemory` is true, the context is stored as an observation in the knowledge graph and optionally linked to an associated entity.
+- Extended validation and entity schema to support context for future extensibility.
+
+### Fixed
+- Updated FastMCP tool context usage to resolve TypeScript errors and ensure compatibility with latest FastMCP versions.
+
 ## 1.3.12 (2024-07-10)
 
 ### Fixed
@@ -129,17 +143,3 @@
 - Added support for the "think" tool
 - Added compatibility with Cursor and Claude Desktop 
 
-## 1.3.13 (2024-07-10)
-
-### Added
-- Made `context` a first-class feature in the think tool: when `storeInMemory` is true, the context is stored as an observation in the knowledge graph and optionally linked to an associated entity.
-- Extended validation and entity schema to support context for future extensibility.
-
-### Fixed
-- Updated FastMCP tool context usage to resolve TypeScript errors and ensure compatibility with latest FastMCP versions.
-
-## [1.3.14] - 2025-04-24
-### Fixed
-- CRITICAL: Removed all custom/file-based logging from the package and build output.
-- Now only FastMCP context.log is used for logging; no log files will be created.
-- Fixes issue where gigabytes of logs could be created, crashing the system. 

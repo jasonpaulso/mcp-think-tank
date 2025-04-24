@@ -246,20 +246,72 @@ This project uses MCP Think Tank for structured reasoning, persistent memory, ad
 | `exa_search` | Web search via Exa API                       | `exa_search({query: "latest in LLMs"})`                                       |
 | `exa_answer` | Get sourced answers from the web             | `exa_answer({question: "What is quantum advantage?"})`                        |
 
+## 🧠 Think Tank Instructions
+
+This section provides detailed, actionable guidance for using MCP Think Tank within Cursor AI IDE (or any MCP-compliant agent), with a focus on coding and large project development. The tools are grouped into four main categories:
+
+### 1. Think Tools (Structured Reasoning)
+- Use the `think` tool for all complex decisions, architecture planning, and problem-solving.
+- Always provide clear, step-by-step reasoning and relevant context.
+- **To persist your reasoning for future reference, set `storeInMemory: true` in your tool call.**
+  - Example: When you want your analysis or decision to be available across sessions or for team traceability.
+- If you do not set `storeInMemory: true`, your reasoning will be processed but not saved in the knowledge graph.
+- Agents (like Cursor or Claude) can be prompted to "save this reasoning in memory" to ensure persistence.
+- You can later retrieve saved thoughts using the `search_nodes` or `open_nodes` tools.
+
+> ⚠️ **Important:**
+> The `storeInMemory` parameter is not activly used by the user, the user simply > writes "Please save this reasoning in memory for future reference" and the tool will save the reasoning in the knowledge graph.
+
+
+#### How `storeInMemory` Works
+- The `think` tool accepts a `storeInMemory` parameter (default: false).
+- When `storeInMemory: true`, your structured reasoning, context, and tags are saved as an entity in the knowledge graph.
+- This enables robust project memory, traceability, and continuity.
+- Example tool call:
+  ```json
+  {
+    "tool": "think",
+    "parameters": {
+      "structuredReasoning": "Analyzed the pros and cons of REST vs GraphQL for our new API. Decided REST is simpler for our use case.",
+      "context": "API design meeting 2024-07-10",
+      "category": "architecture",
+      "tags": ["api", "meeting"],
+      "storeInMemory": true
+    }
+  }
+  ```
+- To retrieve saved thoughts, use:
+  - `search_nodes` (by keyword, tag, or context)
+  - `open_nodes` (by entity name)
+
+### 2. Research Tools
+- Use `exa_search` for web search and `exa_answer` for sourced answers.
+- Always cite sources and, when relevant, summarize findings in memory using `add_observations` or by saving a `think` entry.
+- Research tools require a valid `EXA_API_KEY` in your MCP server configuration.
+- Integrate research findings into your code and reasoning for robust, up-to-date solutions.
+
+### 3. Task Manager Tools
+- Use `plan_tasks` to create and organize project tasks.
+- Use `list_tasks`, `next_task`, `complete_task`, and `update_tasks` to manage your workflow.
+- All tasks are synchronized with the knowledge graph, enabling persistent, queryable project management.
+- For large projects, leverage task dependencies and priorities to maintain clarity and momentum.
+
+### 4. Memory Tools
+- Use `create_entities`, `add_observations`, `create_relations`, and related tools to build and maintain your project's knowledge graph.
+- Store key decisions, reusable patterns, and architectural choices for future reference.
+- Before starting new work, search memory for relevant prior knowledge to avoid duplication and leverage past insights.
+
 ---
 
-## 🤖 Agent/IDE Instructions
-
-- When a user requests research, use `exa_search` or `exa_answer`.
-- For complex reasoning, always use the `think` tool and commit important findings to memory.
-- Use task tools to manage and update project tasks.
-- Reference memory before proposing new solutions.
-- Follow the workflow and update this rule as needed.
+**Best Practices for Cursor/Claude and Large Projects:**
+- Use the `think` tool liberally for all non-trivial reasoning and always persist important thoughts.
+- Integrate research and task management into your coding workflow for seamless project development.
+- Regularly review and update your knowledge graph to keep project memory relevant and actionable.
+- Reference and build upon previous decisions and patterns for consistent, high-quality code.
 
 ---
 
-**Keep this rule up to date as new tools or workflows are added.**
-```
+Keep this section up to date as new tools or workflows are added.
 
 ### 3. Reference Links
 
