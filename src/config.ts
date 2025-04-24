@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 // Redirect console.log to stderr immediately if not already done
 // This is crucial for FastMCP which uses stdio for communication
-// eslint-disable-next-line no-global-assign
+ 
 if (console.log !== console.error) {
   console.log = (...args: unknown[]) => console.error(...args);
 }

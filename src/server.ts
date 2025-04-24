@@ -1,6 +1,6 @@
 // Redirect console.log to stderr immediately at the top of the file
 // This is crucial for FastMCP which uses stdio for communication
-// eslint-disable-next-line no-global-assign
+ 
 console.log = (...args: unknown[]) => console.error(...args);
 
 // EPIPE error handling
