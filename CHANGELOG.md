@@ -1,6 +1,17 @@
 # Changelog
 
 
+## 1.4.0 (2024-07-11)
+
+### Added & Improved
+- Major documentation update: clarified and expanded instructions for using MCP Think Tank in Cursor and Claude, with a new coherent section on tool groups (think, research, task manager, memory).
+- Clearly documented the `storeInMemory` workflow: users/agents can simply say "Please save this reasoning in memory for future reference" and the tool will persist the thought in the knowledge graph.
+- Improved Readme for large project development and agent/IDE integration.
+
+### Fixed
+- Ensured all documentation and workflow changes are reflected in the Readme and project rule setup.
+- This version supersedes all previous deprecated versions and is ready for production use.
+
 ## 1.3.14 (2024-06-11)
 - All versions of `mcp-think-tank` less than or equal to 1.3.14 have been deprecated on npm.
 - **Reason:** Critical logging bu$g fixed in 1.3.14. Older versions may generate excessive log files and should not be used.
