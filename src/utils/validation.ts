@@ -4,7 +4,8 @@ import { z } from 'zod';
 const EntitySchema = z.object({
   name: z.string().min(1).describe('Unique identifier for the entity'),
   entityType: z.string().min(1).describe('Type classification of the entity'),
-  observations: z.array(z.string()).describe('Facts or observations about the entity')
+  observations: z.array(z.string()).describe('Facts or observations about the entity'),
+  context: z.string().optional().describe('Optional context or situation relevant to this entity (e.g., project, meeting, or scenario)')
 });
 
 // Relation validation schema

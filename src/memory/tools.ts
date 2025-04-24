@@ -2,7 +2,6 @@ import { FastMCP } from 'fastmcp';
 import { graph, graphStorage } from './storage.js';
 import * as Schemas from '../utils/validation.js';
 import { z } from 'zod'; 
-import { logger } from '../utils/logger.js';
 
 // Batch size for processing large entity sets
 const BATCH_SIZE = 20;
@@ -16,9 +15,10 @@ const MAX_OPERATION_TIME = process.env.REQUEST_TIMEOUT
  * Process entities in batches to prevent timeouts on large operations
  * @param entities Array of entities to process
  * @param processFn Function to process each entity
+ * @param log FastMCP log object
  * @returns Object with created and existing entity names
  */
-async function batchProcessEntities<T extends { name: string }>(entities: T[], processFn: (entity: T) => boolean) {
+async function batchProcessEntities<T extends { name: string }>(entities: T[], processFn: (entity: T) => boolean, log: any) {
   const results = {
     created: [] as string[],
     existing: [] as string[],
@@ -32,7 +32,7 @@ async function batchProcessEntities<T extends { name: string }>(entities: T[], p
     // Check if we're approaching timeout
     if (Date.now() - startTime > MAX_OPERATION_TIME) {
       results.incomplete = true;
-      logger.warn(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
+      if (log) log.warn(`Operation approaching timeout limit. Processed ${i} of ${entities.length} entities.`);
       break;
     }
 
@@ -72,13 +72,13 @@ export function registerMemoryTools(server: FastMCP): void {
     name: 'create_entities',
     description: 'Create multiple new entities in the knowledge graph',
     parameters: Schemas.CreateEntitiesSchema,
-    execute: async (args) => {
+    execute: async (args, context) => {
       // Process entities in batches
       const total = args.entities.length;
-      
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const results = await batchProcessEntities(args.entities, (entity) => {
         return graph.addEntity(entity);
-      });
+      }, log);
       
       // Save final changes
       graphStorage.save();

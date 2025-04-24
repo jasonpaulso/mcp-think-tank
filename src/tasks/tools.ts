@@ -3,7 +3,6 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { TaskSchema, Task } from './schemas.js';
 import { taskStorage } from './storage.js';
-import { logger } from '../utils/logger.js';
 import { graph as knowledgeGraph, graphStorage } from '../memory/storage.js';
 
 export function registerTaskTools(server: FastMCP): void {
@@ -21,7 +20,8 @@ export function registerTaskTools(server: FastMCP): void {
           })
       )
     }),
-    execute: async ({ tasks }) => {
+    execute: async ({ tasks }, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const createdTasks: Task[] = [];
       const entities = [];
 
@@ -55,9 +55,9 @@ export function registerTaskTools(server: FastMCP): void {
             knowledgeGraph.addEntity(entity);
           }
           graphStorage.save();
-          logger.info(`Created ${entities.length} task entities in knowledge graph`);
+          if (log) log.info(`Created ${entities.length} task entities in knowledge graph`);
         } catch (err) {
-          logger.error(`Failed to sync tasks with knowledge graph: ${err}`);
+          if (log) log.error(`Failed to sync tasks with knowledge graph: ${err}`);
         }
       }
       
@@ -78,7 +78,8 @@ export function registerTaskTools(server: FastMCP): void {
       status: z.enum(['todo', 'in-progress', 'blocked', 'done']).optional(),
       priority: z.enum(['low', 'medium', 'high']).optional()
     }),
-    execute: async ({ status, priority }) => {
+    execute: async ({ status, priority }, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const filter: Partial<Task> = {};
       
       if (status) filter.status = status;
@@ -101,7 +102,8 @@ export function registerTaskTools(server: FastMCP): void {
     name: 'next_task',
     description: 'Get the next highest priority todo task and mark it as in-progress.',
     parameters: z.object({}),
-    execute: async () => {
+    execute: async (_args, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const todoTasks = taskStorage.getTasksBy({ status: 'todo' });
       
       if (todoTasks.length === 0) {
@@ -129,9 +131,8 @@ export function registerTaskTools(server: FastMCP): void {
           const observation = `Started: ${new Date().toISOString()}`;
           knowledgeGraph.addObservations(`Task-${updatedTask.id}`, [observation]);
           graphStorage.save();
-          logger.info(`Added observation to task entity: ${observation}`);
         } catch (err) {
-          logger.error(`Failed to update task in knowledge graph: ${err}`);
+          if (log) log.error(`Failed to update task in knowledge graph: ${err}`);
         }
       }
       
@@ -149,7 +150,8 @@ export function registerTaskTools(server: FastMCP): void {
     parameters: z.object({
       id: z.string().uuid()
     }),
-    execute: async ({ id }) => {
+    execute: async ({ id }, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const updatedTask = taskStorage.updateTask(id, { status: 'done' });
       
       if (!updatedTask) {
@@ -165,9 +167,8 @@ export function registerTaskTools(server: FastMCP): void {
           const observation = `Completed: ${new Date().toISOString()}`;
           knowledgeGraph.addObservations(`Task-${id}`, [observation]);
           graphStorage.save();
-          logger.info(`Added completion observation to task entity: ${observation}`);
         } catch (err) {
-          logger.error(`Failed to update task completion in knowledge graph: ${err}`);
+          if (log) log.error(`Failed to update task completion in knowledge graph: ${err}`);
         }
       }
       
@@ -195,7 +196,8 @@ export function registerTaskTools(server: FastMCP): void {
         })
       )
     }),
-    execute: async ({ updates }) => {
+    execute: async ({ updates }, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const results = {
         success: [] as Task[],
         failed: [] as string[]
@@ -218,9 +220,8 @@ export function registerTaskTools(server: FastMCP): void {
               
               knowledgeGraph.addObservations(`Task-${id}`, observations);
               graphStorage.save();
-              logger.info(`Updated task entity: ${id}`);
             } catch (err) {
-              logger.error(`Failed to update task entity in knowledge graph: ${err}`);
+              if (log) log.error(`Failed to update task entity in knowledge graph: ${err}`);
             }
           }
         } else {
@@ -237,6 +238,4 @@ export function registerTaskTools(server: FastMCP): void {
       });
     }
   });
-  
-  logger.info('Task management tools registered');
 } 

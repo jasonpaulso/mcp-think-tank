@@ -4,7 +4,6 @@ import * as os from 'os';
 import { createReadStream } from 'fs';
 import { createInterface } from 'readline';
 import { KnowledgeGraph } from './knowledgeGraph.js';
-import { logger } from '../utils/logger.js';
 import { createDirectory } from '../utils/fs.js';
 
 /**
@@ -40,7 +39,7 @@ export class GraphStorage {
    */
   async load(): Promise<void> {
     if (this.isLoading) {
-      logger.warn('Load already in progress, waiting for it to complete');
+      // No logging
       return this.loadPromise as Promise<void>;
     }
 
@@ -76,38 +75,34 @@ export class GraphStorage {
                 this.graph.addRelation(obj);
               }
               lineCount++;
-              
-              // Log progress for large files (every 1000 lines)
-              if (lineCount % 1000 === 0) {
-                logger.info(`Loaded ${lineCount} lines from knowledge graph...`);
-              }
+              // No progress logging
             } catch (err) {
-              logger.warn(`Skipping invalid JSONL line: ${err}`);
+              // No warn logging
             }
           });
           
           // When file is completely read
           rl.on('close', () => {
-            logger.info(`Loaded graph from ${this.filePath} (${lineCount} items)`);
+            // No info logging
             this.isLoading = false;
             resolve();
           });
           
           // Handle errors
           fileStream.on('error', (error) => {
-            logger.error(`Error reading graph file: ${error}`);
+            console.error(`Error reading graph file: ${error}`);
             this.isLoading = false;
             resolve(); // Resolve anyway to prevent hanging
           });
         } else {
           // Create an empty file if it doesn't exist
           fs.writeFileSync(this.filePath, '', 'utf8');
-          logger.info(`Created empty graph file at ${this.filePath}`);
+          // No info logging
           this.isLoading = false;
           resolve();
         }
       } catch (error) {
-        logger.error(`Error loading graph: ${error}`);
+        console.error(`Error loading graph: ${error}`);
         this.isLoading = false;
         resolve(); // Resolve anyway to prevent hanging
       }
@@ -131,9 +126,9 @@ export class GraphStorage {
         }
       }
       fs.writeFileSync(this.filePath, lines.join('\n') + '\n', 'utf8');
-      logger.info(`Saved graph to ${this.filePath}`);
+      // No info logging
     } catch (error) {
-      logger.error(`Error saving graph: ${error}`);
+      console.error(`Error saving graph: ${error}`);
     }
   }
 
@@ -143,7 +138,7 @@ export class GraphStorage {
    * @param details - Details about the operation
    */
   logOperation(operation: string, details: unknown): void {
-    logger.info(`[${operation}] ${JSON.stringify(details)}`);
+    // No logging
   }
 }
 

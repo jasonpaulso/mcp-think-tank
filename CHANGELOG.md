@@ -127,4 +127,13 @@
 ### Features
 - Initial public release
 - Added support for the "think" tool
-- Added compatibility with Cursor and Claude Desktop 
+- Added compatibility with Cursor and Claude Desktop
+
+## 1.3.13 (2024-07-10)
+
+### Added
+- Made `context` a first-class feature in the think tool: when `storeInMemory` is true, the context is stored as an observation in the knowledge graph and optionally linked to an associated entity.
+- Extended validation and entity schema to support context for future extensibility.
+
+### Fixed
+- Updated FastMCP tool context usage to resolve TypeScript errors and ensure compatibility with latest FastMCP versions. 

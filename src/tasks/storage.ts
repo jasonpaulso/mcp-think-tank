@@ -4,7 +4,6 @@ import path from 'path';
 import os from 'os';
 import { Task } from './schemas.js';
 import { createDirectory } from '../utils/fs.js';
-import { logger } from '../utils/logger.js';
 
 // Get tasks path from environment or use default
 const tasksPath = process.env.TASKS_PATH || path.join(os.homedir(), '.mcp-think-tank/tasks.jsonl');
@@ -19,7 +18,6 @@ export class TaskStorage {
   
   constructor() {
     this.load();
-    logger.info(`Task storage initialized at: ${tasksPath}`);
   }
   
   // Load tasks from file
@@ -28,13 +26,11 @@ export class TaskStorage {
       if (!fs.existsSync(tasksPath)) {
         // Create empty file if it doesn't exist
         fs.writeFileSync(tasksPath, '');
-        logger.info(`Created empty tasks file at: ${tasksPath}`);
         return;
       }
       
       const content = fs.readFileSync(tasksPath, 'utf-8');
       if (!content.trim()) {
-        logger.info('Tasks file is empty');
         return;
       }
       
@@ -45,13 +41,11 @@ export class TaskStorage {
           const task = JSON.parse(line) as Task;
           this.tasks.set(task.id, task);
         } catch (err) {
-          logger.error(`Error parsing task line: ${err}`);
+          console.error(`Error parsing task line: ${err}`);
         }
       }
-      
-      logger.info(`Loaded ${this.tasks.size} tasks from storage`);
     } catch (err) {
-      logger.error(`Error loading tasks: ${err}`);
+      console.error(`Error loading tasks: ${err}`);
     }
   }
   
@@ -67,7 +61,7 @@ export class TaskStorage {
       fs.appendFileSync(tasksPath, `${entry}\n`);
       this.logOperation(operation, task);
     } catch (err) {
-      logger.error(`Error saving task: ${err}`);
+      console.error(`Error saving task: ${err}`);
     }
   }
   
@@ -98,7 +92,7 @@ export class TaskStorage {
           fs.renameSync(tempPath, tasksPath);
         });
       } catch (err) {
-        logger.error(`Error batch saving tasks: ${err}`);
+        console.error(`Error batch saving tasks: ${err}`);
       }
     }, this.saveDebounceMs);
   }
@@ -154,7 +148,7 @@ export class TaskStorage {
   
   // Log operation
   private logOperation(op: string, task: Task): void {
-    logger.info(`Task ${op}: ${task.id} - ${task.description} (${task.status})`);
+    // No logging
   }
 }
 

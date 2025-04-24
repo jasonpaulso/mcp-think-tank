@@ -3,6 +3,13 @@
 // eslint-disable-next-line no-global-assign
 console.log = (...args: unknown[]) => console.error(...args);
 
+// EPIPE error handling
+process.on('SIGPIPE', () => {});
+process.stdout.on('error', (err) => {
+  if (err.code === 'EPIPE') return;
+  throw err;
+});
+
 import { FastMCP } from 'fastmcp';
 import { registerMemoryTools } from './memory/tools.js';
 import { registerThinkTool } from './think/tools.js';
@@ -13,19 +20,13 @@ import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
 import { config } from './config.js';
-import { logger } from './utils/logger.js';
 
 // Get configuration from environment
 const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
-// Log configuration
-logger.info(`Request timeout set to ${REQUEST_TIMEOUT} seconds`);
-
 // Create necessary directories
 const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
 createDirectory(path.dirname(memoryPath));
-
-logger.info(`Memory path: ${memoryPath}`);
 
 // Create FastMCP server
 const server = new FastMCP({
@@ -66,17 +67,17 @@ server.addResourceTemplate({
 
 // Start the server with error handling
 try {
-server.start();
+  server.start();
 } catch (e) {
-  logger.error(`Startup failed: ${e}`);
+  console.error(`Startup failed: ${e}`);
   process.exit(1);
 }
 
 // Error handling
 process.on('uncaughtException', (error: Error) => {
-  logger.error(`Uncaught exception: ${error.stack || error.message}`);
+  console.error(`Uncaught exception: ${error.stack || error.message}`);
 });
 
 process.on('unhandledRejection', (reason: unknown) => {
-  logger.error(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
+  console.error(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
 });

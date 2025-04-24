@@ -21,4 +21,7 @@ export const ThinkSchema = z.object({
   storeInMemory: z.boolean().optional()
     .default(false)
     .describe('Whether to store this thought in the knowledge graph memory'),
+  
+  context: z.string().optional()
+    .describe('Optional context or situation relevant to this thought (e.g., project, meeting, or scenario)'),
 }); 

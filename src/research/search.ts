@@ -1,7 +1,6 @@
 import { FastMCP } from 'fastmcp';
 import { z } from 'zod';
 import { Exa } from 'exa-js';
-import { logger } from '../utils/logger.js';
 
 /**
  * Register the Exa search tool for web research
@@ -32,19 +31,19 @@ export function registerExaSearchTool(server: FastMCP): void {
       ]).default('general'),
       live_crawl: z.enum(['always', 'fallback']).default('always')
     }),
-    execute: async (params) => {
+    execute: async (params, context) => {
+      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       // Ensure API key is set
       if (!process.env.EXA_API_KEY) {
-        const errorMessage = 'EXA_API_KEY environment variable is not set. Please set it before using this tool.';
-        logger.error(errorMessage);
+        log.error('EXA_API_KEY environment variable is not set. Please set it before using this tool.');
         return JSON.stringify({
-          error: errorMessage
+          error: 'EXA_API_KEY environment variable is not set. Please set it before using this tool.'
         });
       }
 
       try {
         const exa = new Exa(process.env.EXA_API_KEY);
-        logger.info(`Executing Exa search: "${params.query}" (${params.num_results} results)`);
+        log.info(`Executing Exa search: "${params.query}" (${params.num_results} results)`);
         
         // Transform parameters to match Exa API
         const searchParams = {
@@ -60,12 +59,12 @@ export function registerExaSearchTool(server: FastMCP): void {
         const results = await exa.search(params.query, searchParams);
         
         // Log success
-        logger.info(`Exa search complete: found ${results.results.length} results`);
+        log.info(`Exa search complete: found ${results.results.length} results`);
         
         return JSON.stringify(results);
       } catch (error) {
         const errorMessage = `Error executing Exa search: ${error}`;
-        logger.error(errorMessage);
+        log.error(errorMessage);
         
         return JSON.stringify({
           error: errorMessage
@@ -73,6 +72,4 @@ export function registerExaSearchTool(server: FastMCP): void {
       }
     }
   });
-
-  logger.info('Exa search tool registered');
 } 
