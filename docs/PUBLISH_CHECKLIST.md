@@ -30,7 +30,7 @@ This checklist must be followed before publishing new versions to npm to ensure 
 - [ ] Verify it exits with code 0 and displays the correct version
 
 ### 4️⃣ Integration Testing
-- [ ] Update test Cursor configuration with the new version:
+- [ ] I the Human will test the update on Cursor after the new version is published to npm. this is the only way to verify that the new MCP Think Tank package works correctly in Cursor, I will use the following mcp.json configuration, meaning the MCP Think Tank package will be installed from npm and the memory.jsonl file will be used as the memory file.
   ```json
   {
     "mcpServers": {

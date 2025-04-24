@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 1.4.1 (2024-07-11)
+
+### Fixed
+- Version update to fix publishing error - version 1.4.0 was already in the registry.
+- All changes from 1.4.0 are included in this release.
+
 ## 1.4.0 (2024-07-11)
 
 ### Added & Improved
