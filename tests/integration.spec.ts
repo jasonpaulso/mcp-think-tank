@@ -1,8 +1,8 @@
 // tests/integration-test.js
 import { spawn, ChildProcess } from 'child_process';
 import { expect, describe, test, beforeAll, afterAll, vi } from 'vitest';
-import path from 'path';
-import fs from 'fs';
+// import path from 'path';
+// import fs from 'fs';
 
 /**
  * Integration test for MCP Think Tank server
@@ -71,11 +71,11 @@ async function sendToolRequest(serverProcess: ChildProcess, toolName: string, pa
               // Resolve with the response
               resolve(response);
             }
-          } catch (e) {
+          } catch (_e) {
             // Not valid JSON, keep collecting
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Keep collecting data
       }
     };
@@ -123,7 +123,7 @@ describe('MCP Think Tank Server Integration Tests', () => {
       
       expect(response).toBeDefined();
       expect(response.result).toBeDefined();
-    } catch (error) {
+    } catch (_e) {
       // If there's a timeout or format error, try a simpler approach
       console.log('Falling back to simplified test approach');
       // The main assertion is that the test doesn't throw an exception
@@ -139,7 +139,7 @@ describe('MCP Think Tank Server Integration Tests', () => {
       
       expect(response).toBeDefined();
       expect(response.result).toBeDefined();
-    } catch (error) {
+    } catch (_e) {
       // If there's a timeout or format error, try a simpler approach
       console.log('Falling back to simplified test approach');
       // The main assertion is that the test doesn't throw an exception

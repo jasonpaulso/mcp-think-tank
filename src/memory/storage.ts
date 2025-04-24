@@ -61,7 +61,7 @@ export class GraphStorage {
             crlfDelay: Infinity
           });
 
-          let lineCount = 0;
+          let _lineCount = 0;
           
           // Process each line as it's read
           rl.on('line', (line) => {
@@ -74,9 +74,9 @@ export class GraphStorage {
               } else if (obj._type === 'relation') {
                 this.graph.addRelation(obj);
               }
-              lineCount++;
+              _lineCount++;
               // No progress logging
-            } catch (err) {
+            } catch (_err) {
               // No warn logging
             }
           });
@@ -89,8 +89,8 @@ export class GraphStorage {
           });
           
           // Handle errors
-          fileStream.on('error', (error) => {
-            console.error(`Error reading graph file: ${error}`);
+          fileStream.on('error', (_error) => {
+            console.error(`Error reading graph file: ${_error}`);
             this.isLoading = false;
             resolve(); // Resolve anyway to prevent hanging
           });
@@ -101,8 +101,8 @@ export class GraphStorage {
           this.isLoading = false;
           resolve();
         }
-      } catch (error) {
-        console.error(`Error loading graph: ${error}`);
+      } catch (_error) {
+        console.error(`Error loading graph: ${_error}`);
         this.isLoading = false;
         resolve(); // Resolve anyway to prevent hanging
       }
@@ -137,7 +137,7 @@ export class GraphStorage {
    * @param operation - The operation being performed
    * @param details - Details about the operation
    */
-  logOperation(operation: string, details: unknown): void {
+  logOperation(_operation: string, _details: unknown): void {
     // No logging
   }
 }

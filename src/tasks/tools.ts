@@ -79,7 +79,7 @@ export function registerTaskTools(server: FastMCP): void {
       priority: z.enum(['low', 'medium', 'high']).optional()
     }),
     execute: async ({ status, priority }, context) => {
-      const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
+      const _log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const filter: Partial<Task> = {};
       
       if (status) filter.status = status;

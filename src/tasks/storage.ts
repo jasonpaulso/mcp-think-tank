@@ -147,7 +147,7 @@ export class TaskStorage {
   }
   
   // Log operation
-  private logOperation(op: string, task: Task): void {
+  private logOperation(_op: string, _task: Task): void {
     // No logging
   }
 }

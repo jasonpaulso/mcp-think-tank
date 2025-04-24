@@ -22,7 +22,7 @@ import * as os from 'os';
 import { config } from './config.js';
 
 // Get configuration from environment
-const REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
+const _REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
 
 // Create necessary directories
 const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
@@ -67,7 +67,7 @@ server.addResourceTemplate({
 
 // Start the server with error handling
 try {
-  server.start();
+server.start();
 } catch (e) {
   console.error(`Startup failed: ${e}`);
   process.exit(1);
