@@ -66,7 +66,7 @@ server.addResourceTemplate({
 
 // Start the server with error handling
 try {
-  server.start();
+server.start();
 } catch (e) {
   logger.error(`Startup failed: ${e}`);
   process.exit(1);

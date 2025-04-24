@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.12 (2024-07-10)
+
+### Fixed
+- Changed logger to opt-in model: file logging now requires explicit MCP_LOG_FILE=true
+- Added automatic cleanup of old log files, keeping only the 5 most recent backups
+- Reduced disk usage and system load from excessive logging
+- Fixed performance issues caused by rapid log file growth
+
 ## 1.3.11 (2024-07-07)
 
 ### Fixed
