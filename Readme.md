@@ -174,62 +174,131 @@ To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a
 5. In the rule editor, set the metadata as shown below and paste the rule content.
 
 ### 2. Example Rule File (`.cursor/rules/mcp-think-tank.mdc`)
-
-```mdc
+```
 ---
-description: >
-  Unified guidance for using MCP Think Tank tools in this project.
-  Always apply this rule to provide agents and users with structured reasoning, memory, task management, and research capabilities.
-globs: 
-alwaysApply: true
+rule type: always
 ---
 
-# MCP Think Tank: Unified Project Rule
+# MCP Think Tank - Enhance Your AI Agent's Capabilities
 
-This project uses MCP Think Tank for structured reasoning, persistent memory, advanced task management, and web research.  
-**All agents and users should follow these guidelines to ensure consistent, effective use of the MCP server and its tools.**
+This project uses MCP Think Tank to extend your AI assistant with structured reasoning, persistent memory, task management, and web research capabilities. All agents should follow these guidelines to leverage these powerful tools.
 
----
+## 🧠 Tool Categories & When To Use Them
 
-## 1. Thinking & Reasoning
+### 1️⃣ Thinking Tools
+- `think` - Use for complex reasoning, architecture planning, and step-by-step problem-solving
+  - **When to use**: For important decisions requiring structured analysis or reflection
+  - **Pro tip**: Add `storeInMemory: true` to save important thoughts in the knowledge graph
+  - **Example**: `think({structuredReasoning: "Analyzing pros/cons of database options...", storeInMemory: true})`
 
-- Use the `think` tool for all complex decisions, architecture planning, and problem-solving.
-- Break down problems into clear steps and reflect on reasoning.
-- Store important decisions and patterns in memory for future reference.
+### 2️⃣ Memory & Knowledge Graph
+- `create_entities` - Add new concepts to the knowledge graph
+  - **When to use**: To document important concepts, systems, or components
+  - **Example**: `create_entities([{name: "AuthSystem", entityType: "System", observations: ["Uses JWT"]}])`
 
-## 2. Memory & Knowledge Graph
+- `add_observations` - Add facts to existing entities
+  - **When to use**: When new information about an existing entity is discovered
+  - **Example**: `add_observations([{entityName: "AuthSystem", contents: ["Expires tokens after 24h"]}])`
 
-- Use memory tools (`create_entities`, `add_observations`, `create_relations`, etc.) to:
-  - Commit key decisions, reusable patterns, and architectural choices.
-  - Build relationships between concepts and reference previous knowledge.
-- Before creating new solutions, search memory for relevant prior work.
+- `create_relations` - Create relationships between entities
+  - **When to use**: To connect related concepts in the knowledge graph
+  - **Example**: `create_relations([{from: "AuthSystem", to: "Security", relationType: "enhances"}])`
 
-## 3. Task Management
+- `read_graph` - Get the entire knowledge graph
+  - **When to use**: To understand the full project context before making major decisions
 
-- Use the task tools (`plan_tasks`, `list_tasks`, `next_task`, `complete_task`, `update_tasks`) to:
-  - Plan, track, and update project tasks.
-  - Mark tasks as complete when finished and update their status as work progresses.
-  - Use task dependencies and priorities to organize work.
+- `search_nodes` - Find entities matching search criteria
+  - **When to use**: To retrieve relevant knowledge before solving a problem
+  - **Example**: `search_nodes({query: "authentication"})`
 
-## 4. Web Research
+- `open_nodes` - Retrieve specific entities by name
+  - **When to use**: When you need details about a specific known entity
+  - **Example**: `open_nodes({names: ["AuthSystem"]})`
 
-- Use the Exa tools (`exa_search`, `exa_answer`) for all web research and fact-finding.
-- Always cite sources and summarize findings in memory when relevant.
-- **Note:** Exa tools require a valid `EXA_API_KEY` in your MCP server configuration.
+- `update_entities` - Modify existing entities
+  - **When to use**: When core information about an entity changes
+  - **Example**: `update_entities([{name: "AuthSystem", entityType: "Security"}])`
 
-## 5. Logging & Debugging
+- `update_relations` - Modify relationships between entities
+  - **When to use**: When the nature of a relationship changes
+  - **Example**: `update_relations([{from: "AuthSystem", to: "Security", relationType: "implements"}])`
 
-- Use the logging system for all operational events.
-- Check logs for troubleshooting and ensure log rotation is configured.
+- `delete_entities` - Remove entities from the knowledge graph
+  - **When to use**: When concepts become obsolete or are merged
+  - **Example**: `delete_entities({entityNames: ["OldSystem"]})`
 
-## 6. General Workflow
+- `delete_observations` - Remove specific facts from entities
+  - **When to use**: When information becomes outdated or incorrect
+  - **Example**: `delete_observations([{entityName: "AuthSystem", observations: ["Uses MD5"]}])`
 
-- Reference and build upon previous decisions and patterns.
-- Document all significant changes and rationale.
-- Maintain consistent coding and architectural patterns.
-- Update this rule as new tools or workflows are added.
+- `delete_relations` - Remove relationships between entities
+  - **When to use**: When connections are no longer valid
+  - **Example**: `delete_relations([{from: "AuthSystem", to: "Legacy", relationType: "depends on"}])`
 
----
+### 3️⃣ Task Management
+- `plan_tasks` - Create and organize project tasks
+  - **When to use**: At project start or when planning new features
+  - **Example**: `plan_tasks([{description: "Implement login", priority: "high"}])`
+
+- `list_tasks` - Retrieve tasks filtered by status/priority
+  - **When to use**: To understand current work status
+  - **Example**: `list_tasks({status: "todo"})`
+
+- `next_task` - Get and start the highest priority task
+  - **When to use**: When ready to work on the next priority
+  - **Example**: `next_task({random_string: ""})`
+
+- `complete_task` - Mark tasks as done
+  - **When to use**: When a task is finished
+  - **Example**: `complete_task({id: "task-uuid"})`
+
+- `update_tasks` - Modify existing tasks
+  - **When to use**: When priorities change or task details need updating
+  - **Example**: `update_tasks([{id: "task-uuid", priority: "high"}])`
+
+- `show_memory_path` - Get the location of the knowledge graph file
+  - **When to use**: For debugging or when examining stored knowledge directly
+  - **Example**: `show_memory_path({random_string: ""})`
+
+### 4️⃣ Web Research
+- `exa_search` - Search the web for information
+  - **When to use**: When current context is insufficient and you need external facts
+  - **Example**: `exa_search({query: "latest React state management"})`
+
+- `exa_answer` - Get sourced answers to specific questions
+  - **When to use**: For factual questions requiring cited sources
+  - **Example**: `exa_answer({question: "What is quantum computing?"})`
+
+## 📋 Best Practices
+
+### Thinking Process
+- Use the `think` tool for all complex decisions to ensure thorough analysis
+- Structure your reasoning with clear problem definition, context, analysis, and conclusion
+- Set `storeInMemory: true` for important decisions that should be accessible later
+
+### Knowledge Management
+- Before creating new entities, search the graph for related concepts
+- Create a clear entity type hierarchy and consistent naming
+- Link related entities to build a comprehensive knowledge web
+- Regularly update entities with new observations as the project evolves
+
+### Task Workflow
+1. Use `plan_tasks` to break down features into clear steps
+2. Use `list_tasks` to review current priorities
+3. Use `next_task` to identify what to work on next
+4. Use `complete_task` when finished with an item
+5. Use `update_tasks` to adjust priorities as needs change
+
+### Research Protocol
+- Always cite sources when using web research tools
+- Save important findings to the knowledge graph
+- Combine research with structured thinking for best results
+
+## 📝 How To Save Important Thoughts
+
+When using the `think` tool with important reasoning, set `storeInMemory: true` or simply tell the agent "Please save this reasoning in memory for future reference."
+````
+
 
 ## 🛠️ Available Tools (with Example Usage)
 
