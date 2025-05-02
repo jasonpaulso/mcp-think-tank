@@ -1,6 +1,14 @@
 import { FastMCP } from 'fastmcp';
 import { ThinkSchema } from './schemas.js';
+import { BasicAgent, ExtendedThinkSchema } from '../agents/BasicAgent.js';
 import { graph, graphStorage } from '../memory/storage.js';
+
+// Create a dummy memory store adapter (to be replaced in Phase 2)
+const tempMemoryAdapter = {
+  async add() { /* Will be implemented in Phase 2 */ },
+  async query() { return []; /* Will be implemented in Phase 2 */ },
+  async prune() { return 0; /* Will be implemented in Phase 2 */ }
+};
 
 /**
  * Registers the think tool with the MCP server
@@ -10,41 +18,20 @@ export function registerThinkTool(server: FastMCP): void {
   server.addTool({
     name: 'think',
     description: 'Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed. Consider including: problem definition, relevant context, analysis steps, self-reflection on your reasoning, and conclusions. Adapt this structure as needed for your specific thought process.',
-    parameters: ThinkSchema,
+    parameters: ExtendedThinkSchema,
     execute: async (params) => {
-      // If storeInMemory is true, persist the thought as an entity in the knowledge graph
-      if (params.storeInMemory) {
-        // Build the entity name and type
-        const entityName = `Thought-${Date.now()}`;
-        const entityType = 'thought';
-        const observations = [
-          `Reasoning: ${params.structuredReasoning}`,
-        ];
-        if (params.context) {
-          observations.push(`Context: ${params.context}`);
-        }
-        if (params.category) {
-          observations.push(`Category: ${params.category}`);
-        }
-        if (params.tags && params.tags.length > 0) {
-          observations.push(`Tags: ${params.tags.join(', ')}`);
-        }
-        // Create the entity
-        graph.addEntity({
-          name: entityName,
-          entityType,
-          observations
-        });
-        // Optionally create a relation to an associated entity
-        if (params.associateWithEntity) {
-          graph.addRelation({
-            from: entityName,
-            to: params.associateWithEntity,
-            relationType: 'context-for'
-          });
-        }
-        graphStorage.save();
-      }
+      // Create a basic agent to handle the thinking process
+      const agent = new BasicAgent('think-tool', tempMemoryAdapter, params);
+      
+      // Initialize with the provided parameters
+      await agent.init({ thinkParams: params });
+      
+      // Process the reasoning step
+      const result = await agent.step(params.structuredReasoning);
+      
+      // Finalize to ensure persistence
+      await agent.finalize();
+      
       return "Your structured reasoning has been processed.";
     }
   });
