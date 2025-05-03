@@ -297,23 +297,6 @@ This project uses MCP Think Tank to extend your AI assistant with structured rea
 ## 📝 How To Save Important Thoughts
 
 When using the `think` tool with important reasoning, set `storeInMemory: true` or simply tell the agent "Please save this reasoning in memory for future reference."
-````
-
-
-## 🛠️ Available Tools (with Example Usage)
-
-| Tool         | Purpose                                      | Example Usage                                                                 |
-|--------------|----------------------------------------------|-------------------------------------------------------------------------------|
-| `think`      | Structured reasoning & reflection            | `think("Design auth system for microservices...")`                            |
-| `create_entities` | Add new concepts to memory              | `create_entities([{name: "AuthSystem", ...}])`                                |
-| `add_observations` | Add facts to existing entities         | `add_observations([{entityName: "AuthSystem", contents: ["Uses JWT"]}])`      |
-| `create_relations` | Link concepts in the knowledge graph   | `create_relations([{from: "AuthSystem", to: "Security", relationType: "enhances"}])` |
-| `plan_tasks` | Create multiple project tasks                | `plan_tasks([{description: "Implement login", priority: "high"}])`            |
-| `list_tasks` | List tasks by status/priority                | `list_tasks({status: "todo"})`                                                |
-| `next_task`  | Get and start the next highest priority task | `next_task({})`                                                               |
-| `complete_task` | Mark a task as done                       | `complete_task({id: "task-uuid"})`                                            |
-| `exa_search` | Web search via Exa API                       | `exa_search({query: "latest in LLMs"})`                                       |
-| `exa_answer` | Get sourced answers from the web             | `exa_answer({question: "What is quantum advantage?"})`                        |
 
 ## 🧠 Think Tank Instructions
 
@@ -327,10 +310,6 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - If you do not set `storeInMemory: true`, your reasoning will be processed but not saved in the knowledge graph.
 - Agents (like Cursor or Claude) can be prompted to "save this reasoning in memory" to ensure persistence.
 - You can later retrieve saved thoughts using the `search_nodes` or `open_nodes` tools.
-
-> ⚠️ **Important:**
-> The `storeInMemory` parameter is not activly used by the user, the user simply > writes "Please save this reasoning in memory for future reference" and the tool will save the reasoning in the knowledge graph.
-
 
 #### How `storeInMemory` Works
 - The `think` tool accepts a `storeInMemory` parameter (default: false).
@@ -352,6 +331,103 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - To retrieve saved thoughts, use:
   - `search_nodes` (by keyword, tag, or context)
   - `open_nodes` (by entity name)
+
+#### Multi-step Reasoning with Step Counters
+- For complex thinking processes that span multiple steps, use the step counter parameters:
+  - `plannedSteps`: Total number of steps you plan to complete (e.g., 5)
+  - `currentStep`: The current step number you're on (e.g., 2)
+- The system will track your progress through the multi-step reasoning process
+- Each step will be saved with appropriate metadata when using `storeInMemory: true`
+- Example tool call:
+  ```json
+  {
+    "tool": "think",
+    "parameters": {
+      "structuredReasoning": "Step 2 analysis of database schema options...",
+      "plannedSteps": 5,
+      "currentStep": 2,
+      "storeInMemory": true
+    }
+  }
+  ```
+- This is especially useful for breaking down complex problems into manageable stages and tracking progress.
+
+#### Self-Reflection for Enhanced Reasoning
+- Use the self-reflection feature to automatically critique your reasoning and identify potential improvements
+- Set `selfReflect: true` in your think tool parameters to enable this feature
+- You can optionally provide a custom reflection prompt with `reflectPrompt`
+- Self-reflection helps identify:
+  - Potential logical fallacies or inconsistencies in reasoning
+  - Overlooked factors or considerations
+  - Assumptions that may need validation
+  - Areas where the reasoning could be strengthened
+- Example tool call with self-reflection:
+  ```json
+  {
+    "tool": "think",
+    "parameters": {
+      "structuredReasoning": "My analysis of the authentication system...",
+      "selfReflect": true,
+      "reflectPrompt": "Evaluate my reasoning for security considerations I might have missed",
+      "storeInMemory": true
+    }
+  }
+  ```
+- The reflection is appended to your original reasoning and saved together when using `storeInMemory: true`
+
+#### Inline Research Integration
+- Enable mid-reasoning research by setting `allowResearch: true` in your think tool parameters
+- Insert research queries directly in your reasoning using the format: `[research: your search query]`
+- The system will automatically:
+  - Detect and process these research requests
+  - Replace the markers with formatted research results
+  - Include source citations for each result
+- You can also set an initial `researchQuery` parameter for preliminary research before your reasoning starts
+- Example tool call with research:
+  ```json
+  {
+    "tool": "think",
+    "parameters": {
+      "structuredReasoning": "I need to understand the latest advancements in [research: quantum error correction 2023] before designing our system.",
+      "allowResearch": true,
+      "storeInMemory": true
+    }
+  }
+  ```
+- Multiple research requests can be included in a single reasoning step
+- All research results and sources are stored with your reasoning when using `storeInMemory: true`
+- Research sources are added as relations in the knowledge graph for traceability
+
+#### Structured Markdown Formatting
+- The think tool automatically formats output as structured markdown for improved readability
+- Available format types:
+  - `general`: Generic reasoning with introduction, analysis, and conclusion sections
+  - `problem`: Problem-solving format with problem definition, analysis, and solution sections
+  - `comparison`: Comparative analysis format that preserves tables and highlights options
+- Control formatting with these parameters:
+  - `formatOutput: true/false` - Enable or disable formatting (default: true)
+  - `formatType: 'auto'/'general'/'problem'/'comparison'` - Select format type (default: auto)
+- When `formatType` is 'auto', the system analyzes your content to determine the most appropriate format
+- Example tool call with specific formatting:
+  ```json
+  {
+    "tool": "think",
+    "parameters": {
+      "structuredReasoning": "My analysis comparing different database options...",
+      "formatType": "comparison",
+      "storeInMemory": true
+    }
+  }
+  ```
+- Formatted output includes:
+  - Clear section headers
+  - Metadata section with context and category
+  - Features section showing enabled capabilities (reflection, research)
+  - Properly structured content based on the format type
+- This formatting improves both human readability and machine parsing of the reasoning
+
+> ⚠️ **Important:**
+> The `storeInMemory` parameter is not activly used by the user, the user simply writes "Please save this reasoning in memory for future reference" and the tool will save the reasoning in the knowledge graph.
 
 ### 2. Research Tools
 - Use `exa_search` for web search and `exa_answer` for sourced answers.

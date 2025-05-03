@@ -8,6 +8,7 @@ export class Orchestrator {
   private agents: IAgent[];
   private strategy: CoordinationStrategy;
   private allowedTools: string[] | null;
+  private debug: boolean;
   
   /**
    * Create a new Orchestrator
@@ -20,12 +21,14 @@ export class Orchestrator {
     agents: IAgent[],
     strategy: CoordinationStrategy,
     options: {
-      allowedTools?: string[]
+      allowedTools?: string[],
+      debug?: boolean
     } = {}
   ) {
     this.agents = agents;
     this.strategy = strategy;
     this.allowedTools = options.allowedTools || null;
+    this.debug = options.debug || false;
   }
   
   /**
@@ -93,8 +96,10 @@ export class Orchestrator {
       
       return result;
     } catch (error) {
-      // Handle errors
-      console.error('Orchestration error:', error);
+      // Handle errors in a test-friendly way
+      if (this.debug) {
+        console.error('Orchestration error:', error);
+      }
       
       return {
         output: `Error: ${error instanceof Error ? error.message : String(error)}`,

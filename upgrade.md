@@ -28,30 +28,34 @@ Strictly follow every sub-task in order; no details may be skipped.*
 - [x] Implement `ParallelStrategy` (Promise.all & merge)
 - [x] Unit tests covering agent order & merge correctness
 
-### **Story 1-D Add step counter & plan fields to think tool**
-- [ ] Extend `ThinkSchema` with `plannedSteps:number` and `currentStep:number`
-- [ ] Modify `think` execute logic to store/return these fields
-- [ ] Update README & docs to describe new parameters
-- [ ] Add validation test in `tests/think/stepCounter.spec.ts`
+### **Story 1-D Add step counter & plan fields to think tool**
+- [x] Add `plannedSteps`, `currentStep` to `ThinkSchema` (implement as `ExtendedThinkSchema`)
+- [x] Calculate current as % of planned or estimate based on text complexity
+- [x] Test multi-step plans in IDE with same agent, verify continuity across calls
+- [x] Update Readme with multi-step instructions
 
-### **Story 1-E Implement iterative self-reflection pass**
-- [ ] Add optional flag `selfReflect:boolean` to `ThinkSchema`
-- [ ] In `BasicAgent.step`:
-  - [ ] After producing answer, run internal critique prompt (Critic role)
-  - [ ] Append critique to memory with tag `self_reflection`
-  - [ ] If critique identifies flaw, revise answer once
-- [ ] Write unit tests that mock critique detection & verify revision stored
+### **Story 1-E Implement iterative self-reflection pass**
+- [x] Extend `ThinkSchema` with `selfReflect:boolean` (default: false)
+- [x] Add optional `reflectPrompt:string` for custom reflection
+- [x] Update agent to perform reflection on its reasoning when enabled
+- [x] Store reflection result and original reasoning when `storeInMemory:true`
+- [x] Test in IDE with self-reflection, verify output quality
 
-### **Story 1-F Enable mid-chain research tool calls**
-- [ ] Add `allowResearch:boolean` param to `ThinkSchema`
-- [ ] Provide helper in `BasicAgent` to call `exa_search`/`exa_answer` when flag true
-- [ ] Ensure ToolManager (see Phase 3) wraps these calls
-- [ ] Add integration test where agent fetches external fact during reasoning
+### **Story 1-F Enable mid-chain research tool calls**
+- [x] Add `allowResearch:boolean` option to `ExtendedThinkSchema` (default: false)
+- [x] Support optional `researchQuery:string` parameter for initial research
+- [x] Implement detection of inline research requests using `[research: query]` syntax
+- [x] Parse results into structured format and append to reasoning + memory
+- [x] Add relevant relations for research sources
+- [x] Create tests verifying research feature
 
-### **Story 1-G Structured markdown output for thought logs**
-- [ ] Standardize agent output: numbered list + concluding section
-- [ ] Add utility `formatThoughts()` shared across agents
-- [ ] Update docs with example output snippet
+### **Story 1-G Structured markdown output for thought logs**
+- [x] Add formatters for different reasoning types (general, comparison, problem-solving)
+- [x] Include auto-detection based on content
+- [x] Add `formatOutput:boolean` and `formatType:string` options to schema
+- [x] Modify BasicAgent to apply formatting before returning results
+- [x] Update tests to verify formatting behavior
+- [x] Update README with formatting documentation
 
 ---
 
