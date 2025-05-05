@@ -1,5 +1,5 @@
-import { IAgent } from './IAgent';
-import { MemoryStore } from '../memory/store/MemoryStore';
+import { IAgent } from './IAgent.js';
+import { MemoryStore } from '../memory/store/MemoryStore.js';
 import { z } from 'zod';
 import { graph, graphStorage } from '../memory/storage.js';
 import { formatThought, detectFormatterType } from '../think/formatters.js';
@@ -15,7 +15,7 @@ export const ExtendedThinkSchema = BaseThinkSchema.extend({
   allowResearch: z.boolean().optional().default(false).describe('Whether to allow research via external tools during the reasoning process'),
   reflectPrompt: z.string().optional().describe('Custom prompt for the self-reflection stage'),
   researchQuery: z.string().optional().describe('Optional research query to execute during the reasoning process'),
-  formatOutput: z.boolean().optional().default(true).describe('Whether to apply structured markdown formatting to the output'),
+  formatOutput: z.boolean().optional().default(true).describe('Whether to apply markdown formatting to the output'),
   formatType: z.enum(['auto', 'general', 'problem', 'comparison']).optional().default('auto').describe('The type of formatting to apply')
 });
 
@@ -49,12 +49,19 @@ export class BasicAgent implements IAgent {
    * @param memory - Memory store for persistence
    * @param params - Optional think tool parameters
    */
-  constructor(agentId: string, memory: MemoryStore, params?: ThinkParams) {
+  constructor(agentId: string, memory: MemoryStore, params?: Partial<ThinkParams>) {
     this.agentId = agentId;
     this.memory = memory;
-    this.params = params || {
+    this.params = {
       structuredReasoning: '',
-      storeInMemory: false
+      storeInMemory: false,
+      selfReflect: false,
+      allowResearch: false,
+      formatOutput: true,
+      formatType: 'auto',
+      category: '',
+      tags: [],
+      ...params
     };
   }
   
@@ -66,7 +73,10 @@ export class BasicAgent implements IAgent {
   async init(ctx: Record<string, unknown>): Promise<void> {
     // If thinkParams is provided in the context, use it to override the default params
     if (ctx.thinkParams) {
-      this.params = ctx.thinkParams as ThinkParams;
+      this.params = {
+        ...this.params,
+        ...(ctx.thinkParams as Partial<ThinkParams>)
+      };
     }
     
     // Initialize research state if allowed
@@ -145,10 +155,10 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
   
   /**
    * Conduct research using external tools
-   * In a real implementation, this would call a web search or similar tool
+   * In a real implementation, this would call a search API
    */
   private async conductResearch(query: string): Promise<void> {
-    // In a full implementation, this would make an actual call to a search API
+    // In a full implementation, this would call the research tool
     // For now, we'll simulate research results for testing
     
     // Simulate a delay for the "network call"
@@ -182,7 +192,7 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
       `Review the following reasoning for inconsistencies, logical errors, or incomplete analysis:\n\n${this.output}\n\nProvide a critical self-reflection identifying any issues and suggesting improvements:`;
     
     // In a real implementation, this would call the LLM again
-    // For now, we'll simulate the reflection for testing purposes
+    // For now, we'll simulate a reflection
     this.reflection = `Self-reflection on the reasoning:\n- The reasoning is sound but could be more comprehensive\n- Additional considerations for edge cases would strengthen the analysis\n- The conclusion follows logically from the premises`;
     
     // In a full implementation, we might update the original output based on reflection
@@ -200,7 +210,7 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
     
     if (this.params.formatType === 'auto') {
       formatType = detectFormatterType(this.output);
-    } else if (this.params.formatType !== 'auto') {
+    } else {
       formatType = this.params.formatType as 'general' | 'problem' | 'comparison';
     }
     
@@ -221,12 +231,12 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
   }
   
   /**
-   * Get the final output, either raw or formatted
+   * Get the final output
    */
   private finalOutput(): string {
     return this.formattedOutput || this.output;
   }
-  
+
   /**
    * Finalize the agent's work and persist to memory if needed
    */
@@ -236,61 +246,76 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
       const entityName = `Thought_${new Date().toISOString().replace(/[-:.]/g, '_')}`;
       const entityType = this.params.category || 'Thought';
       
-      const metadata = [];
+      const observations = [];
       
       // Add step information if available
       if (typeof this.params.currentStep === 'number' && typeof this.params.plannedSteps === 'number') {
-        metadata.push(`Step ${this.params.currentStep} of ${this.params.plannedSteps}`);
+        observations.push(`Step: ${this.params.currentStep}/${this.params.plannedSteps}`);
       }
       
       // Add context if available
       if (this.params.context) {
-        metadata.push(`Context: ${this.params.context}`);
+        observations.push(`Context: ${this.params.context}`);
       }
       
-      // Add standard metadata
-      metadata.push(`Agent: ${this.agentId}`);
-      metadata.push(`Created: ${new Date().toISOString()}`);
+      // Add the reasoning itself
+      observations.push(`Reasoning: ${this.output}`);
       
-      // Add research metadata if available
+      // If there's a reflection, add it too
+      if (this.reflection) {
+        observations.push(`Reflection: ${this.reflection}`);
+      }
+      
+      // Add research results if any
       if (this.researchResults.length > 0) {
-        metadata.push(`Research Queries: ${this.researchResults.map(r => r.query).join(', ')}`);
+        this.researchResults.forEach((result, index) => {
+          observations.push(`Research ${index + 1}: Query: ${result.query}, Results: ${result.results.join(', ')}`);
+        });
       }
       
-      // Create observations from the reasoning
-      const observations = [
-        // Store the formatted output if available, raw output otherwise
-        this.formattedOutput || this.output,
-        ...metadata
-      ];
+      // Add to knowledge graph
+      const entity = await graph.addEntity({
+        name: entityName,
+        entityType: entityType,
+        observations: observations
+      });
       
-      // Create the entity in the knowledge graph
-      await graph.addEntity(entityName, entityType, observations);
-      
-      // Add relationship to context if provided
+      // Add context relation if available
       if (this.params.context) {
-        await graph.addRelation(entityName, 'has context', this.params.context);
+        await graph.addRelation({
+          from: entityName,
+          to: this.params.context,
+          relationType: 'has context'
+        });
       }
       
-      // Add tags as relations if provided
-      if (this.params.tags && Array.isArray(this.params.tags)) {
+      // Add tag relations if available
+      if (this.params.tags && this.params.tags.length > 0) {
         for (const tag of this.params.tags) {
-          await graph.addRelation(entityName, 'tagged with', tag);
+          await graph.addRelation({
+            from: entityName,
+            to: tag,
+            relationType: 'tagged with'
+          });
         }
       }
       
-      // Add research sources as relations if available
+      // Add research source relations if any
       if (this.researchResults.length > 0) {
         for (const research of this.researchResults) {
           for (const source of research.sources) {
             if (source) {
-              await graph.addRelation(entityName, 'references', source);
+              await graph.addRelation({
+                from: entityName,
+                to: source,
+                relationType: 'references'
+              });
             }
           }
         }
       }
       
-      // Save the graph to storage
+      // Save to storage
       await graphStorage.save();
     }
   }

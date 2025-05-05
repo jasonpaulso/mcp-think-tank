@@ -1,4 +1,4 @@
-import { IAgent } from '../agents/IAgent';
+import { IAgent } from '../agents/IAgent.js';
 
 /**
  * Interface for coordination strategies that manage the order and manner

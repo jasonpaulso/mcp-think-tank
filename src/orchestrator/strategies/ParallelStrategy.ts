@@ -1,5 +1,5 @@
-import { IAgent } from '../../agents/IAgent';
-import { CoordinationStrategy } from '../CoordinationStrategy';
+import { IAgent } from '../../agents/IAgent.js';
+import { CoordinationStrategy } from '../CoordinationStrategy.js';
 
 /**
  * Implements a parallel strategy for agent coordination.

@@ -1,4 +1,4 @@
-import { MemoryStore } from '../memory/store/MemoryStore';
+import { MemoryStore } from '../memory/store/MemoryStore.js';
 
 /**
  * Interface defining the core contract for all agent implementations.

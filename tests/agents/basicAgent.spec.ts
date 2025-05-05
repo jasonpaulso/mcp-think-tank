@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BasicAgent } from '../../src/agents/BasicAgent';
+import { BasicAgent } from '../../src/agents/BasicAgent.js';
 
 // Create a mock memory store for testing
 const mockMemoryStore = {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BasicAgent, ExtendedThinkSchema } from '../../src/agents/BasicAgent';
+import { BasicAgent, ExtendedThinkSchema } from '../../src/agents/BasicAgent.js';
 
 // Create a mock memory store for testing
 const mockMemoryStore = {
@@ -12,7 +12,12 @@ const mockMemoryStore = {
 vi.mock('../../src/memory/storage.js', () => {
   return {
     graph: {
-      addEntity: vi.fn(),
+      addEntity: vi.fn().mockImplementation((entityObj) => ({
+        id: entityObj.id,
+        name: entityObj.name,
+        type: entityObj.type,
+        observations: entityObj.observations
+      })),
       addRelation: vi.fn(),
       addObservations: vi.fn()
     },
@@ -56,7 +61,8 @@ describe('Self-Reflection Feature', () => {
       thinkParams: {
         structuredReasoning: 'Test reasoning',
         selfReflect: false,
-        storeInMemory: false
+        storeInMemory: false,
+        formatOutput: false // Disable formatting for cleaner testing
       }
     });
     
@@ -92,6 +98,19 @@ describe('Self-Reflection Feature', () => {
   it('should store self-reflection in memory when both options are enabled', async () => {
     const { graph, graphStorage } = await import('../../src/memory/storage.js');
     
+    // Mock addEntity to return an entity with the observations
+    (graph.addEntity as any).mockImplementation((entityObj: {
+      id?: string;
+      name: string;
+      entityType: string;
+      observations: string[];
+    }) => ({
+      id: entityObj.id || entityObj.name,
+      name: entityObj.name,
+      entityType: entityObj.entityType,
+      observations: entityObj.observations
+    }));
+    
     // Initialize agent with both features enabled
     await agent.init({
       thinkParams: {
@@ -111,11 +130,11 @@ describe('Self-Reflection Feature', () => {
     expect(graph.addEntity).toHaveBeenCalled();
     
     // Extract the observations from the addEntity call
-    const callArgs = (graph.addEntity as any).mock.calls[0];
-    const observations = callArgs[2];
+    const callArgs = (graph.addEntity as any).mock.calls[0][0];
+    const observations = callArgs.observations;
     
-    // Verify that at least one observation contains self-reflection content
-    const hasReflection = observations.some((obs: string) => obs.includes('Self-Reflection'));
+    // Verify that at least one observation contains reflection content
+    const hasReflection = observations.some((obs: string) => obs.includes('Reflection:'));
     expect(hasReflection).toBe(true);
     
     // Verify that the graph was saved

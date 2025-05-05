@@ -1,5 +1,5 @@
-import { IAgent } from '../../agents/IAgent';
-import { CoordinationStrategy } from '../CoordinationStrategy';
+import { IAgent } from '../../agents/IAgent.js';
+import { CoordinationStrategy } from '../CoordinationStrategy.js';
 
 /**
  * Implements a sequential, round-robin strategy for agent coordination.

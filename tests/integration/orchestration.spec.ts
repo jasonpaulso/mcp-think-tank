@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { BasicAgent } from '../../src/agents/BasicAgent';
-import { Orchestrator } from '../../src/orchestrator/Orchestrator';
-import { SequentialStrategy } from '../../src/orchestrator/strategies/SequentialStrategy';
-import { ParallelStrategy } from '../../src/orchestrator/strategies/ParallelStrategy';
+import { BasicAgent } from '../../src/agents/BasicAgent.js';
+import { Orchestrator } from '../../src/orchestrator/Orchestrator.js';
+import { SequentialStrategy } from '../../src/orchestrator/strategies/SequentialStrategy.js';
+import { ParallelStrategy } from '../../src/orchestrator/strategies/ParallelStrategy.js';
 
 // Mock memory store for testing
 const createMockMemoryStore = () => ({

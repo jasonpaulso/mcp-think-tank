@@ -1,5 +1,5 @@
-import { IAgent } from '../agents/IAgent';
-import { CoordinationStrategy, OrchestrationResult } from './CoordinationStrategy';
+import { IAgent } from '../agents/IAgent.js';
+import { CoordinationStrategy, OrchestrationResult } from './CoordinationStrategy.js';
 
 /**
  * Orchestrator that coordinates multiple agents according to a strategy.
@@ -76,7 +76,10 @@ export class Orchestrator {
         if (!outputs.has(currentAgentId)) {
           outputs.set(currentAgentId, []);
         }
-        outputs.get(currentAgentId)?.push(output);
+        const agentOutputs = outputs.get(currentAgentId);
+        if (agentOutputs) {
+          agentOutputs.push(output);
+        }
         
         // Increment steps
         steps++;

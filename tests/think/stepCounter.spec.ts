@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ExtendedThinkSchema } from '../../src/agents/BasicAgent';
+import { ExtendedThinkSchema } from '../../src/agents/BasicAgent.js';
 import { FastMCP } from 'fastmcp';
 
 // Mock the FastMCP dependency
@@ -26,7 +26,7 @@ vi.mock('../../src/memory/storage.js', () => {
 });
 
 // Import the function after mocking dependencies
-import { registerThinkTool } from '../../src/think/tools';
+import { registerThinkTool } from '../../src/think/tools.js';
 
 describe('Think Tool Step Counter', () => {
   let server: FastMCP;
@@ -37,7 +37,10 @@ describe('Think Tool Step Counter', () => {
     vi.clearAllMocks();
     
     // Create a mock server
-    server = new FastMCP();
+    server = new FastMCP({
+      name: 'Test MCP Server',
+      version: '1.0.0'
+    });
     
     // Register the think tool
     registerThinkTool(server);
@@ -58,7 +61,7 @@ describe('Think Tool Step Counter', () => {
   
   it('should initialize step counters correctly', async () => {
     // Setup test parameters with plannedSteps but no currentStep
-    const params = {
+    const params: Record<string, any> = {
       structuredReasoning: 'Test reasoning',
       plannedSteps: 3,
       formatOutput: false // Disable formatting for testing
@@ -78,7 +81,7 @@ describe('Think Tool Step Counter', () => {
   
   it('should estimate plannedSteps based on content length if not provided', async () => {
     // Setup test parameters with currentStep but no plannedSteps
-    const params = {
+    const params: Record<string, any> = {
       structuredReasoning: 'Test reasoning that is longer than 500 characters. '.repeat(10), // ~610 characters
       currentStep: 2,
       formatOutput: false // Disable formatting for testing
@@ -94,7 +97,7 @@ describe('Think Tool Step Counter', () => {
   
   it('should increment currentStep in the agent during execution', async () => {
     // Setup test parameters with step counters
-    const params = {
+    const params: Record<string, any> = {
       structuredReasoning: 'Test reasoning',
       plannedSteps: 5,
       currentStep: 3,

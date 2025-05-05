@@ -5,7 +5,7 @@ import {
   formatComparison,
   detectFormatterType,
   formatThought
-} from '../../src/think/formatters';
+} from '../../src/think/formatters.js';
 
 describe('Thought Formatters', () => {
   describe('detectFormatterType', () => {

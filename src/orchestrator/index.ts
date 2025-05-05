@@ -1,6 +1,6 @@
 /**
- * Barrel file for orchestrator exports
+ * Barrel file for orchestration exports
  */
-export * from './Orchestrator';
-export * from './CoordinationStrategy';
-export * from './strategies'; 
+export * from './Orchestrator.js';
+export * from './CoordinationStrategy.js';
+export * from './strategies/index.js'; 

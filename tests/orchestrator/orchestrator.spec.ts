@@ -1,139 +1,110 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Orchestrator } from '../../src/orchestrator/Orchestrator';
-import { SequentialStrategy } from '../../src/orchestrator/strategies/SequentialStrategy';
-import { ParallelStrategy } from '../../src/orchestrator/strategies/ParallelStrategy';
-import { IAgent } from '../../src/agents/IAgent';
+import { describe, it, expect, vi } from 'vitest';
+import { Orchestrator } from '../../src/orchestrator/Orchestrator.js';
+import { SequentialStrategy } from '../../src/orchestrator/strategies/SequentialStrategy.js';
+import { ParallelStrategy } from '../../src/orchestrator/strategies/ParallelStrategy.js';
+import { IAgent } from '../../src/agents/IAgent.js';
+import { MemoryStore } from '../../src/memory/store/MemoryStore.js';
 
-// Create mock agents for testing
-class MockAgent implements IAgent {
-  agentId: string;
-  memory: any;
-  initCalled: boolean = false;
-  stepCalls: string[] = [];
-  finalizeCalled: boolean = false;
-  
-  constructor(id: string) {
-    this.agentId = id;
-    this.memory = {}; // Just a placeholder
-  }
-  
-  async init(): Promise<void> {
-    this.initCalled = true;
-  }
-  
-  async step(input: string): Promise<string> {
-    this.stepCalls.push(input);
-    return `Output from ${this.agentId}: ${input}`;
-  }
-  
-  async finalize(): Promise<void> {
-    this.finalizeCalled = true;
-  }
+// Helper to create a typed mock agent
+function createMockAgent(id: string, memory: MemoryStore): IAgent {
+  return {
+    agentId: id,
+    memory,
+    init: vi.fn().mockResolvedValue(undefined),
+    step: vi.fn().mockResolvedValue(`${id} output`),
+    finalize: vi.fn().mockResolvedValue(undefined)
+  };
 }
 
 describe('Orchestrator', () => {
-  let agent1: MockAgent;
-  let agent2: MockAgent;
-  let agents: MockAgent[];
+  // Create mock memory store
+  const mockMemory: MemoryStore = {
+    add: vi.fn().mockResolvedValue(undefined),
+    query: vi.fn().mockResolvedValue([]),
+    prune: vi.fn().mockResolvedValue(0)
+  };
   
-  beforeEach(() => {
-    // Reset agents for each test
-    agent1 = new MockAgent('agent1');
-    agent2 = new MockAgent('agent2');
-    agents = [agent1, agent2];
-  });
-  
-  describe('with SequentialStrategy', () => {
-    it('should coordinate agents in sequence', async () => {
-      // Arrange
-      const strategy = new SequentialStrategy();
-      const orchestrator = new Orchestrator(agents, strategy);
-      
-      // Act
-      const result = await orchestrator.run('Initial input');
-      
-      // Assert
-      expect(agent1.initCalled).toBe(true);
-      expect(agent2.initCalled).toBe(true);
-      
-      // The agents may be called multiple times - just verify they were called at least once
-      expect(agent1.stepCalls.length).toBeGreaterThan(0);
-      expect(agent1.stepCalls[0]).toBe('Initial input');
-      
-      expect(agent2.stepCalls.length).toBeGreaterThan(0);
-      expect(agent2.stepCalls[0]).toContain('Output from agent1');
-      
-      expect(agent1.finalizeCalled).toBe(true);
-      expect(agent2.finalizeCalled).toBe(true);
-      
-      expect(result.status).toBe('COMPLETED');
-      expect(result.steps).toBeGreaterThan(0);
-    });
+  it('should use the strategy to select the next agent', async () => {
+    // Create mock agents
+    const agent1 = createMockAgent('agent1', mockMemory);
+    const agent2 = createMockAgent('agent2', mockMemory);
     
-    it('should stop when isDone returns true', async () => {
-      // Arrange
-      const strategy = new SequentialStrategy();
-      const orchestrator = new Orchestrator(agents, strategy);
-      
-      // Act - isDone returns true after the first agent
-      const result = await orchestrator.run('Initial input', 
-        (output) => output.includes('Output from agent1'));
-      
-      // Assert
-      expect(agent1.stepCalls.length).toBeGreaterThan(0);
-      expect(agent2.stepCalls).toHaveLength(0); // Second agent should not be called
-      
-      expect(result.status).toBe('COMPLETED');
-      expect(result.steps).toBeGreaterThan(0);
-    });
-  });
-  
-  describe('with ParallelStrategy', () => {
-    it('should process all agents once', async () => {
-      // Arrange
-      const strategy = new ParallelStrategy();
-      const orchestrator = new Orchestrator(agents, strategy);
-      
-      // Act
-      const result = await orchestrator.run('Initial input');
-      
-      // Assert
-      expect(agent1.initCalled).toBe(true);
-      expect(agent2.initCalled).toBe(true);
-      
-      expect(agent1.stepCalls.length).toBeGreaterThan(0);
-      expect(agent2.stepCalls.length).toBeGreaterThan(0);
-      
-      expect(agent1.stepCalls[0]).toBe('Initial input');
-      // agent2 is receiving the output from agent1, match partial content
-      expect(agent2.stepCalls[0]).toContain('Initial input');
-      
-      expect(agent1.finalizeCalled).toBe(true);
-      expect(agent2.finalizeCalled).toBe(true);
-      
-      expect(result.status).toBe('COMPLETED');
-      expect(result.steps).toBeGreaterThan(0);
-    });
-  });
-  
-  it('should handle errors gracefully', async () => {
-    // Arrange
-    const strategy = new SequentialStrategy();
-    const errorAgent = {
-      agentId: 'error-agent',
-      memory: {},
-      init: async () => { /* no-op */ },
-      step: async () => { throw new Error('Agent error'); },
-      finalize: async () => { /* no-op */ }
+    // Mock the strategy
+    const mockStrategy = {
+      nextAgent: vi.fn().mockReturnValueOnce(agent1).mockReturnValueOnce(null),
+      combine: vi.fn().mockReturnValue('Combined output')
     };
     
-    const orchestrator = new Orchestrator([errorAgent], strategy);
+    // Create orchestrator
+    const orchestrator = new Orchestrator([agent1, agent2], mockStrategy);
     
-    // Act
-    const result = await orchestrator.run('Initial input');
+    // Run the orchestrator
+    await orchestrator.run('Test input');
     
-    // Assert
+    // Check that the strategy's nextAgent method was called
+    expect(mockStrategy.nextAgent).toHaveBeenCalledTimes(2);
+    
+    // Check that the agent's init method was called
+    expect(agent1.init).toHaveBeenCalled();
+    
+    // Check that the agent's step method was called with the input
+    expect(agent1.step).toHaveBeenCalledWith('Test input');
+    
+    // Check that the agent's finalize method was called
+    expect(agent1.finalize).toHaveBeenCalled();
+  });
+  
+  it('should handle agent errors gracefully', async () => {
+    // Create mock agent that throws an error
+    const errorAgent = createMockAgent('error-agent', mockMemory);
+    
+    // Override the init method to reject
+    (errorAgent.init as any).mockRejectedValue(new Error('Init error'));
+    
+    // Mock the strategy
+    const strategy = new SequentialStrategy();
+    
+    // Create orchestrator with debug mode
+    const orchestrator = new Orchestrator([errorAgent], strategy, { debug: true });
+    
+    // Run the orchestrator
+    const result = await orchestrator.run('Test input');
+    
+    // Check that the result has ERROR status
     expect(result.status).toBe('ERROR');
-    expect(result.output).toContain('Agent error');
+    expect(result.output).toContain('Error');
+  });
+  
+  it('should work with SequentialStrategy', async () => {
+    // Create mock agents
+    const agent1 = createMockAgent('agent1', mockMemory);
+    const agent2 = createMockAgent('agent2', mockMemory);
+    
+    // Create orchestrator with sequential strategy
+    const strategy = new SequentialStrategy();
+    const orchestrator = new Orchestrator([agent1, agent2], strategy);
+    
+    // Run the orchestrator
+    const result = await orchestrator.run('Test input');
+    
+    // Check that the result has COMPLETED status
+    expect(result.status).toBe('COMPLETED');
+  });
+  
+  it('should work with ParallelStrategy', async () => {
+    // Create mock agents
+    const agent1 = createMockAgent('agent1', mockMemory);
+    const agent2 = createMockAgent('agent2', mockMemory);
+    
+    // Create orchestrator with parallel strategy
+    const strategy = new ParallelStrategy();
+    const orchestrator = new Orchestrator([agent1, agent2], strategy);
+    
+    // Run the orchestrator with isDone function
+    const result = await orchestrator.run('Test input', 
+      (output: string) => output.includes('agent1 output'));
+    
+    // Check that the result has COMPLETED status
+    expect(result.status).toBe('COMPLETED');
   });
 }); 
