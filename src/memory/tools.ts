@@ -2,6 +2,7 @@ import { FastMCP } from 'fastmcp';
 import { graph, memoryStore } from './store/index.js';
 import * as Schemas from '../utils/validation.js';
 import { z } from 'zod'; 
+import { Relation } from './store/MemoryStore.js';
 
 // Batch size for processing large entity sets
 const BATCH_SIZE = 20;
@@ -245,20 +246,51 @@ export function registerMemoryTools(server: FastMCP): void {
         notFound: [] as string[]
       };
 
-      // Using pruning with the deprecate option set to false to actually delete
       for (const item of args.deletions) {
         try {
-          let prunedCount = 0;
-          for (const observation of item.observations) {
-            // Prune all observations matching this text
-            const count = await memoryStore.prune({
-              tag: observation, // Use the observation text as the tag
-              deprecate: false
-            });
-            prunedCount += count;
+          // First, find the entity directly
+          const entity = graph.entities.get(item.entityName);
+          
+          if (!entity) {
+            // If not found directly, try to find similar entities
+            const similarEntities = await memoryStore.findSimilar(item.entityName);
+            
+            if (similarEntities.length === 0) {
+              // No matching entity found
+              results.notFound.push(item.entityName);
+              continue;
+            }
+            
+            // Use the first similar entity
+            item.entityName = similarEntities[0];
           }
           
-          if (prunedCount > 0) {
+          // Get enhanced entity from memory store (access private property carefully)
+          const enhancedEntityMap = (memoryStore as any).enhancedEntities;
+          const enhancedEntity = enhancedEntityMap?.get(item.entityName);
+          
+          if (!enhancedEntity) {
+            results.notFound.push(item.entityName);
+            continue;
+          }
+          
+          // Track if any observations were removed
+          let observationsRemoved = false;
+          
+          // Loop through the observations to delete
+          for (const observationToDelete of item.observations) {
+            // Filter out observations that match the text
+            const originalLength = enhancedEntity.observations.length;
+            enhancedEntity.observations = enhancedEntity.observations.filter((obs: { text: string }) => 
+              !obs.text.includes(observationToDelete)
+            );
+            
+            if (enhancedEntity.observations.length < originalLength) {
+              observationsRemoved = true;
+            }
+          }
+          
+          if (observationsRemoved) {
             results.updated.push(item.entityName);
           } else {
             results.notFound.push(item.entityName);
@@ -276,7 +308,7 @@ export function registerMemoryTools(server: FastMCP): void {
       return JSON.stringify({
         updated: results.updated.length > 0 ? results.updated : null,
         notFound: results.notFound.length > 0 ? results.notFound : null,
-        message: `Removed observations from ${results.updated.length} entities. ${results.notFound.length} entities not found.`
+        message: `Removed observations from ${results.updated.length} entities. ${results.notFound.length} entities not found or observations not found.`
       });
     }
   });
@@ -333,19 +365,24 @@ export function registerMemoryTools(server: FastMCP): void {
     description: 'Search for nodes in the knowledge graph based on a query',
     parameters: Schemas.SearchNodesSchema,
     execute: async (args) => {
-      // First use the new query interface
+      // First, check if any entity names directly match or contain the query
+      const directMatches = Array.from(graph.entities.keys()).filter(name => 
+        name.toLowerCase().includes(args.query.toLowerCase())
+      );
+      
+      // Then use the query interface to search observations
       const queryResults = await memoryStore.query({
         keyword: args.query,
         limit: 100
       });
       
-      // Map to unique entity names
-      const entityNames = new Set<string>();
-      for (const result of queryResults) {
-        entityNames.add(result.entityName);
-      }
+      // Combine direct entity name matches with observation content matches
+      const entityNames = new Set<string>([
+        ...directMatches,
+        ...queryResults.map(result => result.entityName)
+      ]);
       
-      // Then get the full entities using the underlying graph
+      // Get the full entities
       const results = graph.getEntities(Array.from(entityNames));
       
       // Return as string
@@ -441,26 +478,46 @@ export function registerMemoryTools(server: FastMCP): void {
         failed: [] as Array<{from: string, to: string, relationType: string, reason: string}>
       };
 
-      // Still using the lower-level graph for relations for now
+      // Check entities exist before attempting operations
       for (const relation of args.relations) {
-        // Try to delete the relation first (if it exists)
-        const deleted = graph.deleteRelation(relation);
+        // First check if entities exist
+        const fromExists = graph.entities.has(relation.from);
+        const toExists = graph.entities.has(relation.to);
         
-        // Then add it
-        const added = graph.addRelation(relation);
-        
-        if (!added) {
-          // If we couldn't add it, determine the reason
+        if (!fromExists || !toExists) {
           let reason = "Unknown error";
-          if (!graph.entities.has(relation.from)) {
+          if (!fromExists) {
             reason = `Source entity '${relation.from}' doesn't exist`;
-          } else if (!graph.entities.has(relation.to)) {
+          } else if (!toExists) {
             reason = `Target entity '${relation.to}' doesn't exist`;
           }
           
           results.failed.push({...relation, reason});
+          continue;
+        }
+        
+        // Check if relationship already exists
+        // Flatten the relations into a single array of Relation objects
+        const allRelations: Relation[] = [];
+        graph.relations.forEach(relations => {
+          relations.forEach(relation => allRelations.push(relation));
+        });
+        
+        const existingRelation = allRelations.find(rel => 
+          rel.from === relation.from && 
+          rel.to === relation.to && 
+          rel.relationType === relation.relationType
+        );
+        
+        // Proceed with update (which is delete + recreate)
+        const deleted = existingRelation ? graph.deleteRelation(relation) : false;
+        const added = graph.addRelation(relation);
+        
+        if (!added) {
+          // If addition failed for some reason
+          results.failed.push({...relation, reason: "Failed to create relation"});
         } else if (deleted) {
-          // If we deleted and added, it was an update
+          // If we deleted an existing relation and added a new one, consider it updated
           results.updated.push(relation);
         } else {
           // If we just added (didn't delete first), it was a creation
@@ -471,12 +528,13 @@ export function registerMemoryTools(server: FastMCP): void {
       // Save changes
       await memoryStore.save();
 
-      // Return as string
+      // Return as string with clarified message about behavior
       return JSON.stringify({
         updated: results.updated.length > 0 ? results.updated : null,
         created: results.created.length > 0 ? results.created : null,
         failed: results.failed.length > 0 ? results.failed : null,
-        message: `Updated ${results.updated.length} relations. Created ${results.created.length} relations. Failed for ${results.failed.length} relations.`
+        message: `Updated ${results.updated.length} relations (by recreating them). Created ${results.created.length} new relations. Failed for ${results.failed.length} relations.`,
+        note: "Relations are updated by removing and recreating them, rather than modifying in place."
       });
     }
   });

@@ -354,12 +354,32 @@ export class JsonlMemoryStore implements MemoryStore {
     await this.getLoadingPromise();
 
     const results: string[] = [];
-    const normalizedName = name.toLowerCase();
+    const normalizedName = name.toLowerCase().trim();
     
-    // Simple case-insensitive matching for now
+    // Direct exact match (case-insensitive)
     for (const entityName of this.enhancedEntities.keys()) {
+      // First check for exact match
+      if (entityName.toLowerCase() === normalizedName) {
+        return [entityName]; // Return immediately for exact matches
+      }
+      
+      // Check for contains in either direction
       if (entityName.toLowerCase().includes(normalizedName) || 
           normalizedName.includes(entityName.toLowerCase())) {
+        results.push(entityName);
+        continue;
+      }
+      
+      // Check for word-level matches
+      const entityWords = entityName.toLowerCase().split(/\s+/);
+      const searchWords = normalizedName.split(/\s+/);
+      
+      // If any word matches, consider it similar
+      const hasWordMatch = entityWords.some(word => 
+        searchWords.some(searchWord => word === searchWord && word.length > 2)
+      );
+      
+      if (hasWordMatch) {
         results.push(entityName);
       }
     }
