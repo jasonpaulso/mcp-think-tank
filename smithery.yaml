@@ -9,14 +9,22 @@ startCommand:
     type: "object"
     title: "Think Tool Configuration"
     description: "Configuration options for the Think Tool MCP server"
-    properties: {}
+    properties:
+      MEMORY_PATH:
+        type: "string"
+        description: "Custom path for memory storage. Important: Use a unique path for each project to avoid knowledge graph conflicts."
+      EXA_API_KEY:
+        type: "string"
+        description: "Exa API key (required for web search tools). Sign up at exa.ai to obtain a key."
     required: []
   commandFunction: |-
     (config) => ({
       command: 'npx',
       args: ['-y', 'mcp-think-tank'],
       env: {
-        NODE_ENV: 'production'
+        NODE_ENV: 'production',
+        MEMORY_PATH: config.MEMORY_PATH,
+        EXA_API_KEY: config.EXA_API_KEY
       }
     })
 
