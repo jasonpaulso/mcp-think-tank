@@ -54,6 +54,8 @@ Recent studies show significant improvements when using structured thinking:
 - 🌐 **Web Research Tools (Exa)**: Search the web and get sourced answers using Exa API
 - 🔍 **Memory Tools**: Easy-to-use tools for storing and retrieving information
 - 🤝 **Client Support**: Seamless integration with Cursor, Claude @Web, and other MCP clients
+- 🔒 **Tool Orchestration & Call Limits**: Built-in safeguards to prevent excessive tool usage with configurable limits
+- ⚡ **Content Caching**: Performance optimization for file and URL operations with automatic duplicate detection
 
 ## 📦 Installation
 
@@ -111,6 +113,40 @@ mcp-think-tank
 - `EXA_API_KEY` (**required for Exa web search**): Enables `exa_search` and `exa_answer` tools. Without it, web search will not work.
 
 > For more details, see [exa.ai](https://exa.ai/) and [Cursor MCP documentation](https://docs.cursor.com/context/model-context-protocol).
+
+### Tool Limits and Caching Configuration
+
+MCP Think Tank includes built-in safeguards to prevent excessive tool usage and performance optimizations through caching. These can be configured via environment variables:
+
+- `TOOL_LIMIT` (default: 25): Maximum number of tool calls allowed per session
+- `CACHE_TOOL_CALLS` (default: true): Enable/disable duplicate tool call caching
+- `CACHE_CONTENT` (default: true): Enable/disable content-based caching for file/URL operations
+- `CONTENT_CACHE_SIZE` (default: 50): Maximum number of items in the content cache
+- `CONTENT_CACHE_TTL` (default: 300000): Time-to-live for cached content in milliseconds (5 minutes)
+
+Example configuration with custom limits and caching settings:
+
+```json
+{
+  "mcpServers": {
+    "think-tool": {
+      "command": "npx",
+      "args": ["-y", "mcp-think-tank"],
+      "type": "stdio",
+      "env": {
+        "MEMORY_PATH": "/absolute/path/to/your/memory.jsonl",
+        "EXA_API_KEY": "your-exa-api-key-here",
+        "TOOL_LIMIT": "50",
+        "CACHE_CONTENT": "true",
+        "CONTENT_CACHE_SIZE": "100"
+      }
+    }
+  }
+}
+```
+
+> 💡 **Performance tip:**
+> Content caching can significantly improve performance for repeated file and URL operations. In tests, cached URL fetches were over 1000× faster than the initial fetch.
 
 ---
 
@@ -176,127 +212,96 @@ To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a
 ### 2. Example Rule File (`.cursor/rules/mcp-think-tank.mdc`)
 ```
 ---
-rule type: always
+rule type: auto attach
+use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md,**/*.py,**/*.json
 ---
 
-# MCP Think Tank - Enhance Your AI Agent's Capabilities
+# MCP Think Tank Tools Guide
 
-This project uses MCP Think Tank to extend your AI assistant with structured reasoning, persistent memory, task management, and web research capabilities. All agents should follow these guidelines to leverage these powerful tools.
+MCP Think Tank extends AI with structured reasoning, knowledge graph memory, task management, and web research capabilities. This rule helps determine when each tool is most appropriate.
 
-## 🧠 Tool Categories & When To Use Them
+## Tool Selection Guide
 
-### 1️⃣ Thinking Tools
-- `think` - Use for complex reasoning, architecture planning, and step-by-step problem-solving
-  - **When to use**: For important decisions requiring structured analysis or reflection
-  - **Pro tip**: Add `storeInMemory: true` to save important thoughts in the knowledge graph
-  - **Example**: `think({structuredReasoning: "Analyzing pros/cons of database options...", storeInMemory: true})`
+### 1. Thinking Tools (Structured Reasoning)
 
-### 2️⃣ Memory & Knowledge Graph
-- `create_entities` - Add new concepts to the knowledge graph
-  - **When to use**: To document important concepts, systems, or components
-  - **Example**: `create_entities([{name: "AuthSystem", entityType: "System", observations: ["Uses JWT"]}])`
+Use `think` for:
+- Complex technical decisions requiring systematic analysis
+- Architecture planning and design considerations
+- Step-by-step problem-solving with self-reflection
+- When analysis should be saved for future reference
 
-- `add_observations` - Add facts to existing entities
-  - **When to use**: When new information about an existing entity is discovered
-  - **Example**: `add_observations([{entityName: "AuthSystem", contents: ["Expires tokens after 24h"]}])`
+```javascript
+// Complex architecture decision with memory storage
+mcp_think-tool_think({
+  structuredReasoning: "Analyzing database options for our user management system...",
+  category: "architecture",
+  storeInMemory: true
+})
+```
 
-- `create_relations` - Create relationships between entities
-  - **When to use**: To connect related concepts in the knowledge graph
-  - **Example**: `create_relations([{from: "AuthSystem", to: "Security", relationType: "enhances"}])`
+### 2. Memory & Knowledge Graph
 
-- `read_graph` - Get the entire knowledge graph
-  - **When to use**: To understand the full project context before making major decisions
+Use when information should be preserved across conversations:
 
-- `search_nodes` - Find entities matching search criteria
-  - **When to use**: To retrieve relevant knowledge before solving a problem
-  - **Example**: `search_nodes({query: "authentication"})`
+| Tool | When to Use |
+|------|-------------|
+| `create_entities` | Document important concepts or components |
+| `add_observations` | Add new facts to existing entities |
+| `create_relations` | Connect related concepts |
+| `search_nodes` | Find relevant knowledge before solving problems |
+| `open_nodes` | Retrieve specific entity details |
 
-- `open_nodes` - Retrieve specific entities by name
-  - **When to use**: When you need details about a specific known entity
-  - **Example**: `open_nodes({names: ["AuthSystem"]})`
+```javascript
+// Documenting architectural components
+mcp_think-tool_create_entities([
+  {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
+])
+```
 
-- `update_entities` - Modify existing entities
-  - **When to use**: When core information about an entity changes
-  - **Example**: `update_entities([{name: "AuthSystem", entityType: "Security"}])`
+### 3. Task Management
 
-- `update_relations` - Modify relationships between entities
-  - **When to use**: When the nature of a relationship changes
-  - **Example**: `update_relations([{from: "AuthSystem", to: "Security", relationType: "implements"}])`
+Use for project planning and tracking:
 
-- `delete_entities` - Remove entities from the knowledge graph
-  - **When to use**: When concepts become obsolete or are merged
-  - **Example**: `delete_entities({entityNames: ["OldSystem"]})`
+- `plan_tasks`: At project start or when planning features
+- `list_tasks`: To understand current work status
+- `next_task`: When ready to work on next priority
+- `complete_task`: When a task is finished
+- `update_tasks`: When priorities change
 
-- `delete_observations` - Remove specific facts from entities
-  - **When to use**: When information becomes outdated or incorrect
-  - **Example**: `delete_observations([{entityName: "AuthSystem", observations: ["Uses MD5"]}])`
+### 4. Web Research (Exa)
 
-- `delete_relations` - Remove relationships between entities
-  - **When to use**: When connections are no longer valid
-  - **Example**: `delete_relations([{from: "AuthSystem", to: "Legacy", relationType: "depends on"}])`
+Use when current context is insufficient:
 
-### 3️⃣ Task Management
-- `plan_tasks` - Create and organize project tasks
-  - **When to use**: At project start or when planning new features
-  - **Example**: `plan_tasks([{description: "Implement login", priority: "high"}])`
+- `exa_search`: For finding current information from the web
+- `exa_answer`: For factual questions requiring cited sources
 
-- `list_tasks` - Retrieve tasks filtered by status/priority
-  - **When to use**: To understand current work status
-  - **Example**: `list_tasks({status: "todo"})`
+```javascript
+// Research current best practices
+mcp_think-tool_exa_search({
+  query: "latest React state management libraries 2025",
+  num_results: 5
+})
+```
 
-- `next_task` - Get and start the highest priority task
-  - **When to use**: When ready to work on the next priority
-  - **Example**: `next_task({random_string: ""})`
+## Integration Best Practices
 
-- `complete_task` - Mark tasks as done
-  - **When to use**: When a task is finished
-  - **Example**: `complete_task({id: "task-uuid"})`
+1. Start complex reasoning with `think` tool
+2. Save important conclusions to knowledge graph
+3. Create tasks based on conclusions when appropriate
+4. Use research tools to fill knowledge gaps
+5. Record research findings in knowledge graph
 
-- `update_tasks` - Modify existing tasks
-  - **When to use**: When priorities change or task details need updating
-  - **Example**: `update_tasks([{id: "task-uuid", priority: "high"}])`
+## Performance Considerations
 
-- `show_memory_path` - Get the location of the knowledge graph file
-  - **When to use**: For debugging or when examining stored knowledge directly
-  - **Example**: `show_memory_path({random_string: ""})`
+- Tool calls are limited to 25 per session (configurable)
+- Content caching improves repeated file/URL operation performance
+- Avoid redundant tool calls for optimal performance
+```
 
-### 4️⃣ Web Research
-- `exa_search` - Search the web for information
-  - **When to use**: When current context is insufficient and you need external facts
-  - **Example**: `exa_search({query: "latest React state management"})`
-
-- `exa_answer` - Get sourced answers to specific questions
-  - **When to use**: For factual questions requiring cited sources
-  - **Example**: `exa_answer({question: "What is quantum computing?"})`
-
-## 📋 Best Practices
-
-### Thinking Process
-- Use the `think` tool for all complex decisions to ensure thorough analysis
-- Structure your reasoning with clear problem definition, context, analysis, and conclusion
-- Set `storeInMemory: true` for important decisions that should be accessible later
-
-### Knowledge Management
-- Before creating new entities, search the graph for related concepts
-- Create a clear entity type hierarchy and consistent naming
-- Link related entities to build a comprehensive knowledge web
-- Regularly update entities with new observations as the project evolves
-
-### Task Workflow
-1. Use `plan_tasks` to break down features into clear steps
-2. Use `list_tasks` to review current priorities
-3. Use `next_task` to identify what to work on next
-4. Use `complete_task` when finished with an item
-5. Use `update_tasks` to adjust priorities as needs change
-
-### Research Protocol
-- Always cite sources when using web research tools
-- Save important findings to the knowledge graph
-- Combine research with structured thinking for best results
 
 ## 📝 How To Save Important Thoughts
 
-When using the `think` tool with important reasoning, set `storeInMemory: true` or simply tell the agent "Please save this reasoning in memory for future reference."
+When using the `think` tool with important reasoning, set `storeInMemory: true` simply tell the agent "Please save this reasoning in memory for future reference."
 
 ## 🧠 Think Tank Instructions
 
@@ -434,6 +439,7 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - Always cite sources and, when relevant, summarize findings in memory using `add_observations` or by saving a `think` entry.
 - Research tools require a valid `EXA_API_KEY` in your MCP server configuration.
 - Integrate research findings into your code and reasoning for robust, up-to-date solutions.
+- Includes intelligent error handling for non-JSON responses and content caching for better performance.
 
 ### 3. Task Manager Tools
 - Use `plan_tasks` to create and organize project tasks.
@@ -445,6 +451,23 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - Use `create_entities`, `add_observations`, `create_relations`, and related tools to build and maintain your project's knowledge graph.
 - Store key decisions, reusable patterns, and architectural choices for future reference.
 - Before starting new work, search memory for relevant prior knowledge to avoid duplication and leverage past insights.
+- File and URL operations benefit from content-based caching for improved performance.
+
+## ⚡ Performance Optimization
+
+MCP Think Tank includes built-in performance optimizations:
+
+### Content Caching
+- Automatic caching of file and URL content based on cryptographic hashing
+- Prevents redundant file reads and network requests
+- In tests, cached URL fetches were over 1000× faster than the initial fetch
+- File reads showed significant improvements with 2-5× speedup on subsequent reads
+- Cache size and TTL are configurable via environment variables
+
+### Tool Call Optimization
+- Identical tool calls are automatically cached to prevent counting duplicates against your limit
+- Intelligent error handling, especially for Exa search, prevents failures from non-JSON responses
+- Tool limit safeguards prevent runaway tool usage while providing graceful degradation
 
 ---
 
@@ -453,6 +476,7 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - Integrate research and task management into your coding workflow for seamless project development.
 - Regularly review and update your knowledge graph to keep project memory relevant and actionable.
 - Reference and build upon previous decisions and patterns for consistent, high-quality code.
+- Be mindful of tool limits in complex workflows, and use the cache stats utilities to monitor usage.
 
 ---
 

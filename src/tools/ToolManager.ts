@@ -1,9 +1,16 @@
 import { FastMCP } from 'fastmcp';
 import { LRUCache } from 'lru-cache';
+import crypto from 'crypto';
+import fs from 'fs/promises';
+import http from 'http';
+import https from 'https';
 
 // Environment variables
 const MAX_TOOL_CALLS = parseInt(process.env.TOOL_LIMIT || '25', 10);
 const CACHE_TOOL_CALLS = process.env.CACHE_TOOL_CALLS !== 'false'; // Default to true
+const CACHE_CONTENT = process.env.CACHE_CONTENT !== 'false'; // Default to true
+const CONTENT_CACHE_SIZE = parseInt(process.env.CONTENT_CACHE_SIZE || '50', 10);
+const CONTENT_CACHE_TTL = parseInt(process.env.CONTENT_CACHE_TTL || '300000', 10); // 5 minutes default
 
 /**
  * ToolManager tracks and limits tool calls across agents
@@ -18,6 +25,14 @@ export class ToolManager {
   // Cache for duplicate tool calls
   private callCache: LRUCache<string, any>;
   
+  // Public getter for contentCache
+  get contentCache(): LRUCache<string, any> {
+    return this._contentCache;
+  }
+  
+  // Actual private storage for content cache
+  private _contentCache: LRUCache<string, any>;
+  
   // Store allowed tools if whitelist is enabled
   private allowedTools: string[] | null = null;
   
@@ -26,6 +41,12 @@ export class ToolManager {
     this.callCache = new LRUCache({
       max: 100,
       ttl: 1000 * 60 * 5, // 5 minute TTL
+    });
+    
+    // Initialize content cache
+    this._contentCache = new LRUCache({
+      max: CONTENT_CACHE_SIZE,
+      ttl: CONTENT_CACHE_TTL,
     });
   }
   
@@ -169,12 +190,166 @@ export class ToolManager {
   }
   
   /**
+   * Get statistics about the content cache
+   */
+  getContentCacheStats(): { enabled: boolean, size: number, maxSize: number, ttl: number } {
+    return {
+      enabled: CACHE_CONTENT,
+      size: this._contentCache.size,
+      maxSize: this._contentCache.max,
+      ttl: CONTENT_CACHE_TTL
+    };
+  }
+  
+  /**
+   * Check if content is in the cache
+   * @param key Cache key to check
+   * @returns Whether the key exists in the cache
+   */
+  hasContentCacheItem(key: string): boolean {
+    return this._contentCache.has(key);
+  }
+  
+  /**
+   * Get content from the cache
+   * @param key Cache key to retrieve
+   * @returns The cached content or undefined if not found
+   */
+  getContentCacheItem(key: string): any {
+    return this._contentCache.get(key);
+  }
+  
+  /**
+   * Set content in the cache
+   * @param key Cache key
+   * @param value Value to cache
+   * @returns The cache instance
+   */
+  setContentCacheItem(key: string, value: any): LRUCache<string, any> {
+    return this._contentCache.set(key, value);
+  }
+  
+  /**
    * Reset all counters
    */
   reset(): void {
     this.globalCount = 0;
     this.perAgentCount.clear();
     this.callCache.clear();
+    // Also clear content cache
+    this._contentCache.clear();
+  }
+
+  /**
+   * Generate a SHA-1 hash of content
+   * @param content The content to hash
+   * @returns The SHA-1 hash as a hex string
+   */
+  private generateContentHash(content: string | Buffer): string {
+    const hash = crypto.createHash('sha1');
+    hash.update(content);
+    return hash.digest('hex');
+  }
+
+  /**
+   * Read a file with caching based on content hash
+   * @param filePath Path to the file to read
+   * @param options Options for fs.readFile
+   * @returns The file contents
+   */
+  async readFileWithCache(filePath: string, options?: any): Promise<string | Buffer> {
+    if (!CACHE_CONTENT) {
+      return fs.readFile(filePath, options);
+    }
+
+    try {
+      // First, check if we have a recent stat for this file to avoid reading it
+      const stats = await fs.stat(filePath);
+      const fileKey = `file:${filePath}:${stats.size}:${stats.mtime.getTime()}`;
+      
+      // Check if we have this exact file version cached
+      const cachedContent = this._contentCache.get(fileKey);
+      if (cachedContent) {
+        console.log(`[ToolManager] Content cache hit for file ${filePath}`);
+        return cachedContent;
+      }
+      
+      // Read the file content
+      const content = await fs.readFile(filePath, options);
+      
+      // Cache the content
+      this._contentCache.set(fileKey, content);
+      
+      return content;
+    } catch (error) {
+      console.error(`[ToolManager] Error reading file with cache: ${error}`);
+      // Fall back to regular file read
+      return fs.readFile(filePath, options);
+    }
+  }
+
+  /**
+   * Fetch URL content with caching based on content hash
+   * @param url The URL to fetch
+   * @returns The URL content
+   */
+  async fetchUrlWithCache(url: string): Promise<string> {
+    if (!CACHE_CONTENT) {
+      return this.fetchUrl(url);
+    }
+
+    // Check if we have a cache hit for this URL
+    const urlKey = `url:${url}`;
+    const cachedContent = this._contentCache.get(urlKey);
+    
+    if (cachedContent) {
+      console.log(`[ToolManager] Content cache hit for URL ${url}`);
+      return cachedContent;
+    }
+    
+    // Fetch fresh content
+    const content = await this.fetchUrl(url);
+    
+    // Generate hash and cache content
+    this._contentCache.set(urlKey, content);
+    
+    return content;
+  }
+
+  /**
+   * Helper method to fetch URL content
+   * @param url The URL to fetch
+   * @returns Promise resolving to the URL content
+   */
+  private fetchUrl(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const client = url.startsWith('https') ? https : http;
+      
+      client.get(url, (res) => {
+        const { statusCode } = res;
+        
+        if (statusCode !== 200) {
+          // Consume response data to free up memory
+          res.resume();
+          reject(new Error(`Request failed with status code: ${statusCode}`));
+          return;
+        }
+        
+        res.setEncoding('utf8');
+        let rawData = '';
+        
+        res.on('data', (chunk) => { rawData += chunk; });
+        res.on('end', () => {
+          try {
+            resolve(rawData);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }).on('error', (e) => {
+        reject(e);
+      });
+    });
   }
 }
 

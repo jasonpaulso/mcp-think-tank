@@ -1,5 +1,6 @@
 export * from './ToolManager.js';
 export * from './FastMCPAdapter.js';
+export * from './ContentCacheAdapter.js';
 
 // Add the async-mutex package for fallback concurrency protection if using worker threads
 export const getMutex = async () => {

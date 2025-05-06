@@ -23,7 +23,8 @@
     "verify-publish": "npm run lint && npm test && npm run build && npm run test:publish && npm run smoke-test",
     "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\"",
     "stop-orphaned": "node scripts/stop-orphaned.js",
-    "memory:prune": "node bin/prune-memory.js"
+    "memory:prune": "node bin/prune-memory.js",
+    "cache:stats": "node bin/cache-stats.js"
   },
   "keywords": [
     "mcp",
@@ -51,6 +52,7 @@
     "@types/node": "^22.13.17",
     "@types/uuid": "^10.0.0",
     "async-mutex": "^0.5.0",
+    "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "exa-js": "^1.6.13",
     "fastmcp": ">=1.2.0",
