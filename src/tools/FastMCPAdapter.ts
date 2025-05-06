@@ -174,8 +174,8 @@ async function handleUrlTool(
   await toolManager.callTool(agentId, toolName, params);
   
   try {
-    // Special handling for Exa search which may return non-JSON responses
-    if (toolName === 'exa_search' || toolName === 'mcp_think-tool_exa_search') {
+    // Special handling for all Exa tools
+    if (toolName.includes('exa_search') || toolName.includes('exa_answer')) {
       const result = await callExaSearch(originalExecute, params, context);
       
       // Store successful result in cache
@@ -187,9 +187,13 @@ async function handleUrlTool(
     // Generic URL tool handling
     const result = await originalExecute(params, { ...context, direct: true });
     return result;
-  } catch (error) {
-    console.error(`Error executing URL tool ${toolName}:`, error);
-    throw error;
+  } catch (error: any) {
+    // Return a properly formatted error instead of throwing
+    return JSON.stringify({
+      status: 'ERROR',
+      message: `Error executing URL tool ${toolName}: ${error.message}`,
+      query: params
+    });
   }
 }
 
@@ -201,29 +205,29 @@ async function handleUrlTool(
  * @returns Properly formatted search results
  */
 async function callExaSearch(originalExecute: Function, params: any, context: any): Promise<any> {
+  // Store original console functions
+  const originalLog = console.log;
+  const originalError = console.error;
+  
   try {
-    // Try the original execution
+    // Temporarily disable console output to prevent it from mixing with JSON
+    console.log = () => {};
+    console.error = () => {};
+    
+    // Execute the tool with suppressed logging
     const result = await originalExecute(params, { ...context, direct: true });
     return result;
   } catch (error: any) {
-    console.error('Error in Exa search execution:', error);
-    
-    // Check if the error is a JSON parsing error from a non-JSON response
-    if (error.message?.includes('Unexpected token') || 
-        error.message?.includes('not valid JSON')) {
-      console.log('Detected non-JSON Exa response, formatting properly');
-      
-      // Create a formatted JSON response
-      return JSON.stringify({
-        status: 'ERROR',
-        message: 'Exa search returned non-JSON results. Formatting response.',
-        error: error.message,
-        query: params.query
-      });
-    }
-    
-    // For other errors, rethrow
-    throw error;
+    // Return properly formatted error JSON instead of throwing
+    return JSON.stringify({
+      status: 'ERROR',
+      message: `Error executing Exa search: ${error.message}`,
+      query: params.query
+    });
+  } finally {
+    // Always restore original console functions
+    console.log = originalLog;
+    console.error = originalError;
   }
 }
 
@@ -250,9 +254,13 @@ async function handleFileTool(
   try {
     const result = await originalExecute(params, { ...context, direct: true });
     return result;
-  } catch (error) {
-    console.error(`Error executing file tool ${toolName}:`, error);
-    throw error;
+  } catch (error: any) {
+    // Return properly formatted error JSON instead of throwing
+    return JSON.stringify({
+      status: 'ERROR',
+      message: `Error executing file tool ${toolName}: ${error.message}`,
+      query: params
+    });
   }
 }
 

@@ -43,7 +43,6 @@ export function registerExaSearchTool(server: FastMCP): void {
 
       try {
         const exa = new Exa(process.env.EXA_API_KEY);
-        log.info(`Executing Exa search: "${params.query}" (${params.num_results} results)`);
         
         // Transform parameters to match Exa API
         const searchParams = {
@@ -57,9 +56,6 @@ export function registerExaSearchTool(server: FastMCP): void {
         };
         
         const results = await exa.search(params.query, searchParams);
-        
-        // Log success
-        log.info(`Exa search complete: found ${results.results.length} results`);
         
         return JSON.stringify(results);
       } catch (error) {

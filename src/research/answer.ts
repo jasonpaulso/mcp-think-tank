@@ -25,7 +25,6 @@ export function registerExaAnswerTool(server: FastMCP): void {
 
       try {
         const exa = new Exa(process.env.EXA_API_KEY);
-        log.info(`Executing Exa answer: "${question}" (max ${max_citations} citations)`);
         
         // Exa doesn't directly let us control citation count in AnswerOptions
         // We'll use the text option to get more complete results
@@ -33,9 +32,6 @@ export function registerExaAnswerTool(server: FastMCP): void {
           text: true,
           model: "exa"
         });
-        
-        // Log success
-        log.info(`Exa answer complete: received answer with ${response.citations.length || 0} citations`);
         
         return JSON.stringify(response);
       } catch (error) {
@@ -72,7 +68,6 @@ export function registerExaAnswerTool(server: FastMCP): void {
 
       try {
         const exa = new Exa(process.env.EXA_API_KEY);
-        logger.info(`Executing Exa streaming answer: "${question}" (max ${max_citations} citations)`);
         
         const stream = await exa.streamAnswer(question, {
           text: true
@@ -81,8 +76,6 @@ export function registerExaAnswerTool(server: FastMCP): void {
         for await (const chunk of stream) {
           yield JSON.stringify(chunk);
         }
-        
-        logger.info(`Exa streaming answer complete`);
       } catch (error) {
         const errorMessage = `Error executing Exa streaming answer: ${error}`;
         logger.error(errorMessage);

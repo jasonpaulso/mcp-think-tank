@@ -1,8 +1,13 @@
 // src/server.ts
-// Redirect console.log to stderr immediately at the top of the file
+// Only log to stderr when MCP_DEBUG is enabled, otherwise suppress logs
 // This is crucial for FastMCP which uses stdio for communication
- 
-console.log = (...args: unknown[]) => console.error(...args);
+
+if (process.env.MCP_DEBUG === 'true') {
+  console.log = (...args: unknown[]) => console.error(...args);
+} else {
+  // Suppress regular logs in production to avoid interfering with stdio
+  console.log = () => {};
+}
 
 // EPIPE error handling
 process.on('SIGPIPE', () => {});
