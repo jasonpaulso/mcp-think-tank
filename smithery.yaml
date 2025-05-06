@@ -1,7 +1,38 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 name: "@flight505/mcp-think-tank"
-description: "A structured reasoning tool for AI assistants that provides a dedicated space for complex thinking and analysis"
+description: "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants"
 version: "2.0.2"
+displayName: "MCP Think Tank"
+summary: "A knowledge graph-based reasoning tool with structured thinking and web research capabilities"
+icon: "/assets/MCP_Think_Tank_dark.png"
+homepage: "https://github.com/flight505/mcp-think-tank"
+repository: "https://github.com/flight505/mcp-think-tank"
+keywords:
+  - reasoning
+  - knowledge-graph
+  - structured-thinking
+  - memory
+  - task-management
+  - exa
+  - web-research
+  - think
+readme: |
+  MCP Think Tank provides AI assistants with a dedicated space for structured reasoning, persistent memory, advanced task management, and web research via Exa.
+  
+  ## Key Features
+  
+  - 💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection
+  - 🧩 **Knowledge Graph**: Simple but effective persistent memory
+  - 📝 **Task Management**: Plan, track, and update tasks with knowledge graph integration
+  - 🌐 **Web Research (Exa)**: Search the web and get sourced answers
+  - 🔒 **Tool Orchestration**: Built-in safeguards with configurable limits
+  - ⚡ **Content Caching**: Performance optimization for repeated operations
+  
+  ## Essential Configuration
+  
+  The only required configuration is an Exa API key for web search. Always set a unique MEMORY_PATH for each project to avoid knowledge graph conflicts.
+  
+  For more details, see the full documentation at: https://github.com/flight505/mcp-think-tank
 
 startCommand:
   type: stdio
