@@ -1,18 +1,11 @@
 import { FastMCP } from 'fastmcp';
 import { ThinkSchema } from './schemas.js';
 import { BasicAgent, ExtendedThinkSchema } from '../agents/BasicAgent.js';
-import { graph, graphStorage } from '../memory/storage.js';
-
-// Create a dummy memory store adapter (to be replaced in Phase 2)
-const tempMemoryAdapter = {
-  async add() { /* Will be implemented in Phase 2 */ },
-  async query() { return []; /* Will be implemented in Phase 2 */ },
-  async prune() { return 0; /* Will be implemented in Phase 2 */ }
-};
+import { memoryStore } from '../memory/store/index.js';
 
 /**
- * Registers the think tool with the MCP server
- * @param server - The FastMCP server instance
+ * Register the think tool for structured reasoning
+ * @param server The FastMCP server instance
  */
 export function registerThinkTool(server: FastMCP): void {
   server.addTool({
@@ -20,55 +13,62 @@ export function registerThinkTool(server: FastMCP): void {
     description: 'Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed. Consider including: problem definition, relevant context, analysis steps, self-reflection on your reasoning, and conclusions. Adapt this structure as needed for your specific thought process.',
     parameters: ExtendedThinkSchema,
     execute: async (params) => {
-      // Initialize step counters if not already set
-      if (params.plannedSteps && typeof params.currentStep === 'undefined') {
-        params.currentStep = 1; // Start at step 1 if plannedSteps is specified
-      } else if (typeof params.currentStep === 'number') {
-        // If currentStep is already set but no plannedSteps, estimate based on content
-        if (!params.plannedSteps) {
-          // Rough estimate based on content length
-          const contentLength = params.structuredReasoning.length;
-          params.plannedSteps = Math.max(
-            Math.ceil(contentLength / 500), // Approximately 1 step per 500 chars
-            params.currentStep + 1 // At least one more step than current
-          );
-        }
+      // If params don't include storeInMemory, default to false to avoid persisting everything
+      params.storeInMemory = params.storeInMemory === true;
+      
+      // Initialize step counters if not provided
+      if (typeof params.currentStep !== 'number') {
+        params.currentStep = 1;
       }
       
-      // Create a basic agent to handle the thinking process
+      // Estimate plannedSteps based on content length if not provided
+      if (typeof params.plannedSteps !== 'number') {
+        // Simple heuristic: 1 step per 300 characters, minimum 1, maximum 10
+        const contentLength = params.structuredReasoning.length;
+        params.plannedSteps = Math.max(1, Math.min(10, Math.ceil(contentLength / 300)));
+      }
+      
+      // Create a temporary memory adapter for research capabilities
+      const tempMemoryAdapter = {
+        add: async () => Promise.resolve({
+          text: '',
+          timestamp: new Date().toISOString()
+        }),
+        query: async () => Promise.resolve([]),
+        prune: async () => Promise.resolve(0),
+        findSimilar: async () => Promise.resolve([]),
+        save: async () => Promise.resolve(),
+        load: async () => Promise.resolve(),
+        getLoadingPromise: async () => Promise.resolve(),
+        // For compatibility with BasicAgent expectations
+        addEntity: async () => Promise.resolve(true),
+        addRelation: async () => Promise.resolve(true)
+      };
+      
+      // Create agent
       const agent = new BasicAgent('think-tool', tempMemoryAdapter, params);
       
-      // Initialize with the provided parameters
+      // Initialize with provided params
       await agent.init({ thinkParams: params });
       
-      // Process the reasoning step
-      const result = await agent.step(params.structuredReasoning);
+      // Process the reasoning
+      const output = await agent.step(params.structuredReasoning);
       
-      // Finalize to ensure persistence
-      await agent.finalize();
-      
-      // Generate response message based on parameters
-      const stepInfo = params.currentStep && params.plannedSteps 
-        ? `Step ${params.currentStep} of ${params.plannedSteps} completed. `
-        : '';
-      
-      const reflectionInfo = params.selfReflect
-        ? 'Self-reflection analysis applied. '
-        : '';
-      
-      const researchInfo = params.allowResearch
-        ? 'Research integration enabled. '
-        : '';
-      
-      const formatInfo = params.formatOutput !== false
-        ? `Output formatted as ${params.formatType === 'auto' ? 'auto-detected' : params.formatType} markdown. `
-        : '';
-      
-      const storedInfo = params.storeInMemory
-        ? 'Your reasoning has been saved to memory. '
-        : '';
+      // If storing in memory, use the real memory store
+      if (params.storeInMemory) {
+        // Create a new agent with the real memory store
+        const persistentAgent = new BasicAgent('think-tool', memoryStore, params);
         
-      return `${stepInfo}${reflectionInfo}${researchInfo}${formatInfo}${storedInfo}Your structured reasoning has been processed.`;
+        // Initialize and reprocess the reasoning
+        await persistentAgent.init({ thinkParams: params });
+        await persistentAgent.step(params.structuredReasoning);
+        
+        // Finalize to store in memory
+        await persistentAgent.finalize();
+      }
+      
+      // Return the output as a string
+      return output;
     }
   });
 } 

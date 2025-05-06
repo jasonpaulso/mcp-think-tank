@@ -1,5 +1,5 @@
 import { FastMCP } from 'fastmcp';
-import { graph, graphStorage } from './storage.js';
+import { graph, memoryStore } from './store/index.js';
 import * as Schemas from '../utils/validation.js';
 import { z } from 'zod'; 
 
@@ -18,7 +18,7 @@ const MAX_OPERATION_TIME = process.env.REQUEST_TIMEOUT
  * @param log FastMCP log object
  * @returns Object with created and existing entity names
  */
-async function batchProcessEntities<T extends { name: string }>(entities: T[], processFn: (entity: T) => boolean, log: any) {
+async function batchProcessEntities<T extends { name: string }>(entities: T[], processFn: (entity: T) => Promise<boolean>, log: any) {
   const results = {
     created: [] as string[],
     existing: [] as string[],
@@ -40,7 +40,7 @@ async function batchProcessEntities<T extends { name: string }>(entities: T[], p
     
     // Process each entity in the batch
     for (const entity of batch) {
-      const success = processFn(entity);
+      const success = await processFn(entity);
       if (success) {
         results.created.push(entity.name);
       } else {
@@ -50,7 +50,7 @@ async function batchProcessEntities<T extends { name: string }>(entities: T[], p
     
     // Save after each batch to ensure persistence
     if (i + BATCH_SIZE < entities.length) {
-      graphStorage.save();
+      await memoryStore.save();
     }
     
     // If not the last batch, add a small delay to prevent CPU blocking
@@ -76,12 +76,25 @@ export function registerMemoryTools(server: FastMCP): void {
       // Process entities in batches
       const total = args.entities.length;
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
-      const results = await batchProcessEntities(args.entities, (entity) => {
-        return graph.addEntity(entity);
+      const results = await batchProcessEntities(args.entities, async (entity) => {
+        // Try to find similar entity first to avoid duplicates
+        const similarEntities = await memoryStore.findSimilar(entity.name);
+        if (similarEntities.length > 0) {
+          return false; // Entity already exists or similar one found
+        }
+        
+        // Add observations for the entity
+        for (const observation of entity.observations) {
+          await memoryStore.add(entity.name, observation, {
+            version: '1.0'
+          });
+        }
+        
+        return true;
       }, log);
       
       // Save final changes
-      graphStorage.save();
+      await memoryStore.save();
       
       // Return detailed results
       return JSON.stringify({
@@ -91,10 +104,7 @@ export function registerMemoryTools(server: FastMCP): void {
         message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.${
           results.incomplete ? ` Operation incomplete due to timeout - ${results.created.length + results.existing.length} of ${total} entities processed.` : ''
         }`,
-        imageEntities: results.created.filter(name => {
-          const entity = graph.entities.get(name);
-          return entity !== undefined;
-        }).length
+        imageEntities: results.created.length
       });
     }
   });
@@ -110,6 +120,8 @@ export function registerMemoryTools(server: FastMCP): void {
         failed: [] as Array<{from: string, to: string, relationType: string, reason: string}>
       };
 
+      // Using the lower-level graph for relations for now
+      // In a future update, we can add relation handling to the MemoryStore itself
       for (const relation of args.relations) {
         const success = graph.addRelation(relation);
         if (success) {
@@ -130,7 +142,7 @@ export function registerMemoryTools(server: FastMCP): void {
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -153,22 +165,31 @@ export function registerMemoryTools(server: FastMCP): void {
       };
 
       for (const item of args.observations) {
-        const added = graph.addObservations(item.entityName, item.contents);
-        if (added.length > 0 || graph.entities.has(item.entityName)) {
-          results.updated.push({
-            entityName: item.entityName,
-            added
-          });
-        } else {
+        try {
+          const added: string[] = [];
+          for (const content of item.contents) {
+            await memoryStore.add(item.entityName, content, {
+              version: '1.0'
+            });
+            added.push(content);
+          }
+          
+          if (added.length > 0) {
+            results.updated.push({
+              entityName: item.entityName,
+              added
+            });
+          }
+        } catch (error) {
           results.failed.push({
             entityName: item.entityName,
-            reason: `Entity '${item.entityName}' doesn't exist`
+            reason: `Failed to add observations: ${error}`
           });
         }
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -190,6 +211,8 @@ export function registerMemoryTools(server: FastMCP): void {
         notFound: [] as string[]
       };
 
+      // Using the lower-level graph for entity deletion for now
+      // In a future update, we can add entity deletion to the MemoryStore itself
       for (const entityName of args.entityNames) {
         const success = graph.deleteEntity(entityName);
         if (success) {
@@ -200,7 +223,7 @@ export function registerMemoryTools(server: FastMCP): void {
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -222,17 +245,32 @@ export function registerMemoryTools(server: FastMCP): void {
         notFound: [] as string[]
       };
 
+      // Using pruning with the deprecate option set to false to actually delete
       for (const item of args.deletions) {
-        const success = graph.deleteObservations(item.entityName, item.observations);
-        if (success) {
-          results.updated.push(item.entityName);
-        } else {
+        try {
+          let prunedCount = 0;
+          for (const observation of item.observations) {
+            // Prune all observations matching this text
+            const count = await memoryStore.prune({
+              tag: observation, // Use the observation text as the tag
+              deprecate: false
+            });
+            prunedCount += count;
+          }
+          
+          if (prunedCount > 0) {
+            results.updated.push(item.entityName);
+          } else {
+            results.notFound.push(item.entityName);
+          }
+        } catch (error) {
+          console.error(`Error deleting observations for ${item.entityName}:`, error);
           results.notFound.push(item.entityName);
         }
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -254,6 +292,7 @@ export function registerMemoryTools(server: FastMCP): void {
         notFound: [] as Array<{from: string, to: string, relationType: string}>
       };
 
+      // Using the lower-level graph for relations for now
       for (const relation of args.relations) {
         const success = graph.deleteRelation(relation);
         if (success) {
@@ -264,7 +303,7 @@ export function registerMemoryTools(server: FastMCP): void {
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -283,7 +322,7 @@ export function registerMemoryTools(server: FastMCP): void {
       dummy: z.string().describe("Returns the complete knowledge graph with entities and relationships").optional()
     }),
     execute: async () => {
-      // Return as string
+      // Return as string - still using the underlying graph for compatibility
       return JSON.stringify(graph.toJSON());
     }
   });
@@ -294,7 +333,20 @@ export function registerMemoryTools(server: FastMCP): void {
     description: 'Search for nodes in the knowledge graph based on a query',
     parameters: Schemas.SearchNodesSchema,
     execute: async (args) => {
-      const results = graph.searchNodes(args.query);
+      // First use the new query interface
+      const queryResults = await memoryStore.query({
+        keyword: args.query,
+        limit: 100
+      });
+      
+      // Map to unique entity names
+      const entityNames = new Set<string>();
+      for (const result of queryResults) {
+        entityNames.add(result.entityName);
+      }
+      
+      // Then get the full entities using the underlying graph
+      const results = graph.getEntities(Array.from(entityNames));
       
       // Return as string
       return JSON.stringify({
@@ -336,6 +388,7 @@ export function registerMemoryTools(server: FastMCP): void {
         notFound: [] as string[]
       };
 
+      // Still using the lower-level graph for entity updates for now
       for (const updateEntity of args.entities) {
         const entity = graph.entities.get(updateEntity.name);
         if (!entity) {
@@ -350,14 +403,22 @@ export function registerMemoryTools(server: FastMCP): void {
 
         // Update observations if provided
         if (updateEntity.observations !== undefined) {
-          entity.observations = [...updateEntity.observations];
+          // Remove all existing observations
+          graph.deleteObservations(updateEntity.name, entity.observations);
+          
+          // Add new observations
+          for (const observation of updateEntity.observations) {
+            await memoryStore.add(updateEntity.name, observation, {
+              version: '1.0'
+            });
+          }
         }
 
         results.updated.push(updateEntity.name);
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -380,6 +441,7 @@ export function registerMemoryTools(server: FastMCP): void {
         failed: [] as Array<{from: string, to: string, relationType: string, reason: string}>
       };
 
+      // Still using the lower-level graph for relations for now
       for (const relation of args.relations) {
         // Try to delete the relation first (if it exists)
         const deleted = graph.deleteRelation(relation);
@@ -407,7 +469,7 @@ export function registerMemoryTools(server: FastMCP): void {
       }
 
       // Save changes
-      graphStorage.save();
+      await memoryStore.save();
 
       // Return as string
       return JSON.stringify({
@@ -415,6 +477,38 @@ export function registerMemoryTools(server: FastMCP): void {
         created: results.created.length > 0 ? results.created : null,
         failed: results.failed.length > 0 ? results.failed : null,
         message: `Updated ${results.updated.length} relations. Created ${results.created.length} relations. Failed for ${results.failed.length} relations.`
+      });
+    }
+  });
+
+  // Memory query tool (new in Phase 2)
+  server.addTool({
+    name: 'memory_query',
+    description: 'Query the memory store with advanced filters',
+    parameters: z.object({
+      keyword: z.string().optional().describe("Text to search for in observations"),
+      before: z.string().optional().describe("ISO date to filter observations before"),
+      after: z.string().optional().describe("ISO date to filter observations after"),
+      tag: z.string().optional().describe("Tag to filter observations by"),
+      agent: z.string().optional().describe("Agent that created the observations"),
+      limit: z.number().optional().describe("Maximum number of results to return")
+    }),
+    execute: async (args) => {
+      const results = await memoryStore.query({
+        keyword: args.keyword,
+        time: {
+          before: args.before,
+          after: args.after
+        },
+        tag: args.tag,
+        agent: args.agent,
+        limit: args.limit
+      });
+      
+      return JSON.stringify({
+        observations: results,
+        count: results.length,
+        message: `Found ${results.length} matching observations.`
       });
     }
   });

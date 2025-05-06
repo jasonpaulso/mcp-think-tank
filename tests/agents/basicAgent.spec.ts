@@ -1,11 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BasicAgent } from '../../src/agents/BasicAgent.js';
+import { MemoryStore, Observation } from '../../src/memory/store/MemoryStore.js';
 
 // Create a mock memory store for testing
-const mockMemoryStore = {
-  add: vi.fn().mockResolvedValue(undefined),
+const mockMemoryStore: MemoryStore = {
+  add: vi.fn().mockResolvedValue({
+    text: 'test observation',
+    timestamp: new Date().toISOString()
+  }),
   query: vi.fn().mockResolvedValue([]),
-  prune: vi.fn().mockResolvedValue(0)
+  prune: vi.fn().mockResolvedValue(0),
+  findSimilar: vi.fn().mockResolvedValue([]),
+  save: vi.fn().mockResolvedValue(undefined),
+  load: vi.fn().mockResolvedValue(undefined),
+  getLoadingPromise: vi.fn().mockResolvedValue(undefined),
+  // Add compatibility methods for graph operations
+  addEntity: vi.fn().mockResolvedValue({
+    id: 'mock-id',
+    entityType: 'thought',
+    observations: ['Reasoning: Complete reasoning process', 'Category: testing']
+  }),
+  addRelation: vi.fn().mockResolvedValue(undefined)
 };
 
 // Mock the graph and graphStorage
@@ -101,16 +116,6 @@ describe('BasicAgent', () => {
   });
   
   it('should store thought in memory when finalize is called', async () => {
-    // Arrange - import the mocked modules
-    const { graph, graphStorage } = await import('../../src/memory/storage.js');
-    
-    // Mock addEntity to return an entity with observations
-    (graph.addEntity as any).mockImplementation(() => ({
-      id: 'mock-id',
-      entityType: 'thought',
-      observations: ['Reasoning: Complete reasoning process', 'Category: testing']
-    }));
-    
     // Setup agent with memory storage enabled
     agent = new BasicAgent('test-agent', mockMemoryStore, {
       storeInMemory: true,
@@ -123,9 +128,9 @@ describe('BasicAgent', () => {
     await agent.init({});
     await agent.finalize();
     
-    // Assert - simply check that the required methods were called
-    expect(graph.addEntity).toHaveBeenCalled();
-    expect(graphStorage.save).toHaveBeenCalled();
+    // Assert - check that the required memory methods were called
+    expect(mockMemoryStore.addEntity).toHaveBeenCalled();
+    expect(mockMemoryStore.save).toHaveBeenCalled();
   });
   
   it('should support self-reflection during step', async () => {
@@ -142,7 +147,5 @@ describe('BasicAgent', () => {
     
     // Assert - the reflection is now included in the formatted output
     expect(result).toContain('Self-Reflection');
-    // The agent implementation may have changed and might not call addObservations directly
-    // so we can't reliably test that method call
   });
 }); 

@@ -88,9 +88,21 @@ export class Orchestrator {
       // Finalize all agents
       await Promise.all(this.agents.map(agent => agent.finalize()));
       
-      // Combine all outputs according to the strategy
+      // Combine outputs according to the strategy
+      const combinedOutput = this.strategy.combine(outputs);
+      
+      // Extract all individual outputs as an array
+      const allOutputs: string[] = [];
+      for (const agentOutputArray of outputs.values()) {
+        for (const output of agentOutputArray) {
+          allOutputs.push(output);
+        }
+      }
+      
       const result: OrchestrationResult = {
-        output: this.strategy.combine(outputs),
+        output: combinedOutput,
+        finalOutput: combinedOutput, // Alias for output
+        outputs: allOutputs,         // All individual outputs as array
         agentOutputs: outputs,
         status: 'COMPLETED',
         steps,
@@ -104,8 +116,20 @@ export class Orchestrator {
         console.error('Orchestration error:', error);
       }
       
+      // Extract all individual outputs as an array for error case
+      const allOutputs: string[] = [];
+      for (const agentOutputArray of outputs.values()) {
+        for (const output of agentOutputArray) {
+          allOutputs.push(output);
+        }
+      }
+      
+      const errorOutput = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      
       return {
-        output: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        output: errorOutput,
+        finalOutput: errorOutput, // Alias for output
+        outputs: allOutputs,      // All individual outputs as array
         agentOutputs: outputs,
         status: 'ERROR',
         steps,

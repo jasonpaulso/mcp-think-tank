@@ -36,6 +36,8 @@ export interface CoordinationStrategy {
  */
 export interface OrchestrationResult {
   output: string;
+  finalOutput: string;  // Alias for output for clearer naming
+  outputs: string[];    // Array of all individual outputs
   agentOutputs: Map<string, string[]>;
   status: 'COMPLETED' | 'HALTED_LIMIT' | 'ERROR';
   steps: number;

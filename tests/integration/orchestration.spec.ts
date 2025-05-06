@@ -3,13 +3,7 @@ import { BasicAgent } from '../../src/agents/BasicAgent.js';
 import { Orchestrator } from '../../src/orchestrator/Orchestrator.js';
 import { SequentialStrategy } from '../../src/orchestrator/strategies/SequentialStrategy.js';
 import { ParallelStrategy } from '../../src/orchestrator/strategies/ParallelStrategy.js';
-
-// Mock memory store for testing
-const createMockMemoryStore = () => ({
-  add: vi.fn().mockResolvedValue(undefined),
-  query: vi.fn().mockResolvedValue([]),
-  prune: vi.fn().mockResolvedValue(0)
-});
+import { createMockMemoryStore } from '../helpers/mockMemoryStore.js';
 
 // Mock graph storage
 vi.mock('../../src/memory/storage.js', () => {

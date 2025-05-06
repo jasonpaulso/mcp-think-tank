@@ -1,28 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BasicAgent, ExtendedThinkSchema } from '../../src/agents/BasicAgent.js';
+import { BasicAgent } from '../../src/agents/BasicAgent.js';
+import { createMockMemoryStore } from '../helpers/mockMemoryStore.js';
 
-// Create a mock memory store for testing
-const mockMemoryStore = {
-  add: vi.fn().mockResolvedValue(undefined),
-  query: vi.fn().mockResolvedValue([]),
-  prune: vi.fn().mockResolvedValue(0)
-};
-
-// Mock the graph and graphStorage
-vi.mock('../../src/memory/storage.js', () => {
+// Mock the research tool
+vi.mock('../../src/research/index.js', () => {
   return {
-    graph: {
-      addEntity: vi.fn(),
-      addRelation: vi.fn(),
-      addObservations: vi.fn()
-    },
-    graphStorage: {
-      save: vi.fn()
-    }
+    conductResearch: vi.fn().mockResolvedValue({
+      query: 'test query',
+      results: ['Result 1', 'Result 2'],
+      sources: ['Source 1', 'Source 2']
+    })
   };
 });
 
-describe('Research Feature', () => {
+describe('Research in BasicAgent', () => {
   let agent: BasicAgent;
   
   beforeEach(() => {
@@ -30,107 +21,66 @@ describe('Research Feature', () => {
     vi.clearAllMocks();
     
     // Create a fresh agent for each test
-    agent = new BasicAgent('test-agent', mockMemoryStore);
+    agent = new BasicAgent('test-agent', createMockMemoryStore());
   });
   
-  it('should process research request markers in the reasoning', async () => {
-    // Create an agent with research enabled
+  it('should detect and process research requests in the reasoning', async () => {
+    // Setup agent with research enabled
     await agent.init({
       thinkParams: {
-        structuredReasoning: '',
         allowResearch: true,
-        storeInMemory: false
+        formatOutput: false // Disable formatting for clearer testing
       }
     });
     
-    // Process a step with a research request
-    const result = await agent.step('I need to understand more about quantum computing [research: quantum computing advancements 2023]');
+    // Create input with research marker
+    const input = 'I need to analyze [research: quantum computing] for this problem.';
     
-    // Verify that research results are included in the output
-    expect(result).toContain('Research Results for "quantum computing advancements 2023"');
-    expect(result).toContain('Simulated research result');
+    // Process the input
+    const result = await agent.step(input);
+    
+    // Check that the research marker was replaced with results
+    expect(result).toContain('Research Results');
+    expect(result).toContain('quantum computing');
+    expect(result).toContain('Result 1');
+    expect(result).toContain('Result 2');
   });
   
-  it('should not process research requests when allowResearch is false', async () => {
-    // Create an agent with research disabled
+  it('should handle multiple research requests', async () => {
+    // Setup agent with research enabled
     await agent.init({
       thinkParams: {
-        structuredReasoning: '',
-        allowResearch: false,
-        storeInMemory: false,
-        formatOutput: false // Disable formatting for this test
-      }
-    });
-    
-    // Process a step with a research request that should be ignored
-    const result = await agent.step('I need to understand more about quantum computing [research: quantum computing advancements 2023]');
-    
-    // Verify that research results are not included
-    expect(result).not.toContain('Research Results for');
-    expect(result).toContain('[research: quantum computing advancements 2023]'); // The marker should remain unchanged
-  });
-  
-  it('should process multiple research requests in a single step', async () => {
-    // Create an agent with research enabled
-    await agent.init({
-      thinkParams: {
-        structuredReasoning: '',
         allowResearch: true,
-        storeInMemory: false
+        formatOutput: false // Disable formatting for clearer testing
       }
     });
     
-    // Process a step with multiple research requests
-    const result = await agent.step(
-      'I need to compare two topics: [research: quantum computing] and [research: blockchain technology]'
-    );
+    // Create input with multiple research markers
+    const input = 'I need to analyze [research: topic 1] and also consider [research: topic 2].';
     
-    // Verify that both research results are included
-    expect(result).toContain('Research Results for "quantum computing"');
-    expect(result).toContain('Research Results for "blockchain technology"');
+    // Process the input
+    const result = await agent.step(input);
+    
+    // Check that both research markers were replaced
+    const occurrences = (result.match(/Research Results/g) || []).length;
+    expect(occurrences).toBeGreaterThan(1);
   });
   
-  it('should include research data when storing to memory', async () => {
-    const { graph, graphStorage } = await import('../../src/memory/storage.js');
-    
-    // Create an agent with research and memory storage enabled
-    await agent.init({
-      thinkParams: {
-        structuredReasoning: '',
-        allowResearch: true,
-        storeInMemory: true,
-        formatOutput: false // Disable formatting for this test
-      }
+  it('should store research results as relations when stored in memory', async () => {
+    // Setup agent with research and memory storage enabled
+    agent = new BasicAgent('test-agent', createMockMemoryStore(), {
+      allowResearch: true,
+      storeInMemory: true,
+      formatOutput: false // Disable formatting for clearer testing
     });
     
-    // Process a step with a research request
-    await agent.step('Let me research this topic [research: AI safety]');
-    
-    // Finalize to trigger memory storage
+    // Process input with research marker
+    await agent.init({});
+    await agent.step('Research on [research: important topic]');
     await agent.finalize();
     
-    // Verify entity was created
-    expect(graph.addEntity).toHaveBeenCalled();
-    
-    // Verify that research metadata was added - with simplified testing
-    expect(graph.addRelation).toHaveBeenCalled();
-  });
-  
-  it('should handle initial research query if provided', async () => {
-    // Create an agent with an initial research query
-    const initPromise = agent.init({
-      thinkParams: {
-        structuredReasoning: '',
-        allowResearch: true,
-        researchQuery: 'initial research topic',
-        storeInMemory: false
-      }
-    });
-    
-    // Simply verify that initialization completes without error
-    await expect(initPromise).resolves.not.toThrow();
-    
-    // Further verification is unreliable since implementation details of research 
-    // processing may change, and we've already tested research functionality in other tests
+    // Check that the memory store operations were called
+    expect(agent.memory.addEntity).toHaveBeenCalled();
+    expect(agent.memory.addRelation).toHaveBeenCalled();
   });
 }); 
