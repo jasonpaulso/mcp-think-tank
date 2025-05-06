@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -15,6 +14,7 @@ export class TaskStorage {
   private tasks: Map<string, Task> = new Map();
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
   private saveDebounceMs = 5000; // 5 seconds debounce
+  private isShuttingDown = false;
   
   constructor() {
     this.load();
@@ -65,32 +65,78 @@ export class TaskStorage {
     }
   }
   
+  // Clear all timeouts - important for graceful shutdown
+  public clearAllTimeouts(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    this.isShuttingDown = true;
+  }
+  
+  // Save immediately - used during shutdown
+  public saveImmediately(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+      this.saveTimeout = null;
+    }
+    
+    try {
+      // Use sync operations for clean shutdown
+      const tmpTasks: string[] = [];
+      for (const task of this.tasks.values()) {
+        const entry = JSON.stringify({
+          ...task,
+          _operation: 'save',
+          _timestamp: new Date().toISOString()
+        });
+        tmpTasks.push(entry);
+      }
+      
+      if (tmpTasks.length > 0) {
+        fs.writeFileSync(tasksPath, tmpTasks.join('\n') + '\n', 'utf8');
+        console.error(`Saved ${tmpTasks.length} tasks during shutdown`);
+      }
+    } catch (err) {
+      console.error(`Error during immediate task save: ${err}`);
+    }
+  }
+  
   // Save all tasks (used for batch operations)
   public save(): void {
+    // Don't schedule new saves during shutdown
+    if (this.isShuttingDown) {
+      return;
+    }
+    
     if (this.saveTimeout) {
       clearTimeout(this.saveTimeout);
       this.saveTimeout = null;
     }
     
     this.saveTimeout = setTimeout(() => {
+      this.saveTimeout = null;
+      
       try {
         // We'll use a temporary file approach to avoid race conditions
         const tempPath = `${tasksPath}.tmp`;
-        const stream = fs.createWriteStream(tempPath);
         
+        // Use a more direct approach with less event listeners
+        const taskEntries: string[] = [];
         for (const task of this.tasks.values()) {
           const entry = JSON.stringify({
             ...task,
             _operation: 'save',
             _timestamp: new Date().toISOString()
           });
-          stream.write(`${entry}\n`);
+          taskEntries.push(entry);
         }
         
-        stream.end();
-        stream.on('finish', () => {
-          fs.renameSync(tempPath, tasksPath);
-        });
+        // Write to temp file
+        fs.writeFileSync(tempPath, taskEntries.join('\n') + '\n', 'utf8');
+        
+        // Rename temp file to real file (atomic operation)
+        fs.renameSync(tempPath, tasksPath);
       } catch (err) {
         console.error(`Error batch saving tasks: ${err}`);
       }
@@ -157,5 +203,14 @@ export const taskStorage = new TaskStorage();
 
 // Ensure all tasks are saved on process exit to prevent data loss
 process.once('beforeExit', () => {
-  taskStorage.save();
-}); 
+  console.error('Process beforeExit - saving tasks');
+  taskStorage.saveImmediately();
+});
+
+// Also handle exit to ensure proper cleanup
+process.once('exit', () => {
+  console.error('Process exit - final cleanup');
+  if (taskStorage) {
+    taskStorage.clearAllTimeouts();
+  }
+});

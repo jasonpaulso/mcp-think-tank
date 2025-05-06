@@ -21,7 +21,8 @@
     "postbuild": "node dist/src/server.js --version || exit 1",
     "smoke-test": "npm pack && TEMP_PKG=$(ls mcp-think-tank-*.tgz | sort -V | tail -n 1) && npx -y ./$TEMP_PKG --version && rm $TEMP_PKG",
     "verify-publish": "npm run lint && npm test && npm run build && npm run test:publish && npm run smoke-test",
-    "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\""
+    "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\"",
+    "stop-orphaned": "node scripts/stop-orphaned.js"
   },
   "keywords": [
     "mcp",

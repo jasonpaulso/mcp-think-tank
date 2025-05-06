@@ -60,6 +60,13 @@ export const config = {
   
   // Version from package.json
   version,
+  
+  // Auto-shutdown after inactivity (in ms, default: 30 minutes, 0 = disabled)
+  autoShutdownMs: argv['auto-shutdown-ms'] ? 
+                 parseInt(argv['auto-shutdown-ms'] as string, 10) * 1000 :
+                 process.env.AUTO_SHUTDOWN_MS ? 
+                 parseInt(process.env.AUTO_SHUTDOWN_MS, 10) * 1000 : 
+                 process.env.AUTO_SHUTDOWN === 'true' ? 30 * 60 * 1000 : 0,
 };
 
 // Handle command line arguments for quick info display
@@ -73,4 +80,4 @@ if (argv['show-memory-path']) {
   process.exit(0);
 }
 
-export default config; 
+export default config;

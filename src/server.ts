@@ -1,3 +1,4 @@
+// src/server.ts
 // Redirect console.log to stderr immediately at the top of the file
 // This is crucial for FastMCP which uses stdio for communication
  
@@ -20,6 +21,7 @@ import { createDirectory } from './utils/fs.js';
 import path from 'path';
 import * as os from 'os';
 import { config } from './config.js';
+import { taskStorage } from './tasks/storage.js';
 
 // Get configuration from environment
 const _REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
@@ -65,9 +67,101 @@ server.addResourceTemplate({
   load: async ({ id }) => ({ text: JSON.stringify({ id }) })
 });
 
+// Track active connections
+let connectionCount = 0;
+let inactivityTimer: NodeJS.Timeout | null = null;
+let connectionCheckTimer: NodeJS.Timeout | null = null;
+
+// Reset inactivity timer
+function resetInactivityTimer() {
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = null;
+  }
+  
+  if (config.autoShutdownMs > 0) {
+    inactivityTimer = setTimeout(() => {
+      console.error(`Server inactive for ${config.autoShutdownMs}ms, shutting down...`);
+      gracefulShutdown();
+    }, config.autoShutdownMs);
+  }
+}
+
+// Periodically check for active connections
+function startConnectionCheck() {
+  // Clear existing timer if any
+  if (connectionCheckTimer) {
+    clearInterval(connectionCheckTimer);
+    connectionCheckTimer = null;
+  }
+  
+  // Check every 60 seconds for active connections
+  connectionCheckTimer = setInterval(() => {
+    // For now, we don't have a reliable way to check active connections
+    // FastMCP doesn't expose a method for this
+    // This is a placeholder for future implementation
+    
+    // If AUTO_SHUTDOWN is forced via environment and no connections for a while
+    if (process.env.FORCE_CHECK_CONNECTIONS === 'true' && 
+        process.env.AUTO_SHUTDOWN === 'true' && 
+        connectionCount <= 0) {
+      console.error('No active connections detected, auto-shutdown initiated');
+      gracefulShutdown();
+    }
+    
+    // Reset inactivity timer regardless to prevent timeout
+    resetInactivityTimer();
+  }, 60000); // 60 second interval
+}
+
+// Graceful shutdown function
+function gracefulShutdown() {
+  console.error('Shutting down MCP Think Tank server...');
+  
+  // Clear any pending timeouts in task storage
+  if (taskStorage && typeof taskStorage.clearAllTimeouts === 'function') {
+    taskStorage.clearAllTimeouts();
+  }
+  
+  // Clear inactivity timer if exists
+  if (inactivityTimer) {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = null;
+  }
+  
+  // Clear connection check timer if exists
+  if (connectionCheckTimer) {
+    clearInterval(connectionCheckTimer);
+    connectionCheckTimer = null;
+  }
+  
+  // Gracefully stop the server (if needed)
+  try {
+    // Ensure all pending operations are completed
+    // FastMCP doesn't currently have a stop method, but we can add safe cleanup here
+    
+    // Save any pending tasks
+    taskStorage.saveImmediately();
+    
+    console.error('Server shut down successfully');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+}
+
+// Handle termination signals
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGHUP', gracefulShutdown);
+
 // Start the server with error handling
 try {
-server.start();
+  server.start();
+  console.error(`MCP Think Tank server v${config.version} started successfully`);
+  resetInactivityTimer(); // Start inactivity timer
+  startConnectionCheck(); // Start connection monitoring
 } catch (e) {
   console.error(`Startup failed: ${e}`);
   process.exit(1);
