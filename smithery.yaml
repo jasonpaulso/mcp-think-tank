@@ -1,7 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 name: "@flight505/mcp-think-tank"
 description: "A structured reasoning tool for AI assistants that provides a dedicated space for complex thinking and analysis"
-version: "2.0.1"
+version: "2.0.2"
 
 startCommand:
   type: stdio

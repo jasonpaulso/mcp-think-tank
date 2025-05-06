@@ -27,10 +27,10 @@ ENV NODE_ENV=production
 RUN npm ci --ignore-scripts --omit=dev
 
 # Set executable permissions
-RUN chmod +x dist/server.js
+RUN chmod +x dist/src/server.js
 
 # Set the user to non-root
 USER node
 
 # Use ENTRYPOINT instead of CMD for better compatibility
-ENTRYPOINT ["node", "dist/server.js"]
+ENTRYPOINT ["node", "dist/src/server.js"]
