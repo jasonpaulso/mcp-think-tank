@@ -29,7 +29,7 @@ describe('Tool Limits', () => {
     process.env.NODE_ENV = 'test';
     
     // Mock the executeToolCall method since it's unimplemented in tests
-    // @ts-ignore - accessing private property for testing
+    // @ts-expect-error - accessing private property for testing
     toolManager.executeToolCall = vi.fn().mockImplementation(async (toolName, params) => {
       return `Executed ${toolName} with params ${JSON.stringify(params)}`;
     });
@@ -48,7 +48,7 @@ describe('Tool Limits', () => {
     process.env.TOOL_LIMIT = '3';
     
     // Override the globalCount directly to simulate reaching the limit
-    // @ts-ignore - accessing private property for testing
+    // @ts-expect-error - accessing private property for testing
     toolManager.globalCount = 0;
     
     // Make some tool calls
@@ -63,7 +63,7 @@ describe('Tool Limits', () => {
     expect(stats.perAgent.get('test-agent')).toBe(3);
     
     // Override our fake execute implementation to throw the error when the limit is reached
-    // @ts-ignore - accessing private property for testing
+    // @ts-expect-error - accessing private property for testing
     toolManager.executeToolCall = vi.fn().mockImplementation(() => {
       throw new ToolLimitError('Tool call limit exceeded in test');
     });

@@ -1,6 +1,58 @@
 # Changelog
 
 
+## 2.0.1 (2024-07-26)
+
+### Fixed
+- Fixed critical console logging issues that were causing JSON parsing errors
+- Completely suppressed console.log output in production to prevent interference with JSON responses
+- Implemented safer error logging directly to stderr
+- Fixed issue in the plan_tasks tool that was causing "Created X" to appear in JSON output
+- Updated task storage to use safe error logging
+
+## 2.0.0 (2024-07-25)
+
+### Major Upgrades
+- **Sequential Thinking & Chained Reasoning**
+  - Added multi-agent interfaces and orchestration capabilities
+  - Implemented `BasicAgent` with IAgent lifecycle
+  - Added coordination strategies (Sequential and Parallel)
+  - Enhanced think tool with step counter and plan fields
+  - Added iterative self-reflection for enhanced reasoning
+  - Implemented mid-chain research tool calls with [research: query] syntax
+  - Added structured markdown output with multiple format types
+  - Implemented mid-chain revision capabilities
+
+- **Knowledge Graph Memory Upgrades**
+  - Introduced `MemoryStore` abstraction with JSONL implementation
+  - Added timestamp & version metadata to observations
+  - Implemented duplicate-prevention & canonical naming
+  - Added automatic linkage heuristics
+  - Added memory pruning & versioning command
+  - Enhanced query API with filtering capabilities
+  - Improved batch operations with timeout guards
+
+- **Tool Orchestration & Call-Limit Safeguards**
+  - Implemented `ToolManager` wrapper for tool calls
+  - Added configurable tool call limits (default: 25)
+  - Added concurrency-safe counter increment
+  - Implemented duplicate-call caching for performance
+  - Added configurable tool whitelists per task
+  - Improved tool-limit feedback with graceful halting
+  - Added execution cache for file/URL operations
+
+### Fixed
+- Eliminated console logging that interfered with JSON responses
+- Fixed JSON parsing errors in the plan_tasks tool
+- Improved error handling in the knowledge graph entity creation
+- Redirected all console output to stderr to maintain clean JSON communication
+- Simplified API by consolidating `create_entities` and `update_entities` into a unified `upsert_entities` tool
+
+### Improved
+- Added an `update` flag to the entity schema to control behavior when an entity already exists
+- Updated documentation to reflect the new upsert pattern
+- Improved error handling with better feedback when operations fail
+
 ## 1.4.1 (2024-07-11)
 
 ### Fixed

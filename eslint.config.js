@@ -16,6 +16,8 @@ export default [
         process: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly', 
         Buffer: 'readonly',
         __dirname: 'readonly',
         NodeJS: 'readonly',

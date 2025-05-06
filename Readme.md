@@ -245,7 +245,7 @@ Use when information should be preserved across conversations:
 
 | Tool | When to Use |
 |------|-------------|
-| `create_entities` | Document important concepts or components |
+| `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
 | `add_observations` | Add new facts to existing entities |
 | `create_relations` | Connect related concepts |
 | `search_nodes` | Find relevant knowledge before solving problems |
@@ -253,10 +253,73 @@ Use when information should be preserved across conversations:
 
 ```javascript
 // Documenting architectural components
-mcp_think-tool_create_entities([
-  {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
-])
+mcp_think-tool_upsert_entities({
+  entities: [
+    {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
+  ]
+})
 ```
+
+### 3. Task Management
+
+Use for project planning and tracking:
+
+- `plan_tasks`: At project start or when planning features
+- `list_tasks`: To understand current work status
+- `next_task`: When ready to work on next priority
+- `complete_task`: When a task is finished
+- `update_tasks`: When priorities change
+
+### 4. Web Research (Exa)
+
+Use when current context is insufficient:
+
+- `exa_search`: For finding current information from the web
+- `exa_answer`: For factual questions requiring cited sources
+
+```javascript
+// Research current best practices
+mcp_think-tool_exa_search({
+  query: "latest React state management libraries 2025",
+  num_results: 5
+})
+```
+## Integration Best Practices
+
+1. Start complex reasoning with `think` tool
+2. Save important conclusions to knowledge graph
+3. Create tasks based on conclusions when appropriate
+4. Use research tools to fill knowledge gaps
+5. Record research findings in knowledge graph
+
+## Performance Considerations
+
+- Tool calls are limited to 25 per session (configurable)
+- Content caching improves repeated file/URL operation performance
+- Avoid redundant tool calls for optimal performance
+```
+
+### 2. Memory & Knowledge Graph
+
+Use when information should be preserved across conversations:
+
+| Tool | When to Use |
+|------|-------------|
+| `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
+| `add_observations` | Add new facts to existing entities |
+| `create_relations` | Connect related concepts |
+| `search_nodes` | Find relevant knowledge before solving problems |
+| `open_nodes` | Retrieve specific entity details |
+
+```javascript
+// Documenting architectural components
+mcp_think-tool_upsert_entities({
+  entities: [
+    {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
+  ]
+})
+```
+
 
 ### 3. Task Management
 
@@ -448,7 +511,7 @@ This section provides detailed, actionable guidance for using MCP Think Tank wit
 - For large projects, leverage task dependencies and priorities to maintain clarity and momentum.
 
 ### 4. Memory Tools
-- Use `create_entities`, `add_observations`, `create_relations`, and related tools to build and maintain your project's knowledge graph.
+- Use `upsert_entities`, `add_observations`, `create_relations`, and related tools to build and maintain your project's knowledge graph.
 - Store key decisions, reusable patterns, and architectural choices for future reference.
 - Before starting new work, search memory for relevant prior knowledge to avoid duplication and leverage past insights.
 - File and URL operations benefit from content-based caching for improved performance.

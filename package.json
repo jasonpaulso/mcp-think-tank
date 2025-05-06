@@ -1,6 +1,6 @@
 {
   "name": "mcp-think-tank",
-  "version": "1.4.1",
+  "version": "2.0.1",
   "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
   "type": "module",
   "main": "dist/src/server.js",
@@ -23,8 +23,7 @@
     "verify-publish": "npm run lint && npm test && npm run build && npm run test:publish && npm run smoke-test",
     "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\"",
     "stop-orphaned": "node scripts/stop-orphaned.js",
-    "memory:prune": "node bin/prune-memory.js",
-    "cache:stats": "node bin/cache-stats.js"
+    "memory:prune": "node bin/prune-memory.js"
   },
   "keywords": [
     "mcp",
@@ -49,8 +48,6 @@
     "url": "https://github.com/flight505/mcp-think-tank/issues"
   },
   "dependencies": {
-    "@types/node": "^22.13.17",
-    "@types/uuid": "^10.0.0",
     "async-mutex": "^0.5.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
@@ -58,17 +55,19 @@
     "fastmcp": ">=1.2.0",
     "lru-cache": "^11.1.0",
     "minimist": "^1.2.8",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
     "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
     "@types/minimist": "^1.2.5",
+    "@types/node": "^22.13.17",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.30.1",
     "@typescript-eslint/parser": "^8.30.1",
     "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2",
     "vitest": "^1.6.1"
   },
   "engines": {

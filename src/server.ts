@@ -1,20 +1,6 @@
 // src/server.ts
-// Only log to stderr when MCP_DEBUG is enabled, otherwise suppress logs
-// This is crucial for FastMCP which uses stdio for communication
-
-if (process.env.MCP_DEBUG === 'true') {
-  console.log = (...args: unknown[]) => console.error(...args);
-} else {
-  // Suppress regular logs in production to avoid interfering with stdio
-  console.log = () => {};
-}
-
-// EPIPE error handling
-process.on('SIGPIPE', () => {});
-process.stdout.on('error', (err) => {
-  if (err.code === 'EPIPE') return;
-  throw err;
-});
+// Import console redirections first to ensure all logging is properly handled
+import './utils/console.js';
 
 import { FastMCP } from 'fastmcp';
 import { registerMemoryTools } from './memory/tools.js';
@@ -28,6 +14,11 @@ import * as os from 'os';
 import { config } from './config.js';
 import { taskStorage } from './tasks/storage.js';
 import { wrapFastMCP, ensureDependencies } from './tools/FastMCPAdapter.js';
+
+// Safely log errors to stderr without interfering with stdout JSON
+const safeErrorLog = (message: string) => {
+  process.stderr.write(`${message}\n`);
+};
 
 // Ensure all dependencies are installed
 await ensureDependencies();
@@ -93,7 +84,7 @@ function resetInactivityTimer() {
   
   if (config.autoShutdownMs > 0) {
     inactivityTimer = setTimeout(() => {
-      console.error(`Server inactive for ${config.autoShutdownMs}ms, shutting down...`);
+      safeErrorLog(`Server inactive for ${config.autoShutdownMs}ms, shutting down...`);
       gracefulShutdown();
     }, config.autoShutdownMs);
   }
@@ -117,7 +108,7 @@ function startConnectionCheck() {
     if (process.env.FORCE_CHECK_CONNECTIONS === 'true' && 
         process.env.AUTO_SHUTDOWN === 'true' && 
         connectionCount <= 0) {
-      console.error('No active connections detected, auto-shutdown initiated');
+      safeErrorLog('No active connections detected, auto-shutdown initiated');
       gracefulShutdown();
     }
     
@@ -128,7 +119,7 @@ function startConnectionCheck() {
 
 // Graceful shutdown function
 function gracefulShutdown() {
-  console.error('Shutting down MCP Think Tank server...');
+  safeErrorLog('Shutting down MCP Think Tank server...');
   
   // Clear any pending timeouts in task storage
   if (taskStorage && typeof taskStorage.clearAllTimeouts === 'function') {
@@ -155,10 +146,10 @@ function gracefulShutdown() {
     // Save any pending tasks
     taskStorage.saveImmediately();
     
-    console.error('Server shut down successfully');
+    safeErrorLog('Server shut down successfully');
     process.exit(0);
   } catch (err) {
-    console.error('Error during shutdown:', err);
+    safeErrorLog(`Error during shutdown: ${err}`);
     process.exit(1);
   }
 }
@@ -171,19 +162,19 @@ process.on('SIGHUP', gracefulShutdown);
 // Start the server with error handling
 try {
   server.start();
-  console.error(`MCP Think Tank server v${config.version} started successfully`);
+  safeErrorLog(`MCP Think Tank server v${config.version} started successfully`);
   resetInactivityTimer(); // Start inactivity timer
   startConnectionCheck(); // Start connection monitoring
 } catch (e) {
-  console.error(`Startup failed: ${e}`);
+  safeErrorLog(`Startup failed: ${e}`);
   process.exit(1);
 }
 
 // Error handling
 process.on('uncaughtException', (error: Error) => {
-  console.error(`Uncaught exception: ${error.stack || error.message}`);
+  safeErrorLog(`Uncaught exception: ${error.stack || error.message}`);
 });
 
 process.on('unhandledRejection', (reason: unknown) => {
-  console.error(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
+  safeErrorLog(`Unhandled rejection: ${reason instanceof Error ? reason.stack || reason.message : reason}`);
 });

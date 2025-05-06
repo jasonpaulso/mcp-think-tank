@@ -16,8 +16,8 @@ export function registerUtilityTools(server: FastMCP): void {
     }),
     execute: async (_args, { log }) => {
       const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
-      log.info(`Showing memory path: ${memoryPath}`);
-      return memoryPath;
+      // Removed debug log
+      return JSON.stringify(memoryPath);
     }
   });
 } 

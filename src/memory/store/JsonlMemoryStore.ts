@@ -481,7 +481,7 @@ export class JsonlMemoryStore implements MemoryStore {
           
           // When file is completely read
           rl.on('close', () => {
-            console.error(`Loaded ${lineCount} items from memory file`);
+            // Removed debug log
             this.isLoading = false;
             resolve();
           });
@@ -495,7 +495,7 @@ export class JsonlMemoryStore implements MemoryStore {
         } else {
           // Create an empty file if it doesn't exist
           fs.writeFileSync(this.filePath, '', 'utf8');
-          console.error(`Created new memory file at ${this.filePath}`);
+          // Removed debug log
           this.isLoading = false;
           resolve();
         }
@@ -538,7 +538,7 @@ export class JsonlMemoryStore implements MemoryStore {
       
       // Write to file
       fs.writeFileSync(this.filePath, lines.join('\n') + '\n', 'utf8');
-      console.error(`Saved ${lines.length} items to memory file`);
+      // Removed debug log
       
       return Promise.resolve();
     } catch (error) {

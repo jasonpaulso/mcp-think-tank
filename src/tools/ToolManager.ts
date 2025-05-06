@@ -96,21 +96,16 @@ export class ToolManager {
     // Log the call
     this.logToolCall(agentId, toolName, params);
     
-    try {
-      // Make the actual tool call (this will be implemented in the adapter)
-      const result = await this.executeToolCall(toolName, params);
-      
-      // Cache the result if caching is enabled
-      if (CACHE_TOOL_CALLS) {
-        const cacheKey = `${toolName}:${JSON.stringify(params)}`;
-        this.callCache.set(cacheKey, result);
-      }
-      
-      return result;
-    } catch (error) {
-      // Re-throw the error to be handled by the caller
-      throw error;
+    // Make the actual tool call (this will be implemented in the adapter)
+    const result = await this.executeToolCall(toolName, params);
+    
+    // Cache the result if caching is enabled
+    if (CACHE_TOOL_CALLS) {
+      const cacheKey = `${toolName}:${JSON.stringify(params)}`;
+      this.callCache.set(cacheKey, result);
     }
+    
+    return result;
   }
   
   /**

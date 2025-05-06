@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+/* eslint-disable */
 /**
  * This utility script finds and stops any orphaned MCP Think Tank processes.
  * Can be run directly or via npm script.

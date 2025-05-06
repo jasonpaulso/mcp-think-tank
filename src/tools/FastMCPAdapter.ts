@@ -57,7 +57,7 @@ export function wrapFastMCP(server: FastMCP, defaultAgentId: string = 'default')
   const originalAddTool = server.addTool.bind(server);
   
   // Set up the executeToolCall method on toolManager to call the real tools
-  // @ts-ignore - we're accessing a private method
+  // @ts-expect-error - we're accessing a private method
   toolManager.executeToolCall = async (toolName: string, params: any) => {
     // Find the tool in FastMCP by name
     // Since server.getTool is not accessible, we use a workaround
@@ -164,7 +164,7 @@ async function handleUrlTool(
   toolName: string,
   params: any,
   agentId: string,
-  originalExecute: Function,
+  originalExecute: (params: any, context: any) => Promise<any>,
   context: any
 ): Promise<any> {
   // Generate a cache key based on the tool name and params
@@ -204,7 +204,11 @@ async function handleUrlTool(
  * @param context Execution context
  * @returns Properly formatted search results
  */
-async function callExaSearch(originalExecute: Function, params: any, context: any): Promise<any> {
+async function callExaSearch(
+  originalExecute: (params: any, context: any) => Promise<any>, 
+  params: any, 
+  context: any
+): Promise<any> {
   // Store original console functions
   const originalLog = console.log;
   const originalError = console.error;
@@ -244,7 +248,7 @@ async function handleFileTool(
   toolName: string,
   params: any,
   agentId: string,
-  originalExecute: Function,
+  originalExecute: (params: any, context: any) => Promise<any>,
   context: any
 ): Promise<any> {
   // File tools already have built-in caching at OS level

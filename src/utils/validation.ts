@@ -15,9 +15,15 @@ const RelationSchema = z.object({
   relationType: z.string().min(1).describe('Type of relationship (in active voice)')
 });
 
-// Create entities schema
-export const CreateEntitiesSchema = z.object({
-  entities: z.array(EntitySchema).describe('Array of entities to create')
+// Unified entity schema for both creation and updates
+export const UpsertEntitiesSchema = z.object({
+  entities: z.array(z.object({
+    name: z.string().min(1).describe('Unique identifier for the entity'),
+    entityType: z.string().min(1).describe('Type classification of the entity'),
+    observations: z.array(z.string()).describe('Facts or observations about the entity'),
+    context: z.string().optional().describe('Optional context or situation relevant to this entity (e.g., project, meeting, or scenario)'),
+    update: z.boolean().optional().default(false).describe('If true, will fully replace an existing entity; if false, will only create if entity doesn\'t exist')
+  })).describe('Array of entities to create or update')
 });
 
 // Create relations schema
@@ -59,15 +65,6 @@ export const SearchNodesSchema = z.object({
 // Open nodes schema
 export const OpenNodesSchema = z.object({
   names: z.array(z.string().min(1)).describe('Array of entity names to retrieve')
-});
-
-// Update entities schema
-export const UpdateEntitiesSchema = z.object({
-  entities: z.array(z.object({
-    name: z.string().min(1).describe('Name of the entity to update'),
-    entityType: z.string().optional().describe('New entity type (optional)'),
-    observations: z.array(z.string()).optional().describe('New observations to replace existing ones (optional)')
-  })).describe('Array of entities to update')
 });
 
 // Update relations schema

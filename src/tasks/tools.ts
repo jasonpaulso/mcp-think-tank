@@ -52,7 +52,14 @@ export function registerTaskTools(server: FastMCP): void {
       if (entities.length > 0) {
         try {
           for (const entity of entities) {
-            knowledgeGraph.addEntity(entity);
+            // Use the knowledgeGraph directly, avoiding any console logs
+            if (!knowledgeGraph.entities.has(entity.name)) {
+              knowledgeGraph.entities.set(entity.name, {
+                name: entity.name,
+                entityType: entity.entityType,
+                observations: [...entity.observations]
+              });
+            }
           }
           graphStorage.save();
           if (log) log.info(`Created ${entities.length} task entities in knowledge graph`);

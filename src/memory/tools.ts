@@ -68,31 +68,78 @@ async function batchProcessEntities<T extends { name: string }>(entities: T[], p
  * @param server The FastMCP server instance
  */
 export function registerMemoryTools(server: FastMCP): void {
-  // Create entities
+  // Upsert entities (combined create/update)
   server.addTool({
-    name: 'create_entities',
-    description: 'Create multiple new entities in the knowledge graph',
-    parameters: Schemas.CreateEntitiesSchema,
+    name: 'upsert_entities',
+    description: 'Create new entities or update existing ones in the knowledge graph using an upsert pattern',
+    parameters: Schemas.UpsertEntitiesSchema,
     execute: async (args, context) => {
-      // Process entities in batches
       const total = args.entities.length;
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
-      const results = await batchProcessEntities(args.entities, async (entity) => {
-        // Try to find similar entity first to avoid duplicates
-        const similarEntities = await memoryStore.findSimilar(entity.name);
-        if (similarEntities.length > 0) {
-          return false; // Entity already exists or similar one found
-        }
-        
-        // Add observations for the entity
-        for (const observation of entity.observations) {
-          await memoryStore.add(entity.name, observation, {
-            version: '1.0'
+      
+      const results = {
+        created: [] as string[],
+        updated: [] as string[],
+        failed: [] as {name: string, reason: string}[],
+        incomplete: false
+      };
+
+      // Process with timeout protection
+      const startTime = Date.now();
+      const timeoutMs = 25000; // 25 second timeout
+      
+      for (const entity of args.entities) {
+        try {
+          // Check if we've exceeded our time budget
+          if (Date.now() - startTime > timeoutMs) {
+            results.incomplete = true;
+            break;
+          }
+          
+          // Check if entity exists
+          const existingEntity = graph.entities.get(entity.name);
+          const doesExist = !!existingEntity;
+          
+          // If entity doesn't exist, create it
+          if (!doesExist) {
+            // Add observations for the new entity
+            for (const observation of entity.observations) {
+              await memoryStore.add(entity.name, observation, {
+                version: '1.0'
+              });
+            }
+            results.created.push(entity.name);
+          } 
+          // If entity exists and update flag is true, update it
+          else if (entity.update) {
+            // Update entity type
+            existingEntity.entityType = entity.entityType;
+            
+            // Remove all existing observations and add new ones
+            graph.deleteObservations(entity.name, existingEntity.observations);
+            
+            // Add new observations
+            for (const observation of entity.observations) {
+              await memoryStore.add(entity.name, observation, {
+                version: '1.0'
+              });
+            }
+            results.updated.push(entity.name);
+          }
+          // Entity exists but update flag is false, skip
+          else {
+            results.failed.push({
+              name: entity.name,
+              reason: "Entity already exists and update flag is false"
+            });
+          }
+        } catch (error) {
+          results.failed.push({
+            name: entity.name,
+            reason: `Error processing entity: ${error}`
           });
         }
-        
-        return true;
-      }, log);
+      }
       
       // Save final changes
       await memoryStore.save();
@@ -100,12 +147,12 @@ export function registerMemoryTools(server: FastMCP): void {
       // Return detailed results
       return JSON.stringify({
         created: results.created.length > 0 ? results.created : null,
-        existing: results.existing.length > 0 ? results.existing : null,
+        updated: results.updated.length > 0 ? results.updated : null,
+        failed: results.failed.length > 0 ? results.failed : null,
         incomplete: results.incomplete,
-        message: `Created ${results.created.length} new entities. ${results.existing.length} entities already existed.${
-          results.incomplete ? ` Operation incomplete due to timeout - ${results.created.length + results.existing.length} of ${total} entities processed.` : ''
-        }`,
-        imageEntities: results.created.length
+        message: `Created ${results.created.length} new entities. Updated ${results.updated.length} existing entities. Failed for ${results.failed.length} entities.${
+          results.incomplete ? ` Operation incomplete due to timeout - ${results.created.length + results.updated.length + results.failed.length} of ${total} entities processed.` : ''
+        }`
       });
     }
   });
@@ -410,58 +457,6 @@ export function registerMemoryTools(server: FastMCP): void {
         found,
         notFound: notFound.length > 0 ? notFound : null,
         message: `Found ${found.length} entities. ${notFound.length} entities not found.`
-      });
-    }
-  });
-
-  // Update entities
-  server.addTool({
-    name: 'update_entities',
-    description: 'Update multiple existing entities in the knowledge graph',
-    parameters: Schemas.UpdateEntitiesSchema,
-    execute: async (args) => {
-      const results = {
-        updated: [] as string[],
-        notFound: [] as string[]
-      };
-
-      // Still using the lower-level graph for entity updates for now
-      for (const updateEntity of args.entities) {
-        const entity = graph.entities.get(updateEntity.name);
-        if (!entity) {
-          results.notFound.push(updateEntity.name);
-          continue;
-        }
-
-        // Update entity type if provided
-        if (updateEntity.entityType !== undefined) {
-          entity.entityType = updateEntity.entityType;
-        }
-
-        // Update observations if provided
-        if (updateEntity.observations !== undefined) {
-          // Remove all existing observations
-          graph.deleteObservations(updateEntity.name, entity.observations);
-          
-          // Add new observations
-          for (const observation of updateEntity.observations) {
-            await memoryStore.add(updateEntity.name, observation, {
-              version: '1.0'
-            });
-          }
-        }
-
-        results.updated.push(updateEntity.name);
-      }
-
-      // Save changes
-      await memoryStore.save();
-
-      // Return as string
-      return JSON.stringify({
-        updated: results.updated.length > 0 ? results.updated : null,
-        notFound: results.notFound.length > 0 ? results.notFound : null,
-        message: `Updated ${results.updated.length} entities. ${results.notFound.length} entities not found.`
       });
     }
   });

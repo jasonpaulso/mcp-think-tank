@@ -4,12 +4,10 @@ import { homedir } from 'os';
 import minimist from 'minimist';
 import { fileURLToPath } from 'url';
 
-// Redirect console.log to stderr immediately if not already done
-// This is crucial for FastMCP which uses stdio for communication
- 
-if (console.log !== console.error) {
-  console.log = (...args: unknown[]) => console.error(...args);
-}
+// Safe logging function that writes directly to stderr
+const safeLog = (message: string) => {
+  process.stderr.write(`${message}\n`);
+};
 
 // Parse command line arguments
 const argv = minimist(process.argv.slice(2));
@@ -20,14 +18,14 @@ const __dirname = dirname(__filename);
 const basedir = resolve(__dirname, '..', '..');
 
 // Dynamically read version from package.json
-let version = '1.4.1'; // Fallback version
+let version = '2.0.1'; // Fallback version
 try {
   const packagePath = resolve(basedir, 'package.json');
   if (existsSync(packagePath)) {
     version = JSON.parse(readFileSync(packagePath, 'utf8')).version;
   }
 } catch (error) {
-  console.error('Error reading package.json:', error);
+  safeLog(`Error reading package.json: ${error}`);
 }
 
 // Default memory path
@@ -40,7 +38,7 @@ try {
     mkdirSync(dirname(memoryPath), { recursive: true });
   }
 } catch (error) {
-  console.error(`Failed to create directory for memory path: ${error}`);
+  safeLog(`Failed to create directory for memory path: ${error}`);
 }
 
 // Export configuration object
@@ -71,12 +69,12 @@ export const config = {
 
 // Handle command line arguments for quick info display
 if (argv.version) {
-  console.log(`mcp-think-tank v${version}`);
+  safeLog(`mcp-think-tank v${version}`);
   process.exit(0);
 }
 
 if (argv['show-memory-path']) {
-  console.log(memoryPath);
+  safeLog(memoryPath);
   process.exit(0);
 }
 

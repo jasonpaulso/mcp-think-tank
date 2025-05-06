@@ -51,8 +51,7 @@ The knowledge graph memory system will be implemented with the following compone
 ### Phase 3: MCP Tool Implementation
 
 - [x] Implement entity management tools
-  - [x] `create_entities` - Create multiple entities
-  - [x] `update_entities` - Update entity properties
+  - [x] `upsert_entities` - Create new entities or update existing ones
   - [x] `delete_entities` - Remove entities
 - [x] Implement relation management tools
   - [x] `create_relations` - Create connections between entities
@@ -171,11 +170,11 @@ Would this approach better align with your vision of maintaining code flow while
 
 | Tool | Parameters (Zod) | Logic outline | KG interaction |
 |------|------------------|---------------|----------------|
-| `plan_tasks` | `{ tasks: z.array(TaskSchema.omit({id:true,status:true}).extend({priority:z.enum([...]).default("medium")})) }` | - generate `uuidv4` for each<br>- push to storage | `create_entities` with `entityType:"task"` + description obs. |
+| `plan_tasks` | `{ tasks: z.array(TaskSchema.omit({id:true,status:true}).extend({priority:z.enum([...]).default("medium")})) }` | - generate `uuidv4` for each<br>- push to storage | `upsert_entities` with `entityType:"task"` + description obs. |
 | `list_tasks` | `{ status?:string, priority?:string }` | filter storage | none |
 | `next_task` | `{}` | pop first `status==="todo"` → mark `in‑progress` | add observation "started <ISO>" |
 | `complete_task` | `{ id:string }` | set `status:"done"` | `add_observations`: "completed <ISO>" |
-| `update_tasks` | `{ updates: z.array(TaskSchema.partial()) }` | merge fields | sync changed description/priority in KG (`update_entities`) |
+| `update_tasks` | `{ updates: z.array(TaskSchema.partial()) }` | merge fields | sync changed description/priority in KG (`upsert_entities` with `update: true`) |
 
 **Common concern:** after *every* mutation call `taskStorage.save()` **then** return tool result; else data loss on crash.
 
@@ -362,10 +361,10 @@ interface KnowledgeGraph {
 
 ### Tool Specifications
 
-1. **create_entities**
-   - Input: Array of entity objects
-   - Behavior: Creates new entities if they don't exist
-   - Output: Confirmation or error
+1. **upsert_entities**
+   - Input: Array of entity objects with optional update flag
+   - Behavior: Creates new entities if they don't exist; updates existing entities if update flag is true
+   - Output: Confirmation with created/updated/failed entities
 
 2. **create_relations**
    - Input: Array of relation objects
@@ -391,6 +390,16 @@ interface KnowledgeGraph {
    - Input: Array of entity names
    - Behavior: Retrieves specific entities
    - Output: Array of entity objects
+
+7. **upsert_entities**
+   - Input: Array of entity objects with optional update flag
+   - Behavior: Creates new entities if they don't exist; updates existing entities if update flag is true
+   - Output: Confirmation with created/updated/failed entities
+
+8. **update_entities**
+   - Input: Array of entity objects
+   - Behavior: Updates existing entities
+   - Output: Confirmation or error
 
 ## Future Enhancements
 

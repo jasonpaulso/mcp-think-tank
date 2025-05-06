@@ -5,8 +5,9 @@
  * when installed globally via npm
  */
 
-// Redirect console.log to stderr immediately 
-// This is crucial for FastMCP which uses stdio for communication
+// Import the console utility immediately to redirect logs
+// Note: We can't import from utils/console since the path resolution is different for bin scripts
+// So we'll still need this minimal redirect here for the bin script
 console.log = (...args) => console.error(...args);
 
 // Import the server module with error handling

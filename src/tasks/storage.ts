@@ -10,6 +10,14 @@ const tasksPath = process.env.TASKS_PATH || path.join(os.homedir(), '.mcp-think-
 // Ensure directory exists
 createDirectory(path.dirname(tasksPath));
 
+// Safely log errors to stderr without interfering with stdout JSON
+const safeErrorLog = (message: string) => {
+  // Only log in debug mode or redirect to stderr
+  if (process.env.MCP_DEBUG === 'true') {
+    process.stderr.write(`${message}\n`);
+  }
+};
+
 export class TaskStorage {
   private tasks: Map<string, Task> = new Map();
   private saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -41,11 +49,11 @@ export class TaskStorage {
           const task = JSON.parse(line) as Task;
           this.tasks.set(task.id, task);
         } catch (err) {
-          console.error(`Error parsing task line: ${err}`);
+          safeErrorLog(`Error parsing task line: ${err}`);
         }
       }
     } catch (err) {
-      console.error(`Error loading tasks: ${err}`);
+      safeErrorLog(`Error loading tasks: ${err}`);
     }
   }
   
@@ -61,7 +69,7 @@ export class TaskStorage {
       fs.appendFileSync(tasksPath, `${entry}\n`);
       this.logOperation(operation, task);
     } catch (err) {
-      console.error(`Error saving task: ${err}`);
+      safeErrorLog(`Error saving task: ${err}`);
     }
   }
   
@@ -95,10 +103,10 @@ export class TaskStorage {
       
       if (tmpTasks.length > 0) {
         fs.writeFileSync(tasksPath, tmpTasks.join('\n') + '\n', 'utf8');
-        console.error(`Saved ${tmpTasks.length} tasks during shutdown`);
+        safeErrorLog(`Saved ${tmpTasks.length} tasks during shutdown`);
       }
     } catch (err) {
-      console.error(`Error during immediate task save: ${err}`);
+      safeErrorLog(`Error during immediate task save: ${err}`);
     }
   }
   
@@ -138,7 +146,7 @@ export class TaskStorage {
         // Rename temp file to real file (atomic operation)
         fs.renameSync(tempPath, tasksPath);
       } catch (err) {
-        console.error(`Error batch saving tasks: ${err}`);
+        safeErrorLog(`Error batch saving tasks: ${err}`);
       }
     }, this.saveDebounceMs);
   }
@@ -203,13 +211,13 @@ export const taskStorage = new TaskStorage();
 
 // Ensure all tasks are saved on process exit to prevent data loss
 process.once('beforeExit', () => {
-  console.error('Process beforeExit - saving tasks');
+  safeErrorLog('Process beforeExit - saving tasks');
   taskStorage.saveImmediately();
 });
 
 // Also handle exit to ensure proper cleanup
 process.once('exit', () => {
-  console.error('Process exit - final cleanup');
+  safeErrorLog('Process exit - final cleanup');
   if (taskStorage) {
     taskStorage.clearAllTimeouts();
   }
