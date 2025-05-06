@@ -10,13 +10,13 @@ export function registerExaSearchTool(server: FastMCP): void {
     name: 'exa_search',
     description: 'Search the web using Exa API',
     parameters: z.object({
-      query: z.string(),
-      num_results: z.number().min(1).max(100).default(5),
-      type: z.enum(['auto', 'keyword', 'neural']).default('auto'),
-      start_published_date: z.string().optional(),
-      end_published_date: z.string().optional(),
-      include_domains: z.array(z.string()).optional(),
-      exclude_domains: z.array(z.string()).optional(),
+      query: z.string().describe("The search query to execute"),
+      num_results: z.number().min(1).max(100).default(5).describe("Number of results to return (1-100)"),
+      type: z.enum(['auto', 'keyword', 'neural']).default('auto').describe("Search type: auto (default), keyword (exact matching), or neural (semantic search)"),
+      start_published_date: z.string().optional().describe("Filter results published after this date (ISO format)"),
+      end_published_date: z.string().optional().describe("Filter results published before this date (ISO format)"),
+      include_domains: z.array(z.string()).optional().describe("Only include results from these domains"),
+      exclude_domains: z.array(z.string()).optional().describe("Exclude results from these domains"),
       category: z.enum([
         'general',
         'company',
@@ -28,8 +28,8 @@ export function registerExaSearchTool(server: FastMCP): void {
         'personal site',
         'linkedin profile',
         'financial report'
-      ]).default('general'),
-      live_crawl: z.enum(['always', 'fallback']).default('always')
+      ]).default('general').describe("Filter results by content category"),
+      live_crawl: z.enum(['always', 'fallback']).default('always').describe("When to use live crawling: 'always' or 'fallback' (when cached not available)")
     }),
     execute: async (params, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };

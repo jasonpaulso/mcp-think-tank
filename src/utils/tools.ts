@@ -11,7 +11,9 @@ export function registerUtilityTools(server: FastMCP): void {
   server.addTool({
     name: 'show_memory_path',
     description: 'Return absolute path of the active knowledge-graph file.',
-    parameters: z.object({}),
+    parameters: z.object({
+      random_string: z.string().describe("Dummy parameter for no-parameter tools").optional()
+    }),
     execute: async (_args, { log }) => {
       const memoryPath = process.env.MEMORY_PATH || path.join(os.homedir(), '.mcp-think-tank/memory.jsonl');
       log.info(`Showing memory path: ${memoryPath}`);

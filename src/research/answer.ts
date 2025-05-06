@@ -10,8 +10,8 @@ export function registerExaAnswerTool(server: FastMCP): void {
     name: 'exa_answer',
     description: 'Ask a question and get a sourced answer via Exa /answer API.',
     parameters: z.object({
-      question: z.string().min(5),
-      max_citations: z.number().min(1).max(10).default(5)
+      question: z.string().min(5).describe("The question to ask and get an answer with sources"),
+      max_citations: z.number().min(1).max(10).default(5).describe("Maximum number of citations to include in the answer (1-10)")
     }),
     execute: async ({ question, max_citations }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };

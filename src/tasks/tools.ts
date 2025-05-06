@@ -18,7 +18,7 @@ export function registerTaskTools(server: FastMCP): void {
           .extend({
             priority: z.enum(['low', 'medium', 'high']).default('medium')
           })
-      )
+      ).describe("List of tasks to create with their details")
     }),
     execute: async ({ tasks }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
@@ -75,8 +75,8 @@ export function registerTaskTools(server: FastMCP): void {
     name: 'list_tasks',
     description: 'List tasks with optional filtering by status and priority.',
     parameters: z.object({
-      status: z.enum(['todo', 'in-progress', 'blocked', 'done']).optional(),
-      priority: z.enum(['low', 'medium', 'high']).optional()
+      status: z.enum(['todo', 'in-progress', 'blocked', 'done']).describe("Filter tasks by status").optional(),
+      priority: z.enum(['low', 'medium', 'high']).describe("Filter tasks by priority level").optional()
     }),
     execute: async ({ status, priority }, context) => {
       const _log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
@@ -101,7 +101,9 @@ export function registerTaskTools(server: FastMCP): void {
   server.addTool({
     name: 'next_task',
     description: 'Get the next highest priority todo task and mark it as in-progress.',
-    parameters: z.object({}),
+    parameters: z.object({
+      random_string: z.string().describe("Dummy parameter for no-parameter tools").optional()
+    }),
     execute: async (_args, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
       const todoTasks = taskStorage.getTasksBy({ status: 'todo' });
@@ -148,7 +150,7 @@ export function registerTaskTools(server: FastMCP): void {
     name: 'complete_task',
     description: 'Mark a task as completed.',
     parameters: z.object({
-      id: z.string().uuid()
+      id: z.string().uuid().describe("UUID of the task to mark as completed")
     }),
     execute: async ({ id }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
@@ -187,14 +189,14 @@ export function registerTaskTools(server: FastMCP): void {
     parameters: z.object({
       updates: z.array(
         z.object({
-          id: z.string().uuid(),
-          description: z.string().min(3).optional(),
-          status: z.enum(['todo', 'in-progress', 'blocked', 'done']).optional(),
-          priority: z.enum(['low', 'medium', 'high']).optional(),
-          due: z.string().datetime().optional(),
-          tags: z.array(z.string()).optional()
+          id: z.string().uuid().describe("UUID of the task to update"),
+          description: z.string().min(3).describe("New task description").optional(),
+          status: z.enum(['todo', 'in-progress', 'blocked', 'done']).describe("New task status").optional(),
+          priority: z.enum(['low', 'medium', 'high']).describe("New priority level").optional(),
+          due: z.string().datetime().describe("New due date in ISO format").optional(),
+          tags: z.array(z.string()).describe("New tags for the task").optional()
         })
-      )
+      ).describe("List of task updates to apply")
     }),
     execute: async ({ updates }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
