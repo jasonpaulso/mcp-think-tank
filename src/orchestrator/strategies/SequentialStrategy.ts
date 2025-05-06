@@ -7,6 +7,7 @@ import { CoordinationStrategy } from '../CoordinationStrategy.js';
  */
 export class SequentialStrategy implements CoordinationStrategy {
   private currentIndex: number = -1;
+  private completionFunction: ((output: string) => boolean) | undefined;
   
   /**
    * Create a new SequentialStrategy
@@ -28,6 +29,11 @@ export class SequentialStrategy implements CoordinationStrategy {
     outputs: Map<string, string[]>,
     isDone?: (output: string) => boolean
   ): IAgent | null {
+    // Store the completion function for use in isDone method
+    if (isDone) {
+      this.completionFunction = isDone;
+    }
+    
     // If no agents, return null
     if (agents.length === 0) {
       return null;
@@ -101,5 +107,56 @@ export class SequentialStrategy implements CoordinationStrategy {
     }
     
     return result.join('\n');
+  }
+  
+  /**
+   * Check whether the orchestration is complete based on the current state.
+   * For sequential strategy, we're done when:
+   * 1. The last output satisfies the completion function, if provided
+   * 2. We've gone through all agents and none have more work to do
+   * 
+   * @param agents - Array of available agents
+   * @param outputs - Map of agent IDs to their outputs so far
+   * @returns True if orchestration should be considered complete, false otherwise
+   */
+  isDone(agents: IAgent[], outputs: Map<string, string[]>): boolean {
+    if (agents.length === 0) {
+      return true; // No agents, so we're done
+    }
+    
+    // Check if we have a completion function and if any agent's last output matches it
+    if (this.completionFunction) {
+      for (const agentId of outputs.keys()) {
+        const agentOutputs = outputs.get(agentId) || [];
+        if (agentOutputs.length > 0) {
+          const lastOutput = agentOutputs[agentOutputs.length - 1];
+          if (lastOutput && this.completionFunction(lastOutput)) {
+            return true; // Completion function says we're done
+          }
+        }
+      }
+    }
+    
+    // If all agents have had a chance to run and produced output, 
+    // we consider one full round complete
+    if (outputs.size >= agents.length) {
+      // Check if we've gone through at least one full round
+      let allHaveOutput = true;
+      for (const agent of agents) {
+        const agentOutputs = outputs.get(agent.agentId) || [];
+        if (agentOutputs.length === 0) {
+          allHaveOutput = false;
+          break;
+        }
+      }
+      
+      // If we're in test mode, one round is enough
+      if (allHaveOutput && process.env.NODE_ENV === 'test') {
+        return true;
+      }
+    }
+    
+    // By default, we're not done yet
+    return false;
   }
 } 

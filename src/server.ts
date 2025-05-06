@@ -22,6 +22,10 @@ import path from 'path';
 import * as os from 'os';
 import { config } from './config.js';
 import { taskStorage } from './tasks/storage.js';
+import { wrapFastMCP, ensureDependencies } from './tools/FastMCPAdapter.js';
+
+// Ensure all dependencies are installed
+await ensureDependencies();
 
 // Get configuration from environment
 const _REQUEST_TIMEOUT = parseInt(process.env.REQUEST_TIMEOUT || '300', 10);
@@ -35,6 +39,9 @@ const server = new FastMCP({
   name: "MCP Think Tank",
   version: config.version as `${number}.${number}.${number}` // Cast to the expected format
 });
+
+// Wrap FastMCP server with ToolManager before registering any tools
+wrapFastMCP(server);
 
 // Register memory tools
 registerMemoryTools(server);

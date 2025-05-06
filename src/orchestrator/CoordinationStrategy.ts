@@ -28,6 +28,15 @@ export interface CoordinationStrategy {
    * @returns The combined output
    */
   combine(outputs: Map<string, string[]>): string;
+  
+  /**
+   * Check whether the orchestration is complete based on the current state.
+   * 
+   * @param agents - Array of available agents
+   * @param outputs - Map of agent IDs to their outputs so far
+   * @returns True if orchestration should be considered complete, false otherwise
+   */
+  isDone(agents: IAgent[], outputs: Map<string, string[]>): boolean;
 }
 
 /**

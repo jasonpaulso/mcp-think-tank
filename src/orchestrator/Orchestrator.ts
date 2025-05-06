@@ -1,5 +1,7 @@
 import { IAgent } from '../agents/IAgent.js';
 import { CoordinationStrategy, OrchestrationResult } from './CoordinationStrategy.js';
+import { toolManager, ToolLimitError } from '../tools/ToolManager.js';
+import { memoryStore } from '../memory/store/index.js';
 
 /**
  * Orchestrator that coordinates multiple agents according to a strategy.
@@ -29,6 +31,11 @@ export class Orchestrator {
     this.strategy = strategy;
     this.allowedTools = options.allowedTools || null;
     this.debug = options.debug || false;
+    
+    // Set allowed tools in the toolManager if specified
+    if (this.allowedTools) {
+      toolManager.setAllowedTools(this.allowedTools);
+    }
   }
   
   /**
@@ -46,6 +53,9 @@ export class Orchestrator {
     const outputs = new Map<string, string[]>();
     let steps = 0;
     let currentAgentId: string | null = null;
+    
+    // Reset tool manager call counts at the start of each orchestration
+    toolManager.reset();
     
     try {
       // Initialize all agents
@@ -68,17 +78,53 @@ export class Orchestrator {
         // Track the current agent
         currentAgentId = nextAgent.agentId;
         
-        // Process the input with the agent
-        let agentInput = steps === 0 ? input : this.strategy.combine(outputs);
-        const output = await nextAgent.step(agentInput);
-        
-        // Store the output
-        if (!outputs.has(currentAgentId)) {
-          outputs.set(currentAgentId, []);
-        }
-        const agentOutputs = outputs.get(currentAgentId);
-        if (agentOutputs) {
-          agentOutputs.push(output);
+        try {
+          // Process the input with the agent
+          let agentInput = steps === 0 ? input : this.strategy.combine(outputs);
+          const output = await nextAgent.step(agentInput);
+          
+          // Store the output
+          if (!outputs.has(currentAgentId)) {
+            outputs.set(currentAgentId, []);
+          }
+          const agentOutputs = outputs.get(currentAgentId);
+          if (agentOutputs) {
+            agentOutputs.push(output);
+          }
+        } catch (error) {
+          if (error instanceof ToolLimitError) {
+            // Log that limits were reached
+            await memoryStore.add('OrchestrationLimits', `Tool call limit reached during orchestration. Agent: ${nextAgent.agentId}`, {
+              tags: ['limit_reached'],
+              agent: nextAgent.agentId,
+              version: '1.0'
+            });
+            await memoryStore.save();
+            
+            // Combine current outputs and return with limit status
+            const combinedOutput = this.strategy.combine(outputs);
+            
+            // Extract all individual outputs as an array
+            const allOutputs: string[] = [];
+            for (const agentOutputArray of outputs.values()) {
+              for (const output of agentOutputArray) {
+                allOutputs.push(output);
+              }
+            }
+            
+            return {
+              output: combinedOutput + '\n\n[Note: Execution halted due to tool call limit]',
+              finalOutput: combinedOutput + '\n\n[Note: Execution halted due to tool call limit]',
+              outputs: allOutputs,
+              agentOutputs: outputs,
+              status: 'HALTED_LIMIT',
+              steps,
+              duration: Date.now() - startTime
+            };
+          }
+          
+          // Re-throw other errors to be caught by the main try/catch
+          throw error;
         }
         
         // Increment steps
@@ -88,10 +134,10 @@ export class Orchestrator {
       // Finalize all agents
       await Promise.all(this.agents.map(agent => agent.finalize()));
       
-      // Combine outputs according to the strategy
+      // Combine the outputs
       const combinedOutput = this.strategy.combine(outputs);
       
-      // Extract all individual outputs as an array
+      // Extract all individual outputs
       const allOutputs: string[] = [];
       for (const agentOutputArray of outputs.values()) {
         for (const output of agentOutputArray) {
@@ -99,10 +145,11 @@ export class Orchestrator {
         }
       }
       
+      // Create the result
       const result: OrchestrationResult = {
         output: combinedOutput,
         finalOutput: combinedOutput, // Alias for output
-        outputs: allOutputs,         // All individual outputs as array
+        outputs: allOutputs,         // Array of all individual outputs
         agentOutputs: outputs,
         status: 'COMPLETED',
         steps,

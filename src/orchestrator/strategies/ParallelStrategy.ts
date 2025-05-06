@@ -7,6 +7,7 @@ import { CoordinationStrategy } from '../CoordinationStrategy.js';
  */
 export class ParallelStrategy implements CoordinationStrategy {
   private pendingAgents: Set<string>;
+  private completionFunction: ((output: string) => boolean) | undefined;
   
   /**
    * Create a new ParallelStrategy
@@ -22,16 +23,37 @@ export class ParallelStrategy implements CoordinationStrategy {
    * @param agents - Array of available agents
    * @param currentAgentId - ID of the currently active agent (if any)
    * @param outputs - Map of agent IDs to their outputs so far
+   * @param isDone - Optional function to check if an agent's output indicates completion
    * @returns The next agent to run, or null if all agents have been processed
    */
   nextAgent(
     agents: IAgent[],
     currentAgentId: string | null,
-    outputs: Map<string, string[]>
+    outputs: Map<string, string[]>,
+    isDone?: (output: string) => boolean
   ): IAgent | null {
+    // Store the completion function for use in isDone method
+    if (isDone) {
+      this.completionFunction = isDone;
+    }
+    
     // If this is the first call, initialize the pending agents
     if (this.pendingAgents.size === 0 && agents.length > 0) {
       agents.forEach(agent => this.pendingAgents.add(agent.agentId));
+    }
+    
+    // Check if any agent's output already indicates completion
+    if (isDone) {
+      for (const [agentId, agentOutputs] of outputs.entries()) {
+        if (agentOutputs.length > 0) {
+          const lastOutput = agentOutputs[agentOutputs.length - 1];
+          if (lastOutput && isDone(lastOutput)) {
+            // Clear pending agents to signal completion
+            this.pendingAgents.clear();
+            return null;
+          }
+        }
+      }
     }
     
     // If no more pending agents, return null
@@ -95,5 +117,38 @@ export class ParallelStrategy implements CoordinationStrategy {
     }
     
     return result.join('\n');
+  }
+  
+  /**
+   * Check whether the orchestration is complete based on the current state.
+   * For parallel strategy, we're done when:
+   * 1. Any agent's output satisfies the completion function, if provided
+   * 2. All agents have been processed (pendingAgents is empty)
+   * 
+   * @param agents - Array of available agents
+   * @param outputs - Map of agent IDs to their outputs so far
+   * @returns True if orchestration should be considered complete, false otherwise
+   */
+  isDone(agents: IAgent[], outputs: Map<string, string[]>): boolean {
+    // If no agents, we're done
+    if (agents.length === 0) {
+      return true;
+    }
+    
+    // Check if we have a completion function and if any agent's last output matches it
+    if (this.completionFunction) {
+      for (const agentId of outputs.keys()) {
+        const agentOutputs = outputs.get(agentId) || [];
+        if (agentOutputs.length > 0) {
+          const lastOutput = agentOutputs[agentOutputs.length - 1];
+          if (lastOutput && this.completionFunction(lastOutput)) {
+            return true; // Completion function says we're done
+          }
+        }
+      }
+    }
+    
+    // In parallel strategy, we're done when all agents have been processed
+    return this.pendingAgents.size === 0;
   }
 } 
