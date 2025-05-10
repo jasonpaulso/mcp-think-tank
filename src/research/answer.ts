@@ -15,15 +15,16 @@ export function registerExaAnswerTool(server: FastMCP): void {
     }),
     execute: async ({ question, max_citations }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
-      // Ensure API key is set
-      if (!process.env.EXA_API_KEY) {
-        log.error('EXA_API_KEY environment variable is not set. Please set it before using this tool.');
-        return JSON.stringify({
-          error: 'EXA_API_KEY environment variable is not set. Please set it before using this tool.'
-        });
-      }
-
+      
       try {
+        // Only check for API key when actually executing the query
+        // This allows tool listing without requiring the API key
+        if (!process.env.EXA_API_KEY) {
+          return JSON.stringify({
+            error: 'EXA_API_KEY environment variable is not set. Please set it in your configuration before using this tool.'
+          });
+        }
+        
         const exa = new Exa(process.env.EXA_API_KEY);
         
         // Exa doesn't directly let us control citation count in AnswerOptions

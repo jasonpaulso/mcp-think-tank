@@ -32,6 +32,8 @@ readme: |
   
   The only required configuration is an Exa API key for web search. Always set a unique MEMORY_PATH for each project to avoid knowledge graph conflicts.
   
+  **Note for Smithery users:** All tools are visible in the tool list, but Exa web research tools require an API key to be configured before use. The server implements lazy loading - tools only authenticate with your API key upon execution, not during initialization.
+  
   For more details, see the full documentation at: https://github.com/flight505/mcp-think-tank
 
 startCommand:
