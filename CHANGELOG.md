@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.5 (2024-07-28)
+
+### Fixed
+- Fixed self-reflection implementation to handle large input strings
+- Added proper reflectPrompt parameter handling with appropriate truncation
+- Fixed multi-step orchestration tests to work with large content
+- Improved string handling in critical sections to prevent RangeError crashes
+- Added better documentation for self-reflection feature
+
 ## 2.0.4 (2024-07-28)
 
 ### Improved

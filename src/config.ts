@@ -18,14 +18,14 @@ const __dirname = dirname(__filename);
 const basedir = resolve(__dirname, '..', '..');
 
 // Dynamically read version from package.json
-let version = '2.0.4'; // Fallback version
+let version = '2.0.5'; // Fallback version
 try {
   const packagePath = resolve(basedir, 'package.json');
   if (existsSync(packagePath)) {
     version = JSON.parse(readFileSync(packagePath, 'utf8')).version;
   }
 } catch (error) {
-  safeLog(`Error reading package.json: ${error}`);
+  safeLog(`Warning: Could not read version from package.json, using fallback version ${version}`);
 }
 
 // Default memory path
