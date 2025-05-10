@@ -142,9 +142,12 @@ MCP Think Tank includes comprehensive features to ensure tools are used responsi
 
 ## 📦 Installation
 
-> ⚠️ **Important:** MCP Think Tank requires a pre-built server.
-> The package is automatically built before publishing, so users
-> do not need to take any extra steps. Just install and run!
+> ⚠️ **Important Note READ THIS:** 
+> When updating to a new version of MCP Think Tank in Cursor or Claude you might create multiple instances of the MCP Think Tank server, causing aditional Node.js instances to be created, dragging down your system performance - this is a known issue with MCP servers - kill all mcp-think-tank processes in your system and check you have only one node.js instance running.
+
+> MCP Think Tank requires a pre-built server.
+
+> The package is automatically built before publishing, so users, do not need to take any extra steps. Just install and run!
 
 ### NPX (Recommended)
 
@@ -240,7 +243,9 @@ Example configuration with advanced settings in `.cursor/mcp.json`:
 > 💡 **Performance tip:** For large projects, increasing `TOOL_LIMIT` and cache sizes can improve performance at the cost of higher memory usage. Monitor your usage patterns and adjust accordingly.
 > But in Cursor, tool limit should be 25 to avoid hitting the limit and getting the resume from the last tool call - currently many cursor users are reporting issues with resuming in Version: 0.49.6. this is not related to MCP Think Tank.
 
-> 💡 When using Cursor in YOLO mode or Vibe coding I suggest context priming new chats and letting Cursor know that it should use the MCP Think Tank to create entities, observations and relations. This will help you get the best out of the MCP Think Tank.
+>  **Note:**
+
+> 💡 **Note:** If you are using Cursor in YOLO mode or Vibe coding I suggest context priming new chats and letting Cursor know that it should use the MCP Think Tank to create entities, observations and relations. This will help you get the best out of the MCP Think Tank.
 
 An example of context priming, is keeping a `Prime.md` file in the `.cursor` folder of your project with the following content:
 ```markdown
