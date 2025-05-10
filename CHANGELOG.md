@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.4 (2024-07-28)
+
+### Improved
+- Implemented lazy loading for Smithery compatibility
+- Modified Exa API tools to only check for API key during execution, not tool listing
+- Updated Smithery documentation to clarify tool visibility and configuration requirements
+- Enhanced error messages to guide users through proper configuration
+
 ## 2.0.3 (2024-07-28)
 
 ### Improved
