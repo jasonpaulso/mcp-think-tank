@@ -315,53 +315,7 @@ To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a
 
     ### 4. Web Research (Exa)
 
-    Use when current context is insufficient:
-
-    - `exa_search`: For finding current information from the web
-    - `exa_answer`: For factual questions requiring cited sources
-
-    ```javascript
-    // Research current best practices
-    mcp_think-tool_exa_search({
-      query: "latest React state management libraries 2025",
-      num_results: 5
-    })
-    ```
-
-    ### 2. Memory & Knowledge Graph
-
-    Use when information should be preserved across conversations:
-
-    | Tool | When to Use |
-    |------|-------------|
-    | `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
-    | `add_observations` | Add new facts to existing entities |
-    | `create_relations` | Connect related concepts |
-    | `search_nodes` | Find relevant knowledge before solving problems |
-    | `open_nodes` | Retrieve specific entity details |
-
-    ```javascript
-    // Documenting architectural components
-    mcp_think-tool_upsert_entities({
-      entities: [
-        {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
-      ]
-    })
-    ```
-
-    ### 3. Task Management
-
-    Use for project planning and tracking:
-
-    - `plan_tasks`: At project start or when planning features
-    - `list_tasks`: To understand current work status
-    - `next_task`: When ready to work on next priority
-    - `complete_task`: When a task is finished
-    - `update_tasks`: When priorities change
-
-    ### 4. Web Research (Exa)
-
-    Use when current context is insufficient:
+    Use when user says key word 'research' or current context is insufficient:
 
     - `exa_search`: For finding current information from the web
     - `exa_answer`: For factual questions requiring cited sources
@@ -387,6 +341,8 @@ To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a
     - Tool calls are limited to 25 per session (configurable)
     - Content caching improves repeated file/URL operation performance
     - Avoid redundant tool calls for optimal performance
+
+    --------END OF EXAMPLE RULE--------
 
 ## ⚡ Performance Optimization
 
