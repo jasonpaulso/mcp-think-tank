@@ -148,11 +148,12 @@ MCP Think Tank includes comprehensive features to ensure tools are used responsi
 
 ### NPX (Recommended)
 
-The easiest way to use MCP Think Tank is via NPX, which runs the latest version without global installation:
+The easiest way to use MCP Think Tank is via NPX in Cursor using mcp.json file, which runs the latest version without global installation, 
 
 ```bash
 npx mcp-think-tank@latest
 ```
+> some users have issues with npx @latest in Cursor, if so try specifying the version mcp-think-tank@2.0.3 in the .json file, or install it globally:
 
 ### Global Installation
 
@@ -251,18 +252,15 @@ An example of context priming, is keeping a `Prime.md` file in the `.cursor` fol
 eza . --tree --git-ignore
 
 ## Read the following files
-> Read the files below test the MCP toola and nothing else.
+> Read the files below test the MCP tools and test the memory_query tool to find recent observations for the last 48 hours. Dont do anything else.
 
+> list of files:
 README.md
+...
 
-## MCP Tools
-> Use the following tools to answer the question.
-mcp-think-tank has the following tools:
-## Memory
-upsert_entities
-create_relations
-add_observations
-
+## MCP Think Tank Tools
+> Automatically use the mcp-think-tank to keep track of the project and its context without the user having to ask for it.
+Adding entities, observations and relations to the knowledge graph and querying the knowledge graph for relevant information and historical context as needed. MCP Think Tank also has tools to help with planning and task management.
 ```
 
 

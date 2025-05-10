@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.3 (2024-07-28)
+
+### Improved
+- Added better documentation for memory_query tool in README
+- Enhanced tool description in rule files to highlight memory_query capabilities
+- Added practical example showing how to query recent observations from the last 48 hours
+- Fixed Dockerfile paths for better container compatibility
+- Improved smithery.yaml for better display on deployment platforms
 
 ## 2.0.1 (2024-07-26)
 
