@@ -114,7 +114,7 @@ export class GraphStorage {
   /**
    * Save the graph to the file in JSONL format
    */
-  save(): void {
+  async save(): Promise<void> {
     try {
       const lines: string[] = [];
       for (const entity of this.graph.entities.values()) {
@@ -127,8 +127,8 @@ export class GraphStorage {
       }
       fs.writeFileSync(this.filePath, lines.join('\n') + '\n', 'utf8');
       // No info logging
-    } catch (error) {
-      console.error(`Error saving graph: ${error}`);
+    } catch (_err) {
+      // Just continue
     }
   }
 

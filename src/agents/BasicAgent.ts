@@ -186,18 +186,21 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
    * Perform a self-reflection pass on the current reasoning
    */
   private async performSelfReflection(): Promise<void> {
+    // Safely truncate the output if it's too large to prevent string length errors
+    const MAX_REFLECTION_TEXT_LENGTH = 10000; // Reasonable limit for reflection content
+    const truncatedOutput = this.output.length > MAX_REFLECTION_TEXT_LENGTH
+      ? this.output.substring(0, MAX_REFLECTION_TEXT_LENGTH) + "\n...[content truncated for reflection]"
+      : this.output;
+    
     // Generate a reflection prompt based on the current reasoning
     const reflectPrompt = this.params.reflectPrompt || 
-      `Review the following reasoning for inconsistencies, logical errors, or incomplete analysis:\n\n${this.output}\n\nProvide a critical self-reflection identifying any issues and suggesting improvements:`;
+      `Review the following reasoning for inconsistencies, logical errors, or incomplete analysis:\n\n${truncatedOutput}\n\nProvide a critical self-reflection identifying any issues and suggesting improvements:`;
     
-    // In a real implementation, this would call the LLM again
-    // For now, we'll simulate a reflection
-    this.reflection = `Self-reflection on the reasoning:\n- The reasoning is sound but could be more comprehensive\n- Additional considerations for edge cases would strengthen the analysis\n- The conclusion follows logically from the premises`;
+    // Use the feedback loop approach - have the client AI perform the reflection
+    this.reflection = reflectPrompt;
     
-    // In a full implementation, we might update the original output based on reflection
-    if (this.reflection) {
-      this.output = `${this.output}\n\n---\n\n**Self-Reflection:**\n${this.reflection}`;
-    }
+    // Add the reflection prompt to the output with a clear section header
+    this.output += `\n\n## Self-Reflection\n\n**REFLECTION NEEDED:**\n${reflectPrompt.substring(0, 500)}${reflectPrompt.length > 500 ? "...[prompt truncated]" : ""}`;
   }
   
   /**
@@ -279,7 +282,7 @@ ${latestResearch.results.map((r, i) => `- ${r} ${latestResearch.sources[i] ? `(S
       }
       
       // Add to knowledge graph
-      const entity = await this.memory.addEntity({
+      const _entity = await this.memory.addEntity({
         name: entityName,
         entityType: entityType,
         observations: observations

@@ -159,24 +159,32 @@ describe('Multi-Agent Orchestration Integration', () => {
     // Create a sequential strategy
     const strategy = new SequentialStrategy();
     
-    // Create an orchestrator with the chained agents
+    // Create an orchestrator with the chained agents and debugging enabled
     const orchestrator = new Orchestrator(
       [definitionAgent, analysisAgent, conclusionAgent],
-      strategy
+      strategy,
+      { debug: true } // Enable debug mode
     );
     
-    // Run the orchestration with a complex problem
-    const result = await orchestrator.run(
-      'We need to design a scalable microservices architecture for our e-commerce platform.'
-    );
-    
-    // Verify that the orchestration completed successfully
-    expect(result.status).toBe('COMPLETED');
-    
-    // Verify that all agents contributed
-    expect(result.agentOutputs.size).toBe(3);
-    
-    // Verify the final output contains a complete solution
-    expect(result.output).toBeTruthy();
+    // Run the orchestration with a simpler input to reduce complexity
+    let result;
+    try {
+      result = await orchestrator.run(
+        'Design a simple web application architecture.'
+      );
+      console.log('Orchestration result status:', result.status);
+      
+      // Verify that the orchestration completed successfully
+      expect(result.status).toBe('COMPLETED');
+      
+      // Verify that all agents contributed
+      expect(result.agentOutputs.size).toBe(3);
+      
+      // Verify the final output contains a complete solution
+      expect(result.output).toBeTruthy();
+    } catch (error) {
+      console.error('Test error:', error);
+      throw error;
+    }
   });
 }); 

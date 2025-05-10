@@ -105,6 +105,22 @@ Beyond the core list, MCP Think Tank offers sophisticated capabilities for advan
 
 The `think` tool is the core mechanism for enabling advanced AI reasoning. It provides a dedicated, structured environment where the AI can systematically break down problems, gather context, analyze options, and perform self-reflection. This promotes deeper analysis and higher-quality outputs compared to unstructured responses. It supports sequential steps and integrates seamlessly with research and memory tools.
 
+#### Self-Reflection Feature
+
+The think tool includes a powerful self-reflection capability that can be enabled with the `selfReflect: true` parameter:
+
+```javascript
+mcp_think-tool_think({
+  structuredReasoning: "...",
+  selfReflect: true,
+  reflectPrompt: "Optional custom reflection prompt"
+})
+```
+
+When self-reflection is enabled, the AI receives a prompt to reflect on its own reasoning. This follows the MCP design philosophy of enhancing rather than replacing AI capabilities.
+
+The `reflectPrompt` parameter lets you customize the prompt used for reflection, tailoring it to specific reasoning tasks or domains. When not specified, a default prompt is used that asks for identification of inconsistencies, logical errors, and improvement suggestions.
+
 ### Knowledge Graph Memory
 
 The knowledge graph provides persistent memory across different interactions and sessions. It allows the AI to build a growing understanding of the project, its components, and related concepts.
@@ -320,6 +336,13 @@ mcp_think-tool_think({
   structuredReasoning: "Analyze database options for the user management system...",
   category: "architecture",
   storeInMemory: true
+})
+
+// Example: With self-reflection enabled
+mcp_think-tool_think({
+  structuredReasoning: "Evaluate the pros and cons of microservices vs monolith...",
+  selfReflect: true,
+  reflectPrompt: "Review the analysis for gaps in the microservices evaluation"
 })
 ```
 
