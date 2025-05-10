@@ -8,6 +8,13 @@
 - Updated Smithery documentation to clarify tool visibility and configuration requirements
 - Enhanced error messages to guide users through proper configuration
 
+### Fixed
+- Fixed self-reflection implementation to handle large input strings
+- Added proper reflectPrompt parameter handling with appropriate truncation
+- Fixed multi-step orchestration tests to work with large content
+- Improved string handling in critical sections to prevent RangeError crashes
+- Added better documentation for self-reflection feature
+
 ## 2.0.3 (2024-07-28)
 
 ### Improved
