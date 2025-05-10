@@ -112,7 +112,7 @@ The knowledge graph provides persistent memory across different interactions and
 *   **Timestamped Observations**: All memory entries include metadata for tracking.
 *   **Duplicate Prevention**: Intelligent entity matching avoids redundant entries.
 *   **Automatic Linkage**: Heuristic-based relation creation connects related concepts (configurable).
-*   **Advanced Querying**: Filter memory by time, tags, keywords, and more.
+*   **Advanced Querying**: Filter memory by time, tags, keywords, and more using the powerful `memory_query` tool for historical analysis and tracking concept evolution.
 *   **Memory Maintenance**: Tools for pruning and managing memory growth are included.
 *   **Key Memory Tools**: Tools like `upsert_entities`, `add_observations`, `create_relations`, `search_nodes`, `memory_query`, and `open_nodes` are used to interact with the graph.
 
@@ -330,7 +330,7 @@ Use these tools to manage the project's knowledge graph, storing and retrieving 
 | `add_observations` | Add facts or details related to existing entities. |
 | `create_relations` | Link related entities to build connections. |
 | `search_nodes` | Find relevant information in the knowledge graph before starting a task. |
-| `memory_query` | Search observations with advanced filters (time, keyword, tag). |
+| `memory_query` | Search observations with precise time filters, keywords, and tags across all entities. |
 | `open_nodes` | Retrieve full details of specific entities. |
 
 ```javascript
