@@ -112,7 +112,7 @@ The knowledge graph provides persistent memory across different interactions and
 *   **Timestamped Observations**: All memory entries include metadata for tracking.
 *   **Duplicate Prevention**: Intelligent entity matching avoids redundant entries.
 *   **Automatic Linkage**: Heuristic-based relation creation connects related concepts (configurable).
-*   **Advanced Querying**: Filter memory by time, tags, keywords, and more using the powerful `memory_query` tool for historical analysis and tracking concept evolution.
+*   **Advanced Querying**: Filter memory by time, tags, keywords, and more using the powerful `memory_query` tool for historical analysis and tracking concept evolution. Easily find recent entries from the last 48 hours or any specific time period.
 *   **Memory Maintenance**: Tools for pruning and managing memory growth are included.
 *   **Key Memory Tools**: Tools like `upsert_entities`, `add_observations`, `create_relations`, `search_nodes`, `memory_query`, and `open_nodes` are used to interact with the graph.
 
@@ -341,10 +341,9 @@ mcp_think-tool_upsert_entities({
   ]
 })
 
-// Example: Advanced memory search
+// Example: Find observations from the last 48 hours
 mcp_think-tool_memory_query({
-  keyword: "api",
-  after: "2023-01-01T00:00:00Z",
+  after: "2025-05-09T00:00:00Z", // Yesterday's date in ISO format
   limit: 10
 })
 ```
