@@ -37,6 +37,7 @@ MCP Think Tank is built on three core principles:
 ## 🧠 The Power of Structured Thinking
 
 The think tool provides a dedicated space for systematic reasoning, encouraging:
+
 - Clear problem definition
 - Relevant context gathering
 - Step-by-step analysis
@@ -44,6 +45,7 @@ The think tool provides a dedicated space for systematic reasoning, encouraging:
 - Well-formed conclusions
 
 Recent studies show significant improvements when using structured thinking:
+
 - **54% relative improvement** in complex decision-making tasks
 - **Enhanced consistency** across multiple trials
 - **Improved performance** on software engineering benchmarks
@@ -66,6 +68,7 @@ Recent studies show significant improvements when using structured thinking:
 ### Sequential Thinking & Chained Reasoning
 
 The latest version introduces powerful multi-step reasoning capabilities:
+
 - **Step-by-Step Planning**: Break down complex problems into manageable sequential steps
 - **Progress Tracking**: Monitor progress through multi-step reasoning with step counters
 - **Self-Reflection**: Automatically evaluate reasoning quality with optional reflection passes
@@ -75,6 +78,7 @@ The latest version introduces powerful multi-step reasoning capabilities:
 ### Enhanced Knowledge Graph Memory
 
 The knowledge graph system has been significantly upgraded:
+
 - **Timestamped Observations**: All memory entries now include metadata for better tracking
 - **Duplicate Prevention**: Intelligent entity matching to avoid redundant entries
 - **Automatic Linkage**: Heuristic-based relation creation between related entities
@@ -84,6 +88,7 @@ The knowledge graph system has been significantly upgraded:
 ### Tool Orchestration & Safeguards
 
 New intelligent tool management features ensure responsible and efficient tool usage:
+
 - **Usage Limits**: Configurable caps on tool calls (default: 25) to prevent runaway usage
 - **Call Caching**: Automatic detection and reuse of duplicate tool calls for efficiency
 - **Content Caching**: SHA-1 based caching for file and URL operations to reduce redundant reads
@@ -138,31 +143,35 @@ mcp-think-tank
 
 > ⚠️ **Important:**
 > Always set a unique `MEMORY_PATH` for each project!
-> 
+>
 > Using the default (centralized) memory path can cause knowledge graph conflicts between projects. For best results and to keep your project memories isolated, specify a custom `MEMORY_PATH` in your configuration for every project.
 > If omitted, defaults to `~/.mcp-think-tank/memory.jsonl`.
 
 ### Environment Variables
 
 #### Essential Variables
+
 - `MEMORY_PATH`: Path to the memory storage file (default: `~/.mcp-think-tank/memory.jsonl`)
 - `EXA_API_KEY` (**required for Exa web search**): Enables `exa_search` and `exa_answer` tools
 
 #### Advanced Configuration
+
 - `MCP_DEBUG`: Enable debug logging (default: `false`)
 - `MCP_LISTEN_PORT`: Set custom port for MCP server (default: `3399`)
 - `LOG_LEVEL`: Set logging level (`debug`, `info`, `warn`, `error`) (default: `info`)
 - `AUTO_LINK`: Enable automatic entity linking in knowledge graph (default: `true`)
 
 #### New Tool Orchestration & Caching Settings
+
 - `TOOL_LIMIT`: Maximum number of tool calls per session (default: `25`)
 - `CACHE_TOOL_CALLS`: Enable/disable duplicate tool call caching (default: `true`)
-- `TOOL_CACHE_SIZE`: Maximum number of cached tool calls (default: `100`) 
+- `TOOL_CACHE_SIZE`: Maximum number of cached tool calls (default: `100`)
 - `CACHE_CONTENT`: Enable/disable content-based caching for file/URL operations (default: `true`)
 - `CONTENT_CACHE_SIZE`: Maximum number of items in content cache (default: `50`)
 - `CONTENT_CACHE_TTL`: Time-to-live for cached content in milliseconds (default: `300000` - 5 minutes)
 
 #### Memory Maintenance
+
 - `MIN_SIMILARITY_SCORE`: Threshold for entity matching (default: `0.85`)
 - `MAX_OPERATION_TIME`: Maximum time for batch operations in milliseconds (default: `5000`)
 
@@ -244,351 +253,147 @@ To ensure Cursor and all agents use MCP Think Tank's full capabilities, create a
 5. In the rule editor, set the metadata as shown below and paste the rule content.
 
 ### 2. Example Rule File (`.cursor/rules/mcp-think-tank.mdc`)
-```
----
-rule type: auto attach
-use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md,**/*.py,**/*.json
----
 
-# MCP Think Tank Tools Guide
+    ---
+    rule type: auto attach
+    use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md,**/*.py,**/*.json
+    ---
 
-MCP Think Tank extends AI with structured reasoning, knowledge graph memory, task management, and web research capabilities. This rule helps determine when each tool is most appropriate.
+    # MCP Think Tank Tools Guide
 
-## Tool Selection Guide
+    MCP Think Tank extends AI with structured reasoning, knowledge graph memory, task management, and web research capabilities. This rule helps determine when each tool is most appropriate.
 
-### 1. Thinking Tools (Structured Reasoning)
+    ## Tool Selection Guide
 
-Use `think` for:
-- Complex technical decisions requiring systematic analysis
-- Architecture planning and design considerations
-- Step-by-step problem-solving with self-reflection
-- When analysis should be saved for future reference
+    ### 1. Thinking Tools (Structured Reasoning)
 
-```javascript
-// Complex architecture decision with memory storage
-mcp_think-tool_think({
-  structuredReasoning: "Analyzing database options for our user management system...",
-  category: "architecture",
-  storeInMemory: true
-})
-```
+    Use `think` for:
+    - Complex technical decisions requiring systematic analysis
+    - Architecture planning and design considerations
+    - Step-by-step problem-solving with self-reflection
+    - When analysis should be saved for future reference
 
-### 2. Memory & Knowledge Graph
+    ```javascript
+    // Complex architecture decision with memory storage
+    mcp_think-tool_think({
+      structuredReasoning: "Analyzing database options for our user management system...",
+      category: "architecture",
+      storeInMemory: true
+    })
+    ```
 
-Use when information should be preserved across conversations:
+    ### 2. Memory & Knowledge Graph
 
-| Tool | When to Use |
-|------|-------------|
-| `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
-| `add_observations` | Add new facts to existing entities |
-| `create_relations` | Connect related concepts |
-| `search_nodes` | Find relevant knowledge before solving problems |
-| `open_nodes` | Retrieve specific entity details |
+    Use when information should be preserved across conversations:
 
-```javascript
-// Documenting architectural components
-mcp_think-tool_upsert_entities({
-  entities: [
-    {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
-  ]
-})
-```
+    | Tool | When to Use |
+    |------|-------------|
+    | `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
+    | `add_observations` | Add new facts to existing entities |
+    | `create_relations` | Connect related concepts |
+    | `search_nodes` | Find relevant knowledge before solving problems |
+    | `open_nodes` | Retrieve specific entity details |
 
-### 3. Task Management
+    ```javascript
+    // Documenting architectural components
+    mcp_think-tool_upsert_entities({
+      entities: [
+        {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
+      ]
+    })
+    ```
 
-Use for project planning and tracking:
+    ### 3. Task Management
 
-- `plan_tasks`: At project start or when planning features
-- `list_tasks`: To understand current work status
-- `next_task`: When ready to work on next priority
-- `complete_task`: When a task is finished
-- `update_tasks`: When priorities change
+    Use for project planning and tracking:
 
-### 4. Web Research (Exa)
+    - `plan_tasks`: At project start or when planning features
+    - `list_tasks`: To understand current work status
+    - `next_task`: When ready to work on next priority
+    - `complete_task`: When a task is finished
+    - `update_tasks`: When priorities change
 
-Use when current context is insufficient:
+    ### 4. Web Research (Exa)
 
-- `exa_search`: For finding current information from the web
-- `exa_answer`: For factual questions requiring cited sources
+    Use when current context is insufficient:
 
-```javascript
-// Research current best practices
-mcp_think-tool_exa_search({
-  query: "latest React state management libraries 2025",
-  num_results: 5
-})
-```
-## Integration Best Practices
+    - `exa_search`: For finding current information from the web
+    - `exa_answer`: For factual questions requiring cited sources
 
-1. Start complex reasoning with `think` tool
-2. Save important conclusions to knowledge graph
-3. Create tasks based on conclusions when appropriate
-4. Use research tools to fill knowledge gaps
-5. Record research findings in knowledge graph
+    ```javascript
+    // Research current best practices
+    mcp_think-tool_exa_search({
+      query: "latest React state management libraries 2025",
+      num_results: 5
+    })
+    ```
 
-## Performance Considerations
+    ### 2. Memory & Knowledge Graph
 
-- Tool calls are limited to 25 per session (configurable)
-- Content caching improves repeated file/URL operation performance
-- Avoid redundant tool calls for optimal performance
-```
+    Use when information should be preserved across conversations:
 
-### 2. Memory & Knowledge Graph
+    | Tool | When to Use |
+    |------|-------------|
+    | `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
+    | `add_observations` | Add new facts to existing entities |
+    | `create_relations` | Connect related concepts |
+    | `search_nodes` | Find relevant knowledge before solving problems |
+    | `open_nodes` | Retrieve specific entity details |
 
-Use when information should be preserved across conversations:
+    ```javascript
+    // Documenting architectural components
+    mcp_think-tool_upsert_entities({
+      entities: [
+        {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
+      ]
+    })
+    ```
 
-| Tool | When to Use |
-|------|-------------|
-| `upsert_entities` | Document important concepts or components or update existing entities with the update flag |
-| `add_observations` | Add new facts to existing entities |
-| `create_relations` | Connect related concepts |
-| `search_nodes` | Find relevant knowledge before solving problems |
-| `open_nodes` | Retrieve specific entity details |
+    ### 3. Task Management
 
-```javascript
-// Documenting architectural components
-mcp_think-tool_upsert_entities({
-  entities: [
-    {name: "AuthService", entityType: "System", observations: ["Handles authentication"]}
-  ]
-})
-```
+    Use for project planning and tracking:
 
+    - `plan_tasks`: At project start or when planning features
+    - `list_tasks`: To understand current work status
+    - `next_task`: When ready to work on next priority
+    - `complete_task`: When a task is finished
+    - `update_tasks`: When priorities change
 
-### 3. Task Management
+    ### 4. Web Research (Exa)
 
-Use for project planning and tracking:
+    Use when current context is insufficient:
 
-- `plan_tasks`: At project start or when planning features
-- `list_tasks`: To understand current work status
-- `next_task`: When ready to work on next priority
-- `complete_task`: When a task is finished
-- `update_tasks`: When priorities change
+    - `exa_search`: For finding current information from the web
+    - `exa_answer`: For factual questions requiring cited sources
 
-### 4. Web Research (Exa)
+    ```javascript
+    // Research current best practices
+    mcp_think-tool_exa_search({
+      query: "latest React state management libraries 2025",
+      num_results: 5
+    })
+    ```
 
-Use when current context is insufficient:
+    ## Integration Best Practices
 
-- `exa_search`: For finding current information from the web
-- `exa_answer`: For factual questions requiring cited sources
+    1. Start complex reasoning with `think` tool
+    2. Save important conclusions to knowledge graph
+    3. Create tasks based on conclusions when appropriate
+    4. Use research tools to fill knowledge gaps
+    5. Record research findings in knowledge graph
 
-```javascript
-// Research current best practices
-mcp_think-tool_exa_search({
-  query: "latest React state management libraries 2025",
-  num_results: 5
-})
-```
+    ## Performance Considerations
 
-## Integration Best Practices
-
-1. Start complex reasoning with `think` tool
-2. Save important conclusions to knowledge graph
-3. Create tasks based on conclusions when appropriate
-4. Use research tools to fill knowledge gaps
-5. Record research findings in knowledge graph
-
-## Performance Considerations
-
-- Tool calls are limited to 25 per session (configurable)
-- Content caching improves repeated file/URL operation performance
-- Avoid redundant tool calls for optimal performance
-```
-
-
-## 📝 How To Save Important Thoughts
-
-When using the `think` tool with important reasoning, you have several options to enhance and persist your thought processes:
-
-### Saving Thoughts to Memory
-
-Simply tell the agent "Please save this reasoning in memory for future reference" and the tool will automatically save the reasoning in the knowledge graph with `storeInMemory: true`.
-
-### Multi-Step Reasoning
-
-For complex problems that require sequential thinking:
-1. Break down your reasoning into logical steps
-2. Use the step counter parameters (`plannedSteps` and `currentStep`) to track progress
-3. The system will maintain continuity across multiple reasoning steps
-4. Each step is saved with appropriate metadata when stored in memory
-
-Example request: "Let's analyze this architecture decision in 4 steps. This is step 1 focusing on requirements. Please save this in memory."
-
-### Self-Reflection Enhancement
-
-Improve the quality of your reasoning with automated self-reflection:
-1. Request self-reflection by saying "Please analyze this reasoning and provide a reflection on potential improvements"
-2. The system will evaluate your reasoning for logical gaps, overlooked factors, and potential improvements
-3. Both the original reasoning and reflection are stored together in memory
-4. Use custom reflection prompts for targeted improvement in specific areas
-
-Example request: "Please reflect on this architecture decision with a focus on security considerations I might have missed, and save the analysis to memory."
-
-### Research Integration
-
-Seamlessly incorporate web research into your reasoning process:
-1. Include research queries in your thinking with `[research: your query]` syntax
-2. Request initial research with "Before analyzing this problem, please research the latest approaches to X"
-3. All research results are automatically formatted with source citations
-4. Research sources are added as relations in the knowledge graph
-
-Example request: "I need to understand [research: latest React state management approaches 2023] before making this architecture decision. Please save this analysis in memory."
-
-## 🧠 Think Tank Instructions
-
-This section provides detailed, actionable guidance for using MCP Think Tank within Cursor AI IDE (or any MCP-compliant agent), with a focus on coding and large project development. The tools are grouped into four main categories:
-
-### 1. Think Tools (Structured Reasoning)
-- Use the `think` tool for all complex decisions, architecture planning, and problem-solving.
-- Always provide clear, step-by-step reasoning and relevant context.
-- **To persist your reasoning for future reference, set `storeInMemory: true` in your tool call.**
-  - Example: When you want your analysis or decision to be available across sessions or for team traceability.
-- If you do not set `storeInMemory: true`, your reasoning will be processed but not saved in the knowledge graph.
-- Agents (like Cursor or Claude) can be prompted to "save this reasoning in memory" to ensure persistence.
-- You can later retrieve saved thoughts using the `search_nodes` or `open_nodes` tools.
-
-#### How `storeInMemory` Works
-- The `think` tool accepts a `storeInMemory` parameter (default: false).
-- When `storeInMemory: true`, your structured reasoning, context, and tags are saved as an entity in the knowledge graph.
-- This enables robust project memory, traceability, and continuity.
-- Example tool call:
-  ```json
-  {
-    "tool": "think",
-    "parameters": {
-      "structuredReasoning": "Analyzed the pros and cons of REST vs GraphQL for our new API. Decided REST is simpler for our use case.",
-      "context": "API design meeting 2024-07-10",
-      "category": "architecture",
-      "tags": ["api", "meeting"],
-      "storeInMemory": true
-    }
-  }
-  ```
-- To retrieve saved thoughts, use:
-  - `search_nodes` (by keyword, tag, or context)
-  - `open_nodes` (by entity name)
-
-#### Multi-step Reasoning with Step Counters
-- For complex thinking processes that span multiple steps, use the step counter parameters:
-  - `plannedSteps`: Total number of steps you plan to complete (e.g., 5)
-  - `currentStep`: The current step number you're on (e.g., 2)
-- The system will track your progress through the multi-step reasoning process
-- Each step will be saved with appropriate metadata when using `storeInMemory: true`
-- Example tool call:
-  ```json
-  {
-    "tool": "think",
-    "parameters": {
-      "structuredReasoning": "Step 2 analysis of database schema options...",
-      "plannedSteps": 5,
-      "currentStep": 2,
-      "storeInMemory": true
-    }
-  }
-  ```
-- This is especially useful for breaking down complex problems into manageable stages and tracking progress.
-
-#### Self-Reflection for Enhanced Reasoning
-- Use the self-reflection feature to automatically critique your reasoning and identify potential improvements
-- Set `selfReflect: true` in your think tool parameters to enable this feature
-- You can optionally provide a custom reflection prompt with `reflectPrompt`
-- Self-reflection helps identify:
-  - Potential logical fallacies or inconsistencies in reasoning
-  - Overlooked factors or considerations
-  - Assumptions that may need validation
-  - Areas where the reasoning could be strengthened
-- Example tool call with self-reflection:
-  ```json
-  {
-    "tool": "think",
-    "parameters": {
-      "structuredReasoning": "My analysis of the authentication system...",
-      "selfReflect": true,
-      "reflectPrompt": "Evaluate my reasoning for security considerations I might have missed",
-      "storeInMemory": true
-    }
-  }
-  ```
-- The reflection is appended to your original reasoning and saved together when using `storeInMemory: true`
-
-#### Inline Research Integration
-- Enable mid-reasoning research by setting `allowResearch: true` in your think tool parameters
-- Insert research queries directly in your reasoning using the format: `[research: your search query]`
-- The system will automatically:
-  - Detect and process these research requests
-  - Replace the markers with formatted research results
-  - Include source citations for each result
-- You can also set an initial `researchQuery` parameter for preliminary research before your reasoning starts
-- Example tool call with research:
-  ```json
-  {
-    "tool": "think",
-    "parameters": {
-      "structuredReasoning": "I need to understand the latest advancements in [research: quantum error correction 2023] before designing our system.",
-      "allowResearch": true,
-      "storeInMemory": true
-    }
-  }
-  ```
-- Multiple research requests can be included in a single reasoning step
-- All research results and sources are stored with your reasoning when using `storeInMemory: true`
-- Research sources are added as relations in the knowledge graph for traceability
-
-#### Structured Markdown Formatting
-- The think tool automatically formats output as structured markdown for improved readability
-- Available format types:
-  - `general`: Generic reasoning with introduction, analysis, and conclusion sections
-  - `problem`: Problem-solving format with problem definition, analysis, and solution sections
-  - `comparison`: Comparative analysis format that preserves tables and highlights options
-- Control formatting with these parameters:
-  - `formatOutput: true/false` - Enable or disable formatting (default: true)
-  - `formatType: 'auto'/'general'/'problem'/'comparison'` - Select format type (default: auto)
-- When `formatType` is 'auto', the system analyzes your content to determine the most appropriate format
-- Example tool call with specific formatting:
-  ```json
-  {
-    "tool": "think",
-    "parameters": {
-      "structuredReasoning": "My analysis comparing different database options...",
-      "formatType": "comparison",
-      "storeInMemory": true
-    }
-  }
-  ```
-- Formatted output includes:
-  - Clear section headers
-  - Metadata section with context and category
-  - Features section showing enabled capabilities (reflection, research)
-  - Properly structured content based on the format type
-- This formatting improves both human readability and machine parsing of the reasoning
-
-> ⚠️ **Important:**
-> The `storeInMemory` parameter is not activly used by the user, the user simply writes "Please save this reasoning in memory for future reference" and the tool will save the reasoning in the knowledge graph.
-
-### 2. Research Tools
-- Use `exa_search` for web search and `exa_answer` for sourced answers.
-- Always cite sources and, when relevant, summarize findings in memory using `add_observations` or by saving a `think` entry.
-- Research tools require a valid `EXA_API_KEY` in your MCP server configuration.
-- Integrate research findings into your code and reasoning for robust, up-to-date solutions.
-- Includes intelligent error handling for non-JSON responses and content caching for better performance.
-
-### 3. Task Manager Tools
-- Use `plan_tasks` to create and organize project tasks.
-- Use `list_tasks`, `next_task`, `complete_task`, and `update_tasks` to manage your workflow.
-- All tasks are synchronized with the knowledge graph, enabling persistent, queryable project management.
-- For large projects, leverage task dependencies and priorities to maintain clarity and momentum.
-
-### 4. Memory Tools
-- Use `upsert_entities`, `add_observations`, `create_relations`, and related tools to build and maintain your project's knowledge graph.
-- Store key decisions, reusable patterns, and architectural choices for future reference.
-- Before starting new work, search memory for relevant prior knowledge to avoid duplication and leverage past insights.
-- File and URL operations benefit from content-based caching for improved performance.
+    - Tool calls are limited to 25 per session (configurable)
+    - Content caching improves repeated file/URL operation performance
+    - Avoid redundant tool calls for optimal performance
 
 ## ⚡ Performance Optimization
 
 MCP Think Tank includes built-in performance optimizations:
 
 ### Content Caching
+
 - Automatic caching of file and URL content based on cryptographic hashing
 - Prevents redundant file reads and network requests
 - In tests, cached URL fetches were over 1000× faster than the initial fetch
@@ -596,6 +401,7 @@ MCP Think Tank includes built-in performance optimizations:
 - Cache size and TTL are configurable via environment variables
 
 ### Tool Call Optimization
+
 - Identical tool calls are automatically cached to prevent counting duplicates against your limit
 - Intelligent error handling, especially for Exa search, prevents failures from non-JSON responses
 - Tool limit safeguards prevent runaway tool usage while providing graceful degradation
@@ -605,25 +411,30 @@ MCP Think Tank includes built-in performance optimizations:
 MCP Think Tank v2.0.2 includes comprehensive tool management features to ensure responsible and efficient usage:
 
 ### Usage Limits & Monitoring
+
 - **Default limit**: 25 tool calls per session (configurable via `TOOL_LIMIT` environment variable)
 - **Automatic tracking**: All tool calls are logged with timestamps, agent IDs, and parameters
 - **Graceful degradation**: When limits are reached, the system returns partial results rather than failing completely
 - **Status tracking**: Tool calls that exceed limits are tagged with `HALTED_LIMIT` status
 
 ### Intelligent Caching
+
 - **Duplicate detection**: Identical tool calls are automatically detected and served from cache
 - **Content hashing**: File and URL operations use SHA-1 hashing to identify unchanged content
 - **Configurable caching**: Enable/disable caching behavior through environment variables
 - **Cache statistics**: Monitor cache hit/miss rates for performance analysis
 
 ### Tool Access Control
+
 - **Configurable whitelists**: Restrict which tools can be used in specific contexts
 - **Permission errors**: Clear error messages when disallowed tools are requested
 - **Orchestration strategies**: Multiple coordination strategies for sequential or parallel execution
 - **Agent isolation**: Tool usage tracked per agent to prevent cross-contamination
 
 ### Implementation
+
 The safeguards are implemented through a dedicated `ToolManager` that wraps all tool calls:
+
 - Atomic counters ensure accurate tracking even in concurrent environments
 - LRU cache prevents redundant operations while maintaining memory efficiency
 - Comprehensive error handling provides meaningful feedback rather than cryptic failures
@@ -635,6 +446,7 @@ The safeguards are implemented through a dedicated `ToolManager` that wraps all 
 ---
 
 **Best Practices for Cursor/Claude and Large Projects:**
+
 - Use the `think` tool liberally for all non-trivial reasoning and always persist important thoughts.
 - Integrate research and task management into your coding workflow for seamless project development.
 - Regularly review and update your knowledge graph to keep project memory relevant and actionable.
