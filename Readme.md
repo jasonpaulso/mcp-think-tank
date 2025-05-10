@@ -156,7 +156,7 @@ The easiest way to use MCP Think Tank is via NPX in Cursor using mcp.json file, 
 ```bash
 npx mcp-think-tank@latest
 ```
-> some users have issues with npx @latest in Cursor, if so try specifying the version mcp-think-tank@2.0.3 in the .json file, or install it globally:
+> some users have issues with npx @latest in Cursor, if so try specifying the version mcp-think-tank@2.0.4 in the .json file, or install it globally:
 
 ### Global Installation
 
