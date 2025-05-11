@@ -158,7 +158,8 @@ MCP Think Tank is configured primarily through environment variables or via your
 1.  **Install MCP Think Tank** (see Installation above).
 2.  **Get your Exa API Key** (required for web search tools):
     *   Sign up at [exa.ai](https://exa.ai/) and copy your API key.
-3.  **Configure your MCP server** (for Cursor, add to `.cursor/mcp.json`):
+3.  **IMPORTANT STDIO SERVERS ARE DEPRECATED** - The MCP industry is moving toward HTTP-based transports, - FUTURE UPDATES WILL NOT SUPPORT STDIO SERVERS.
+4.  **Configure your MCP server** (for Cursor, add to `.cursor/mcp.json`):
 
 ```json
 {
