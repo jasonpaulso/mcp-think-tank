@@ -161,9 +161,8 @@ MCP Think Tank includes comprehensive features to ensure tools are used responsi
 > ⚠️ **Important Note READ THIS:** 
 > When updating to a new version of MCP Think Tank in Cursor or Claude you might create multiple instances of the MCP Think Tank server, causing aditional Node.js instances to be created, dragging down your system performance - this is a known issue with MCP servers - kill all mcp-think-tank processes in your system and check you have only one node.js instance running.
 
-> MCP Think Tank requires a pre-built server.
+> ⚠️  The tasks.jsonl is located in ~/.mcp-think-tank/ The file is seperated from the kg file, as think tank could get confused by prevuiously created tasks in the kg file. Delete the content of the tasks.jsonl file if you want to start a new project. This will be fixed in a future version.
 
-> The package is automatically built before publishing, so users, do not need to take any extra steps. Just install and run!
 
 ### NPX (Recommended)
 
@@ -320,72 +319,133 @@ use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md, **/*.py, **/*.json
 ```
 
 ```markdown
-Automatically use the MCP Think Tank tools, ensure you frequently use the tools to keep the knowledge graph up to date and to get the best out of the MCP Think Tank.
+Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph and maximize its potential.
 
-## Primary Decision Tree
+## Quick Decision Tree
 
-1. **Analyzing a complex problem?**
-   → Use `think` with appropriate parameters
+1. 🤔 **Complex problem to analyze?**
+   → Use `think` to structure reasoning and reflect
 
-2. **Need information from past conversations?**
-   → Use `search_nodes` or `open_nodes` to retrieve from knowledge graph
+2. 🔍 **Need past context or information?**
+   → Use `memory_query` (time-based) or `search_nodes` (keyword-based)
 
-3. **Planning implementation work?**
-   → Use `plan_tasks` to create a structured plan
+3. 📊 **Planning implementation steps?**
+   → Use `plan_tasks` to create and track work
 
-4. **Need up-to-date external information?**
-   → Use `exa_search` for web search or `exa_answer` for factual questions
+4. 🌐 **Need current external information?**
+   → Use `exa_search` (general search) or `exa_answer` (factual questions)
+
+## Critical Memory Management (Automatic Use Required)
+
+| When to automatically use memory | Tool to use |
+|------------------|------------|
+| At session start | `memory_query` with recent time filter (last 24h) |
+| After completing significant analysis | `upsert_entities` to store conclusions |
+| When context seems missing | `memory_query` with relevant keyword |
+| Every ~30 minutes in long sessions | `upsert_entities` to create checkpoint |
+| When switching between major topics | `think` + `upsert_entities` to summarize progress |
+| Before session end | `upsert_entities` to store session summary |
 
 ## Core Workflows
 
-### Workflow 1: Problem Analysis → Implementation
-1. `think` - Structure reasoning about the problem
-2. `plan_tasks` - Break down implementation steps 
-3. `upsert_entities` - Save conclusions to knowledge graph
+### Workflow 1: Problem Analysis → Solution
+1. `memory_query` → Check for relevant past work
+2. `think` → Structure reasoning about the problem  
+3. `plan_tasks` → Break down implementation steps
+4. `upsert_entities` → Store conclusions in memory
 
 ### Workflow 2: Research → Knowledge Capture
-1. `exa_search` - Find current information
-2. `think` - Analyze findings
-3. `upsert_entities` - Document key concepts
+1. `memory_query` → Check if already researched
+2. `exa_search` → Find current information
+3. `think` → Analyze findings
+4. `upsert_entities` → Document key concepts
 
-### Workflow 3: Task Management
-1. `list_tasks` - Review current tasks
-2. `next_task` - Identify priority task
-3. `complete_task` - Mark tasks as done
+### Workflow 3: Context Recovery (Session Resume)
+1. `memory_query` → Retrieve recent work (past 24-48h)
+2. `open_nodes` → Get details on relevant entities
+3. `think` → Synthesize context and plan next steps
+4. Continue where left off
 
-## Trigger Patterns (When to Automatically Use Tools)
+### Workflow 4: Task Management
+1. `list_tasks` → Review current work status
+2. `next_task` → Identify priority task
+3. `complete_task` → Mark finished work
+4. `upsert_entities` → Document completion
+
+## Trigger Patterns (Automatic Tool Use)
 
 | When user... | Automatically use... |
 |--------------|----------------------|
-| Asks a complex question requiring analysis | `think` |
-| Mentions previous work/concepts | `search_nodes` → `open_nodes` |
-| Uses words like "research" or "find latest" | `exa_search` |
+| Asks complex question requiring analysis | `think` |
+| Mentions "remember" or refers to past work | `memory_query` with time filter → `open_nodes` |
+| Uses "research" or "find latest" | `memory_query` (check if already known) → `exa_search` |
 | Asks factual questions needing citations | `exa_answer` |
-| Mentions planning work or implementation | `plan_tasks` |
-| Refers to continuing previous work | `list_tasks` → `next_task` |
-| Needs to document key concepts | `upsert_entities` |
-| Wants to connect related concepts | `create_relations` |
-| `memory_query` | Search observations with precise time filters, keywords, and tags across all entities. |
+| Mentions planning or implementation | `plan_tasks` |
+| Refers to continuing previous work | `memory_query` → `list_tasks` → `next_task` |
+| Seems to have lost context from earlier | `memory_query` with recent time filter |
+| Makes significant conceptual progress | `upsert_entities` without being asked |
+| Connects related concepts | `create_relations` |
+| Completes major section of work | `think` + `upsert_entities` to summarize |
 
-## Tool Quick Reference
+## Memory Tools Detail
+
+### Primary Memory Operations
+
+- `memory_query`: Time-based search across all memory
+  ```js
+  // Get recent context (last 24 hours)
+  mcp_think-tool_memory_query({
+    after: "2025-05-10T14:00:00Z", // 24 hours ago in ISO format
+    limit: 10
+  })
+  
+  // Find all entries on a specific topic
+  mcp_think-tool_memory_query({
+    keyword: "authentication",
+    limit: 5
+  })
+  ```
+
+- `upsert_entities`: Create or update knowledge
+  ```js
+  // Store important concept
+  mcp_think-tool_upsert_entities({
+    entities: [{
+      name: "ProjectStatus",
+      entityType: "Summary",
+      observations: ["Auth feature complete", "Database schema needs revision"]
+    }]
+  })
+  ```
+
+- `search_nodes`: Find entities by keyword
+  ```js
+  mcp_think-tool_search_nodes({
+    query: "authentication implementation"
+  })
+  ```
+
+- `open_nodes`: Get detailed entity information
+  ```js
+  mcp_think-tool_open_nodes({
+    names: ["ProjectStatus", "AuthService"]
+  })
+  ```
+
+### When To Use Each Memory Tool
+
+- `memory_query`: For time-based searches and recent context recovery
+- `search_nodes`: For finding specific concepts by keyword
+- `open_nodes`: For retrieving full details of known entities
+- `upsert_entities`: For creating new knowledge or updating existing entities
+- `add_observations`: For adding facts to existing entities
+- `create_relations`: For connecting related concepts
+
+## Other Tools Reference
 
 ### Thinking
 - `think`: Structured reasoning with optional reflection
-  ```js
-  mcp_think-tool_think({
-    structuredReasoning: "Analysis content...",
-    selfReflect: true,
-    category: "decision",
-    storeInMemory: true
-  })
-  ```
-### Memory
-- `upsert_entities`: Create/update entities
-- `add_observations`: Add facts to entities
-- `create_relations`: Connect entities
-- `search_nodes`: Find relevant entities
-- `open_nodes`: Get detailed entity info
-- `memory_query`: Search observations with precise time filters, keywords, and tags across all entities.
+
 ### Tasks
 - `plan_tasks`: Create task list
 - `list_tasks`: View current tasks
@@ -396,13 +456,15 @@ Automatically use the MCP Think Tank tools, ensure you frequently use the tools 
 - `exa_search`: Web search
 - `exa_answer`: Get cited answers
 
-## Notes for AI
-- Proactively use these tools when relevant triggers appear
-- Prioritize workflows over individual tools
-- Chain tools for complete solutions (search → think → save)
-- Cache hits improve performance - reuse previous searches when possible
-- Always consider the knowledge graph before web research
-- Store important conclusions in the knowledge graph for future reference
+## AI Behavior Requirements
+
+1. ALWAYS check memory at session start with `memory_query`
+2. AUTOMATICALLY store important conclusions with `upsert_entities`
+3. CREATE periodic memory checkpoints during long sessions
+4. PROACTIVELY check memory when context seems missing
+5. CHAIN tools together following the workflows
+6. PRIORITIZE memory tools before web research
+7. SUMMARIZE progress before ending major work segments
 
 ----- End of Rule -----
 ```
