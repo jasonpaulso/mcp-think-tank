@@ -18,7 +18,7 @@ const __dirname = dirname(__filename);
 const basedir = resolve(__dirname, '..', '..');
 
 // Dynamically read version from package.json
-let version = '2.0.5'; // Fallback version
+let version = '2.0.6'; // Fallback version
 try {
   const packagePath = resolve(basedir, 'package.json');
   if (existsSync(packagePath)) {

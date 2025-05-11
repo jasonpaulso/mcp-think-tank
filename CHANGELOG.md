@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.6 (2024-07-30)
+
+### Added
+- Support for HTTP transport protocol alongside STDIO
+- Added environment variables for HTTP transport configuration (MCP_TRANSPORT, MCP_HOST, MCP_PORT, MCP_PATH)
+- Updated server to dynamically choose transport method based on configuration
+
+### Improved
+- Enhanced Smithery compatibility by supporting streamable-http transport
+- Fixed tool visibility issues when published on Smithery
+- Updated documentation with transport configuration examples and best practices
+- Updated configuration to support phased migration from STDIO to HTTP transport
+
 ## 2.0.5 (2024-07-28)
 
 ### Fixed
