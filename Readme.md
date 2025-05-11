@@ -315,117 +315,98 @@ To ensure Cursor and other compatible agents effectively utilize MCP Think Tank'
 This Markdown file serves as context *for the AI*, guiding it on when and how to use the available tools.
 
 ```markdown
----
 rule type: auto attach
-use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md,**/*.py,**/*.json
----
-n
-# MCP Think Tank Tools Guide (for AI)
-
-This guide helps me understand when to use the MCP Think Tank tools.
-
-## Tool Selection
-
-### 1. Thinking Tool (`think`)
-
-Use `mcp_think-tool_think` for complex reasoning, analysis, planning, and self-reflection. This tool helps structure multi-step problem-solving and can persist thoughts to memory.
-
-```javascript
-// Example: Analyzing database options
-mcp_think-tool_think({
-  structuredReasoning: "Analyze database options for the user management system...",
-  category: "architecture",
-  storeInMemory: true
-})
-
-// Example: With self-reflection enabled
-mcp_think-tool_think({
-  structuredReasoning: "Evaluate the pros and cons of microservices vs monolith...",
-  selfReflect: true,
-  reflectPrompt: "Review the analysis for gaps in the microservices evaluation"
-})
+use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md, **/*.py, **/*.json
 ```
 
-### 2. Memory & Knowledge Graph Tools
+```markdown
+Automatically use the MCP Think Tank tools, ensure you frequently use the tools to keep the knowledge graph up to date and to get the best out of the MCP Think Tank.
 
-Use these tools to manage the project's knowledge graph, storing and retrieving information across sessions.
+## Primary Decision Tree
 
-| Tool | Purpose |
-|------|-------------|
-| `upsert_entities` | Document new concepts or components; update existing entities (use `update: true`). |
-| `add_observations` | Add facts or details related to existing entities. |
-| `create_relations` | Link related entities to build connections. |
-| `search_nodes` | Find relevant information in the knowledge graph before starting a task. |
+1. **Analyzing a complex problem?**
+   → Use `think` with appropriate parameters
+
+2. **Need information from past conversations?**
+   → Use `search_nodes` or `open_nodes` to retrieve from knowledge graph
+
+3. **Planning implementation work?**
+   → Use `plan_tasks` to create a structured plan
+
+4. **Need up-to-date external information?**
+   → Use `exa_search` for web search or `exa_answer` for factual questions
+
+## Core Workflows
+
+### Workflow 1: Problem Analysis → Implementation
+1. `think` - Structure reasoning about the problem
+2. `plan_tasks` - Break down implementation steps 
+3. `upsert_entities` - Save conclusions to knowledge graph
+
+### Workflow 2: Research → Knowledge Capture
+1. `exa_search` - Find current information
+2. `think` - Analyze findings
+3. `upsert_entities` - Document key concepts
+
+### Workflow 3: Task Management
+1. `list_tasks` - Review current tasks
+2. `next_task` - Identify priority task
+3. `complete_task` - Mark tasks as done
+
+## Trigger Patterns (When to Automatically Use Tools)
+
+| When user... | Automatically use... |
+|--------------|----------------------|
+| Asks a complex question requiring analysis | `think` |
+| Mentions previous work/concepts | `search_nodes` → `open_nodes` |
+| Uses words like "research" or "find latest" | `exa_search` |
+| Asks factual questions needing citations | `exa_answer` |
+| Mentions planning work or implementation | `plan_tasks` |
+| Refers to continuing previous work | `list_tasks` → `next_task` |
+| Needs to document key concepts | `upsert_entities` |
+| Wants to connect related concepts | `create_relations` |
 | `memory_query` | Search observations with precise time filters, keywords, and tags across all entities. |
-| `open_nodes` | Retrieve full details of specific entities. |
 
-```javascript
-// Example: Documenting a service
-mcp_think-tool_upsert_entities({
-  entities: [
-    {name: "PaymentGateway", entityType: "Service", observations: ["Integrates with Stripe", "Handles transactions"]}
-  ]
-})
+## Tool Quick Reference
 
-// Example: Find observations from the last 48 hours
-mcp_think-tool_memory_query({
-  after: "2025-05-09T00:00:00Z", // Yesterday's date in ISO format
-  limit: 10
-})
+### Thinking
+- `think`: Structured reasoning with optional reflection
+  ```js
+  mcp_think-tool_think({
+    structuredReasoning: "Analysis content...",
+    selfReflect: true,
+    category: "decision",
+    storeInMemory: true
+  })
+  ```
+### Memory
+- `upsert_entities`: Create/update entities
+- `add_observations`: Add facts to entities
+- `create_relations`: Connect entities
+- `search_nodes`: Find relevant entities
+- `open_nodes`: Get detailed entity info
+- `memory_query`: Search observations with precise time filters, keywords, and tags across all entities.
+### Tasks
+- `plan_tasks`: Create task list
+- `list_tasks`: View current tasks
+- `next_task`: Get priority task
+- `complete_task`: Mark task done
+
+### Research
+- `exa_search`: Web search
+- `exa_answer`: Get cited answers
+
+## Notes for AI
+- Proactively use these tools when relevant triggers appear
+- Prioritize workflows over individual tools
+- Chain tools for complete solutions (search → think → save)
+- Cache hits improve performance - reuse previous searches when possible
+- Always consider the knowledge graph before web research
+- Store important conclusions in the knowledge graph for future reference
+
+----- End of Rule -----
 ```
 
-### 3. Task Management Tools
-
-Use these tools to track and manage project tasks.
-
-*   `plan_tasks`: Create a plan of tasks.
-*   `list_tasks`: View current tasks and their status.
-*   `next_task`: Identify the next priority task.
-*   `complete_task`: Mark a task as finished.
-*   `update_tasks`: Modify task details or priorities.
-
-```javascript
-// Example: Planning initial tasks
-mcp_think-tool_plan_tasks({
-  tasks: [
-    { name: "Implement user auth", priority: 1 },
-    { name: "Setup database schema", priority: 2 }
-  ]
-})
-```
-
-### 4. Web Research Tools (Exa)
-
-Use these tools to search the web when external or up-to-date information is needed, especially if the user mentions 'research'. Requires the `EXA_API_KEY` environment variable to be set in the server configuration.
-
-*   `exa_search`: Perform a web search.
-*   `exa_answer`: Get a summarized answer with sources for factual questions.
-
-```javascript
-// Example: Researching a technology
-mcp_think-tool_exa_search({
-  query: "latest trends in serverless architecture 2024",
-  num_results: 5
-})
-```
-
-## Tool Usage Strategy (for AI)
-
-1.  For complex problems, start with `mcp_think-tool_think` to structure the approach.
-2.  Use memory tools (`search_nodes`) to recall relevant project context before planning or acting.
-3.  If external information is needed, use `exa_search` or `exa_answer`, then process the results.
-4.  Save important research findings or conclusions from thinking to the knowledge graph using `upsert_entities` or `add_observations`.
-5.  Use task management tools to track implementation steps identified during thinking or planning.
-6.  Be mindful of tool limits (default 25 calls per session). Cache hits help performance.
-
---------END OF EXAMPLE RULE--------
-```
-
-### 3. Reference Links
-
-*   [Cursor Rules Documentation](https://docs.cursor.com/context/rules)
-*   [MCP Model Context Protocol](https://docs.cursor.com/context/model-context-protocol)
-*   [Exa API](https://exa.ai/)
 
 ## ⚡ Performance Optimization
 
@@ -471,17 +452,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📚 Related Projects
+### 📚 Reference Links
 
+*   [Cursor Rules Documentation](https://docs.cursor.com/context/rules)
+*   [MCP Model Context Protocol](https://docs.cursor.com/context/model-context-protocol)
+*   [Exa API](https://exa.ai/)
+*   [Anthropic's Research on Structured Thinking](https://www.anthropic.com/research)
 *   [Model Context Protocol](https://github.com/modelcontextprotocol/typescript-sdk)
 *   [FastMCP](https://github.com/jlowin/fastmcp)
-*   [Claude 3.7 Sonnet](https://www.anthropic.com/claude)
-
-## 📚 Further Reading
-
-*   [Anthropic's Research on Structured Thinking](https://www.anthropic.com/research)
-*   [Model Context Protocol Documentation](https://github.com/modelcontextprotocol)
-*   [Cursor Documentation](https://docs.cursor.com/)
 
 ---
 
