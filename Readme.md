@@ -167,11 +167,9 @@ MCP Think Tank is configured primarily through environment variables or via your
     "think-tool": {
       "command": "npx",
       "args": ["-y", "mcp-think-tank@2.0.6"],
-      "type": "stdio",
       "env": {
         "MEMORY_PATH": "/absolute/path/to/your/project/memory.jsonl",
         "EXA_API_KEY": "your-exa-api-key-here",
-        "MCP_TRANSPORT": "http" // Uses SSE transport
       }
     }
   }
@@ -209,7 +207,6 @@ Example configuration with advanced settings in `.cursor/mcp.json`:
     "think-tool": {
       "command": "npx",
       "args": ["-y", "mcp-think-tank"],
-      "type": "stdio",
       "env": {
         "MEMORY_PATH": "./project-memory.jsonl",
         "EXA_API_KEY": "your-exa-api-key-here",
