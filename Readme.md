@@ -18,39 +18,6 @@
 
 </div>
 
-<!-- TOC -->
-* [MCP Think Tank](#mcp-think-tank)
-* [Overview](#overview)
-* [Philosophy](#philosophy)
-* [Key Features](#key-features)
-* [Benefits of Structured Thinking](#benefits-of-structured-thinking)
-* [Detailed Features](#detailed-features)
-  * [Structured Thinking (Think Tool)](#structured-thinking-think-tool)
-  * [Knowledge Graph Memory](#knowledge-graph-memory)
-  * [Task Management Tools](#task-management-tools)
-  * [Web Research Tools (Exa)](#web-research-tools-exa)
-  * [Tool Orchestration & Safeguards](#tool-orchestration--safeguards)
-* [Installation](#installation)
-* [Configuration](#configuration)
-  * [Quick Start: Essential Setup](#quick-start-essential-setup)
-  * [Essential Variables](#essential-variables)
-  * [Advanced Configuration](#advanced-configuration)
-  * [Memory Maintenance](#memory-maintenance)
-* [Logging](#logging)
-* [Project Rule Setup (for Cursor/AI)](#project-rule-setup-for-cursorai)
-  * [Exa Web Search API Key Required](#exa-web-search-api-key-required)
-  * [1. Add a New Rule in Cursor](#1-add-a-new-rule-in-cursor)
-  * [2. Example Rule File (`.cursor/rules/mcp-think-tank.mdc`)](#2-example-rule-file-cursorrulesmcp-think-tankmdc)
-  * [3. Reference Links](#3-reference-links)
-* [Performance Optimization](#performance-optimization)
-  * [Content Caching](#content-caching)
-  * [Tool Call Optimization](#tool-call-optimization)
-* [Best Practices](#best-practices)
-* [Contributing](#contributing)
-* [License](#license)
-* [Related Projects](#related-projects)
-* [Further Reading](#further-reading)
-<!-- /TOC -->
 
 ## Overview
 
