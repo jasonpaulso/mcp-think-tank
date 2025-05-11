@@ -280,12 +280,12 @@ To ensure Cursor and other compatible agents effectively utilize MCP Think Tank'
 
 This Markdown file serves as context *for the AI*, guiding it on when and how to use the available tools.
 
-```markdown
+```mdc
 rule type: auto attach
 use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md, **/*.py, **/*.json
 ```
-
-```code
+----- Start of Rule -----
+~~~markdown
 Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph and maximize its potential.
 
 ## Quick Decision Tree
@@ -432,10 +432,8 @@ Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph an
 5. CHAIN tools together following the workflows
 6. PRIORITIZE memory tools before web research
 7. SUMMARIZE progress before ending major work segments
-
+~~~
 ----- End of Rule -----
-```code
-
 
 ## ⚡ Performance Optimization
 
