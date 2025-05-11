@@ -285,7 +285,7 @@ rule type: auto attach
 use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md, **/*.py, **/*.json
 ```
 
-```markdown
+```code
 Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph and maximize its potential.
 
 ## Quick Decision Tree
@@ -434,7 +434,7 @@ Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph an
 7. SUMMARIZE progress before ending major work segments
 
 ----- End of Rule -----
-```
+```code
 
 
 ## ⚡ Performance Optimization
