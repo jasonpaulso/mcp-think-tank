@@ -1,7 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 name: "@flight505/mcp-think-tank"
 description: "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants"
-version: "2.0.5"
+version: "2.0.6"
 displayName: "MCP Think Tank"
 summary: "A knowledge graph-based reasoning tool with structured thinking and web research capabilities"
 icon: "/assets/MCP_Think_Tank_dark.png"
@@ -17,27 +17,53 @@ keywords:
   - web-research
   - think
 readme: |
-  MCP Think Tank provides AI assistants with a dedicated space for structured reasoning, persistent memory, advanced task management, and web research via Exa.
-  
-  ## Key Features
-  
-  - 💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection
-  - 🧩 **Knowledge Graph**: Simple but effective persistent memory
-  - 📝 **Task Management**: Plan, track, and update tasks with knowledge graph integration
-  - 🌐 **Web Research (Exa)**: Search the web and get sourced answers
-  - 🔒 **Tool Orchestration**: Built-in safeguards with configurable limits
-  - ⚡ **Content Caching**: Performance optimization for repeated operations
-  
-  ## Essential Configuration
-  
-  The only required configuration is an Exa API key for web search. Always set a unique MEMORY_PATH for each project to avoid knowledge graph conflicts.
-  
+  ## Overview
+
+MCP Think Tank is a powerful Model Context Protocol (MCP) server designed to enhance the capabilities of AI assistants like **Cursor** and **Claude @Web**. It provides a structured environment for enhanced reasoning, persistent memory, and responsible tool usage.
+
+Key capabilities include advanced **Sequential Thinking & Chained Reasoning**, a robust **Knowledge Graph Memory** system with versioning, and intelligent **Tool Orchestration with Call-Limit Safeguards**. This platform empowers AI to tackle complex problems through structured analysis, maintain knowledge across sessions, and utilize external resources like web search, all while adhering to configurable usage limits.
+
+## 🎯 Philosophy
+
+MCP Think Tank is built on three core principles:
+
+1.  **Elegant Simplicity**: Minimal, well-designed tools that complement AI capabilities rather than trying to replicate them.
+2.  **Enhanced Reflection**: Gentle guidance fosters better reasoning and self-reflection without rigid constraints.
+3.  **Persistent Context**: A simple, yet effective knowledge graph provides memory across conversations.
+
+## Key Features
+
+*   💭 **Think Tool**: Dedicated space for structured reasoning and self-reflection.
+*   🧩 **Knowledge Graph**: Simple and effective persistent memory system.
+*   📝 **Task Management Tools**: Plan, track, and update tasks, integrated with the knowledge graph.
+*   🌐 **Web Research Tools (Exa)**: Search the web and get sourced answers using the Exa API.
+*   🔍 **Memory Tools**: Easy-to-use tools for storing and retrieving information from the knowledge graph.
+*   🤝 **Client Support**: Seamless integration with Cursor, Claude @Web, and other MCP clients.
+*   🛡️ **Tool Orchestration & Call Limits**: Built-in safeguards for efficient and responsible tool usage with configurable limits.
+*   ⚡ **Content Caching**: Performance optimization for file and URL operations with automatic duplicate detection.
+*   🔄 **Sequential Thinking**: Enables multi-step reasoning processes with progress tracking.
+*   🔎 **Self-Reflection**: Automated reflection passes to improve reasoning quality.
+*   📊 **Structured Outputs**: Automatic formatting of thought processes for better readability.
+*   🔗 **Research Integration**: Seamless incorporation of web research findings into reasoning flows.
+
+## Benefits of Structured Thinking
+
+Leveraging the `think` tool provides a dedicated space for systematic reasoning, encouraging:
+
+*   Clear problem definition
+*   Relevant context gathering
+*   Step-by-step analysis
+*   Self-reflection on reasoning
+*   Well-formed conclusions
   **Note for Smithery users:** All tools are visible in the tool list, but Exa web research tools require an API key to be configured before use. The server implements lazy loading - tools only authenticate with your API key upon execution, not during initialization.
   
   For more details, see the full documentation at: https://github.com/flight505/mcp-think-tank
 
+build:
+  dockerfile: Dockerfile
+
 startCommand:
-  type: stdio
+  type: streamable-http
   configSchema:
     type: "object"
     title: "Think Tool Configuration"
@@ -57,7 +83,11 @@ startCommand:
       env: {
         NODE_ENV: 'production',
         MEMORY_PATH: config.MEMORY_PATH,
-        EXA_API_KEY: config.EXA_API_KEY
+        EXA_API_KEY: config.EXA_API_KEY,
+        MCP_TRANSPORT: 'http',
+        MCP_HOST: '0.0.0.0',
+        MCP_PORT: '8000',
+        MCP_PATH: '/mcp'
       }
     })
 
