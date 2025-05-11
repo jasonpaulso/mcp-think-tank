@@ -286,7 +286,7 @@ use globs: **/*.js,**/*.ts,**/*.jsx,**/*.tsx,**/*.md, **/*.py, **/*.json
 ```
 ----- Start of Rule -----
 ~~~markdown
-Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph and maximize its potential.
+Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph and maximize its potential. Simply call the tools in your prompt. 
 
 ## Quick Decision Tree
 
@@ -353,51 +353,6 @@ Regularly utilize MCP Think Tank tools to maintain an updated knowledge graph an
 | Makes significant conceptual progress | `upsert_entities` without being asked |
 | Connects related concepts | `create_relations` |
 | Completes major section of work | `think` + `upsert_entities` to summarize |
-
-## Memory Tools Detail
-
-### Primary Memory Operations
-
-- `memory_query`: Time-based search across all memory
-  ```js
-  // Get recent context (last 24 hours)
-  mcp_think-tool_memory_query({
-    after: "2025-05-10T14:00:00Z", // 24 hours ago in ISO format
-    limit: 10
-  })
-  
-  // Find all entries on a specific topic
-  mcp_think-tool_memory_query({
-    keyword: "authentication",
-    limit: 5
-  })
-  ```
-
-- `upsert_entities`: Create or update knowledge
-  ```js
-  // Store important concept
-  mcp_think-tool_upsert_entities({
-    entities: [{
-      name: "ProjectStatus",
-      entityType: "Summary",
-      observations: ["Auth feature complete", "Database schema needs revision"]
-    }]
-  })
-  ```
-
-- `search_nodes`: Find entities by keyword
-  ```js
-  mcp_think-tool_search_nodes({
-    query: "authentication implementation"
-  })
-  ```
-
-- `open_nodes`: Get detailed entity information
-  ```js
-  mcp_think-tool_open_nodes({
-    names: ["ProjectStatus", "AuthService"]
-  })
-  ```
 
 ### When To Use Each Memory Tool
 
