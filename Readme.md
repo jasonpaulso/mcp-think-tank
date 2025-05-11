@@ -128,7 +128,7 @@ MCP Think Tank includes comprehensive features to ensure tools are used responsi
 > ⚠️ **Important Note READ THIS:** 
 > When updating to a new version of MCP Think Tank in Cursor or Claude you might create multiple instances of the MCP Think Tank server, causing aditional Node.js instances to be created, dragging down your system performance - this is a known issue with MCP servers - kill all mcp-think-tank processes in your system and check you have only one node.js instance running.
 
-> ⚠️  The tasks.jsonl is located in ~/.mcp-think-tank/ The file is seperated from the kg file, as think tank could get confused by prevuiously created tasks in the kg file. Delete the content of the tasks.jsonl file if you want to start a new project. This will be fixed in a future version.
+> ⚠️  The tasks.jsonl is located in ~/.mcp-think-tank/. The file is separated from the kg file, as the think tank could get confused by previously created tasks in the kg file. Delete the content of the tasks.jsonl file if the file becomes too large, or if you want to start a new project and insure there are no tasks in the file. In a future version tasks might be merged with the kg file to insure compleated tasks and relations are stored in memory and there are no duplicate tasks.
 
 
 ### NPX (Recommended)
@@ -165,7 +165,7 @@ MCP Think Tank is configured primarily through environment variables or via your
   "mcpServers": {
     "think-tool": {
       "command": "npx",
-      "args": ["-y", "mcp-think-tank"],
+      "args": ["-y", "mcp-think-tank@2.0.5"],
       "type": "stdio",
       "env": {
         "MEMORY_PATH": "/absolute/path/to/your/project/memory.jsonl",
@@ -225,8 +225,6 @@ Example configuration with advanced settings in `.cursor/mcp.json`:
 > 💡 **Performance tip:** For large projects, increasing `TOOL_LIMIT` and cache sizes can improve performance at the cost of higher memory usage. Monitor your usage patterns and adjust accordingly.
 > But in Cursor, tool limit should be 25 to avoid hitting the limit and getting the resume from the last tool call - currently many cursor users are reporting issues with resuming in Version: 0.49.6. this is not related to MCP Think Tank.
 
->  **Note:**
-
 > 💡 **Note:** If you are using Cursor in YOLO mode or Vibe coding I suggest context priming new chats and letting Cursor know that it should use the MCP Think Tank to create entities, observations and relations. This will help you get the best out of the MCP Think Tank.
 
 An example of context priming, is keeping a `Prime.md` file in the `.cursor` folder of your project with the following content:
@@ -239,15 +237,18 @@ An example of context priming, is keeping a `Prime.md` file in the `.cursor` fol
 eza . --tree --git-ignore
 
 ## Read the following files
-> Read the files below test the MCP tools and test the memory_query tool to find recent observations for the last 48 hours. Dont do anything else.
+> Read the files below to get the context of the project. 
 
 > list of files:
 README.md
 ...
 
 ## MCP Think Tank Tools
-> Automatically use the mcp-think-tank to keep track of the project and its context without the user having to ask for it.
-Adding entities, observations and relations to the knowledge graph and querying the knowledge graph for relevant information and historical context as needed. MCP Think Tank also has tools to help with planning and task management.
+> Test the MCP tools, first use 'show_memory_path' to remind the user of the current memory path file used, then use the 'memory_query' tool to find and read recent entities and observations for the last 48 hours so you are up to date.
+
+> Automatically utilize the MCP Think Tank to autonomously track project context, dynamically adding entities, observations, and relations to the knowledge graph while proactively querying for relevant information and historical insights. Use integrated planning and task management tools to enhance project efficiency. Keep track of the project and its context without the user having to ask for it.
+
+> Dont do anything else.
 ```
 
 
@@ -266,7 +267,7 @@ MCP Think Tank uses a minimal, stable logging approach designed for FastMCP and 
 
 ## Project Rule Setup (for Cursor/AI)
 
-To ensure Cursor and other compatible agents effectively utilize MCP Think Tank's tools, you need to provide the AI with guidance. This is typically done via a project rule. Create a **single, always-on project rule** as follows:
+To ensure Cursor and other compatible agents effectively utilize MCP Think Tank's tools, you need to provide the AI with guidance. This is typically done via a project rule. Create a **single, Auto Attach project rule** as follows:
 
 ### 1. Add a New Rule in Cursor
 
