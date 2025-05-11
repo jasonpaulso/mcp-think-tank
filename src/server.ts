@@ -161,8 +161,31 @@ process.on('SIGHUP', gracefulShutdown);
 
 // Start the server with error handling
 try {
-  server.start();
-  safeErrorLog(`MCP Think Tank server v${config.version} started successfully`);
+  // Determine transport type from environment variable
+  const transportType = process.env.MCP_TRANSPORT || "stdio";
+
+  if (transportType === "http") {
+    // Ensure the endpoint path starts with a slash
+    let endpointPath = process.env.MCP_PATH || "/mcp";
+    if (!endpointPath.startsWith('/')) {
+      endpointPath = `/${endpointPath}`;
+    }
+    
+    // Use SSE transport (Server-Sent Events over HTTP)
+    server.start({
+      transportType: "sse",
+      sse: {
+        port: parseInt(process.env.MCP_PORT || "8000", 10),
+        endpoint: endpointPath as `/${string}`
+      }
+    });
+    safeErrorLog(`MCP Think Tank server v${config.version} started successfully with SSE/HTTP transport at port ${process.env.MCP_PORT || "8000"}${endpointPath}`);
+  } else {
+    // Default to STDIO for backward compatibility
+    server.start();
+    safeErrorLog(`MCP Think Tank server v${config.version} started successfully with STDIO transport`);
+  }
+  
   resetInactivityTimer(); // Start inactivity timer
   startConnectionCheck(); // Start connection monitoring
 } catch (e) {

@@ -63,7 +63,7 @@ build:
   dockerfile: Dockerfile
 
 startCommand:
-  type: streamable-http
+  type: sse
   configSchema:
     type: "object"
     title: "Think Tool Configuration"
