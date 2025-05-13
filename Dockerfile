@@ -1,6 +1,9 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 
+# Install bash for build scripts
+RUN apk add --no-cache bash
+
 # Copy package files
 COPY package*.json tsconfig.json ./
 
