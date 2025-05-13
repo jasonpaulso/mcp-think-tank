@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.0.11 (2025-08-20)
+
+### Fixed
+- Fixed Smithery compatibility issues with tool scanning timeouts
+- Implemented proper lazy loading for research tools 
+- Added runtime configuration in smithery.yaml for better deployment compatibility
+- Increased tool scan timeout in Docker environment
+- Optimized memory usage and server response time during initialization
+- Updated dockerfile to include smithery.yaml in deployment
+- Added memory optimization settings for containerized environments
+
+## 2.0.10 (2025-08-17)
+
+### Fixed
+- Fixed critical server timeout issue occurring after exactly 60 seconds
+- Added proper HTTP connection tracking to accurately count active connections
+- Implemented longer startup grace period (5 minutes) before enforcing connection checks
+- Added detailed connection logging to aid in debugging
+- Enhanced HTTP server configuration with proper event listeners for connections and requests
+- Added compatibility with Node.js 18.x while maintaining FastMCP 1.27.6 support
+
 ## 2.0.9 (2025-08-15)
 
 ### Improved

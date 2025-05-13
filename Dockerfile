@@ -19,9 +19,12 @@ WORKDIR /app
 # Copy only the necessary files from builder
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/smithery.yaml ./
 
-# Set production environment
+# Set production environment and improve tool scanning
 ENV NODE_ENV=production
+ENV TOOL_SCAN_TIMEOUT=30000
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 # Install only production dependencies
 RUN npm ci --ignore-scripts --omit=dev
