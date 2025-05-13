@@ -210,18 +210,21 @@ try {
       endpointPath = `/${endpointPath}`;
     }
     
-    // Set up port
+    // Set up port and host
     const port = parseInt(process.env.MCP_PORT || "8000", 10);
     const host = process.env.MCP_HOST || "127.0.0.1";
     
-    // Use a complete type assertion for the configuration
-    server.start({
-      transportType: "sse", 
+    // Use a compatible configuration for FastMCP 1.27.6
+    const serverConfig: any = {
+      transportType: "sse", // FastMCP TypeScript type expects "sse" but we use it for streamable-http
       sse: {
         port,
         endpoint: endpointPath as `/${string}`,
+        host // FastMCP 1.27.6 supports host in the configuration
       }
-    } as any); // Type assertion to bypass type checking
+    };
+    
+    server.start(serverConfig);
     
     safeErrorLog(`MCP Think Tank server v${config.version} started successfully with streamable-HTTP transport at ${host}:${port}${endpointPath}`);
   } else {
@@ -231,14 +234,17 @@ try {
     const endpointPath = process.env.MCP_PATH || "/mcp";
     const host = process.env.MCP_HOST || "127.0.0.1";
 
-    // Use a complete type assertion for the configuration
-    server.start({
-      transportType: "sse",
+    // Use a compatible configuration for FastMCP 1.27.6
+    const serverConfig: any = {
+      transportType: "sse", // FastMCP TypeScript type expects "sse" but we use it for streamable-http
       sse: {
         port,
         endpoint: endpointPath.startsWith('/') ? endpointPath as `/${string}` : `/${endpointPath}` as `/${string}`,
+        host // FastMCP 1.27.6 supports host in the configuration
       }
-    } as any); // Type assertion to bypass type checking
+    };
+    
+    server.start(serverConfig);
     
     safeErrorLog(`MCP Think Tank server v${config.version} started successfully with streamable-HTTP transport at ${host}:${port}${endpointPath.startsWith('/') ? endpointPath : `/${endpointPath}`}`);
   }

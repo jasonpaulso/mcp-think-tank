@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.9 (2025-08-15)
+
+### Improved
+- Enhanced streamable-HTTP transport configuration for better Smithery compatibility
+- Updated server configuration to use proper host settings with FastMCP 1.27.6
+- Added additional configuration options in smithery.yaml for transport flexibility
+- Fixed type compatibility issues with latest FastMCP transport definitions
+
 ## 2.0.8 (2025-07-31)
 
 ### Improved

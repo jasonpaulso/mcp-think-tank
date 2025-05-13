@@ -1,7 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 name: "@flight505/mcp-think-tank"
 description: "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants"
-version: "2.0.8"
+version: "2.0.9"
 displayName: "MCP Think Tank"
 summary: "A knowledge graph-based reasoning tool with structured thinking and web research capabilities"
 icon: "/assets/MCP_Think_Tank_dark.png"
@@ -75,6 +75,36 @@ startCommand:
       EXA_API_KEY:
         type: "string"
         description: "Exa API key (required for web search tools). Sign up at exa.ai to obtain a key."
+      TOOL_LIMIT:
+        type: "string"
+        description: "Maximum number of tool calls per session (default: 25)"
+        default: "25"
+      MCP_TRANSPORT:
+        type: "string"
+        description: "Transport type (streamable-http recommended)"
+        default: "streamable-http"
+        enum: ["streamable-http", "http", "stdio"]
+      MCP_HOST:
+        type: "string"
+        description: "Host to bind the server to"
+        default: "0.0.0.0"
+      MCP_PORT:
+        type: "string"
+        description: "Port to run the server on"
+        default: "8000"
+      MCP_PATH:
+        type: "string"
+        description: "Endpoint path for HTTP transport"
+        default: "/mcp"
+      AUTO_SHUTDOWN_MS:
+        type: "string"
+        description: "Auto-shutdown after inactivity in milliseconds (0 to disable)"
+        default: "1800000"
+      MCP_DEBUG:
+        type: "string"
+        description: "Enable debug mode"
+        default: "false"
+        enum: ["true", "false"]
     required: []
   commandFunction: |-
     (config) => ({
@@ -84,10 +114,13 @@ startCommand:
         NODE_ENV: 'production',
         MEMORY_PATH: config.MEMORY_PATH,
         EXA_API_KEY: config.EXA_API_KEY,
-        MCP_TRANSPORT: 'http',
-        MCP_HOST: '0.0.0.0',
-        MCP_PORT: '8000',
-        MCP_PATH: '/mcp'
+        TOOL_LIMIT: config.TOOL_LIMIT || "25",
+        MCP_TRANSPORT: config.MCP_TRANSPORT || 'streamable-http',
+        MCP_HOST: config.MCP_HOST || '0.0.0.0',
+        MCP_PORT: config.MCP_PORT || '8000',
+        MCP_PATH: config.MCP_PATH || '/mcp',
+        AUTO_SHUTDOWN_MS: config.AUTO_SHUTDOWN_MS || '1800000',
+        MCP_DEBUG: config.MCP_DEBUG || 'false'
       }
     })
 
