@@ -15,6 +15,7 @@
 [![Claude Compatibility](https://img.shields.io/badge/Claude-Compatible-9370DB.svg)](https://www.anthropic.com/)
 [![Model Context Protocol](https://img.shields.io/badge/MCP-Tank-orange.svg)](https://github.com/modelcontextprotocol)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![smithery badge](https://smithery.ai/badge/@flight505/mcp-think-tank)](https://smithery.ai/server/@flight505/mcp-think-tank)
 
 </div>
 
