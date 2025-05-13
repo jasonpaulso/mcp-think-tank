@@ -8,12 +8,13 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
-    # Uncomment the volumes section when you need persistent storage
-    # volumes:
-    #   - ./memory:/app/memory
+    volumes:
+      # Mount your existing memory directory
+      - /Users/jasonschulz/think-tank:/app/memory
     environment:
       - NODE_ENV=production
       - MCP_HOST=0.0.0.0
       - MCP_PORT=8000
       - MCP_TRANSPORT=streamable-http
+      - MEMORY_PATH=/app/memory/busie
       # Add any other environment variables you need here
