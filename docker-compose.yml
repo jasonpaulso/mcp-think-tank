@@ -8,9 +8,9 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
-    volumes:
-      # Optional: Mount a persistent memory storage directory
-      # - ./memory:/app/memory
+    # Uncomment the volumes section when you need persistent storage
+    # volumes:
+    #   - ./memory:/app/memory
     environment:
       - NODE_ENV=production
       - MCP_HOST=0.0.0.0
