@@ -23,7 +23,12 @@
     "verify-publish": "npm run lint && npm test && npm run build && npm run test:publish && npm run smoke-test",
     "version-check": "node -e \"const pkg = require('./package.json'); console.log('Checking consistency for version', pkg.version); process.exit(0)\"",
     "stop-orphaned": "node scripts/stop-orphaned.js",
-    "memory:prune": "node bin/prune-memory.js"
+    "memory:prune": "node bin/prune-memory.js",
+    "docker:build": "docker build -t mcp-think-tank .",
+    "docker:run": "docker run -p 8000:8000 --name mcp-think-tank -d mcp-think-tank",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:test": "node scripts/test-docker.js"
   },
   "keywords": [
     "mcp",

@@ -69,7 +69,7 @@ export function setupHttpTransport(
 ): void {
   // Extract config with defaults
   const port = options.port || parseInt(process.env.MCP_PORT || "8000", 10);
-  const host = options.host || process.env.MCP_HOST || "127.0.0.1";
+  const host = options.host || process.env.MCP_HOST || "0.0.0.0";
   let endpointPath = options.endpointPath || process.env.MCP_PATH || "/mcp";
   
   // Ensure path starts with a slash

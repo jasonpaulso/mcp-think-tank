@@ -178,6 +178,17 @@ npm install -g mcp-think-tank
 mcp-think-tank
 ```
 
+### Docker Container (Server Mode)
+
+You can run MCP Think Tank in a Docker container, which is useful for server deployments or when you want to access it from multiple clients:
+
+```bash
+# Build and run using docker-compose
+docker-compose up -d
+```
+
+For detailed Docker setup instructions, see [DOCKER.md](DOCKER.md).
+
 ## ⚙️ Configuration
 
 MCP Think Tank is configured primarily through environment variables or via your MCP client's configuration (like Cursor's `.cursor/mcp.json`).
@@ -220,7 +231,10 @@ MCP Think Tank is configured primarily through environment variables or via your
 *   `CONTENT_CACHE_SIZE`: Maximum number of items in content cache (default: `50`).
 *   `CONTENT_CACHE_TTL`: Time-to-live for cached content in milliseconds (default: `300000` - 5 minutes).
 *   `MCP_DEBUG`: Enable debug logging (default: `false`).
-*   `MCP_LISTEN_PORT`: Set custom port for MCP server (default: `3399` for TCP servers, not relevant for `stdio`).
+*   `MCP_PORT`: Set custom port for HTTP server (default: `8000` for streamable-http transport).
+*   `MCP_HOST`: Set the host interface to bind to (default: `0.0.0.0` for Docker containers, `127.0.0.1` otherwise).
+*   `MCP_PATH`: Set the API endpoint path (default: `/mcp`).
+*   `MCP_TRANSPORT`: Set the transport protocol (`streamable-http`, `http`, or `stdio`) (default: `streamable-http`).
 *   `LOG_LEVEL`: Set logging level (`debug`, `info`, `warn`, `error`) (default: `info`).
 *   `AUTO_LINK`: Enable automatic entity linking in knowledge graph (default: `true`).
 
@@ -282,6 +296,24 @@ README.md
 
 
 For more details on MCP servers, see [Cursor MCP documentation](https://docs.cursor.com/context/model-context-protocol).
+
+### Connecting to Docker Container
+
+If you're running MCP Think Tank in a Docker container, you can connect to it from any MCP client that supports the streamable-http transport:
+
+```json
+{
+  "mcpServers": {
+    "think-tank": {
+      "type": "streamable-http",
+      "endpoint": "http://server-ip:8000/mcp",
+      "timeout": 300000
+    }
+  }
+}
+```
+
+Replace `server-ip` with the IP address or hostname of the machine running the Docker container.
 
 ## Logging
 

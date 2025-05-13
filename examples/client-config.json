@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "think-tank": {
+      "type": "streamable-http",
+      "endpoint": "http://localhost:8000/mcp",
+      "timeout": 300000
+    }
+  }
+}

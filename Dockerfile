@@ -25,6 +25,9 @@ COPY --from=builder /app/smithery.yaml ./
 ENV NODE_ENV=production
 ENV TOOL_SCAN_TIMEOUT=30000
 ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV MCP_HOST="0.0.0.0"
+ENV MCP_PORT=8000
+ENV MCP_TRANSPORT="streamable-http"
 
 # Install only production dependencies
 RUN npm ci --ignore-scripts --omit=dev
@@ -34,6 +37,9 @@ RUN chmod +x dist/src/server.js
 
 # Set the user to non-root
 USER node
+
+# Expose the port used by the server
+EXPOSE 8000
 
 # Use ENTRYPOINT instead of CMD for better compatibility
 ENTRYPOINT ["node", "dist/src/server.js"]
