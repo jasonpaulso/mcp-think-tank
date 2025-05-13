@@ -1,6 +1,6 @@
 {
   "name": "mcp-think-tank",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
   "type": "module",
   "main": "dist/src/server.js",

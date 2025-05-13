@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.0.7 (2024-07-31)
+
+### Added
+- Updated default transport to "streamable-http" to align with MCP industry standards
+- Improved host and port configuration for HTTP transport
+- Enhanced error handling for the unsupported transport types
+
+### Improved
+- Better warning message for deprecated STDIO transport
+- More detailed logging of server startup with transport information
+- Improved fallback mechanism for transport configuration
+- Enhanced server process management and cleanup
+
+### Fixed
+- Fixed transport connection issues with some MCP clients
+- Corrected FastMCP type definitions for streamable-http configuration
+- Ensured consistent host and port usage across all transport modes
+
 ## 2.0.6 (2024-07-30)
 
 ### Added
