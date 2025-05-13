@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   mcp-think-tank:
@@ -16,5 +16,6 @@ services:
       - MCP_HOST=0.0.0.0
       - MCP_PORT=8000
       - MCP_TRANSPORT=streamable-http
-      - MEMORY_PATH=/app/memory/busie
-      # Add any other environment variables you need here
+      - MCP_MEMORY_PATH=your_memory_path_here
+      - MCP_TOOL_LIMIT=100
+      - MCP_EXA_API_KEY=your_exa_api_key_here
