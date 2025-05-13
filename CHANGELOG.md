@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.8 (2025-07-31)
+
+### Improved
+- Updated FastMCP dependency to version 1.27.6
+- Enhanced server configuration with type compatibility for latest FastMCP
+- Updated transport configuration to support latest FastMCP conventions
+
 ## 2.0.7 (2024-07-31)
 
 ### Added

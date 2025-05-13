@@ -1,6 +1,6 @@
 {
   "name": "mcp-think-tank",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants",
   "type": "module",
   "main": "dist/src/server.js",
@@ -52,7 +52,7 @@
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "exa-js": "^1.6.13",
-    "fastmcp": ">=1.2.0",
+    "fastmcp": "^1.27.6",
     "lru-cache": "^11.1.0",
     "minimist": "^1.2.8",
     "uuid": "^11.1.0",
@@ -84,6 +84,6 @@
     "access": "public"
   },
   "peerDependencies": {
-    "fastmcp": ">=1.2.0"
+    "fastmcp": "^1.27.6"
   }
 }

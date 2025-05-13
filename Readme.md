@@ -138,7 +138,7 @@ The easiest way to use MCP Think Tank is via NPX in Cursor using mcp.json file, 
 ```bash
 npx mcp-think-tank@latest
 ```
-> some users have issues with npx @latest in Cursor, if so try specifying the version mcp-think-tank@2.0.7 in the .json file, or install it globally:
+> some users have issues with npx @latest in Cursor, if so try specifying the version mcp-think-tank@2.0.8 in the .json file, or install it globally:
 
 ### Global Installation
 
@@ -166,7 +166,7 @@ MCP Think Tank is configured primarily through environment variables or via your
   "mcpServers": {
     "think-tool": {
       "command": "npx",
-      "args": ["-y", "mcp-think-tank@2.0.7"],
+      "args": ["-y", "mcp-think-tank@2.0.8"],
       "type": "streamable-http",
       "env": {
         "MEMORY_PATH": "/absolute/path/to/your/project/memory.jsonl",
