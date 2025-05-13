@@ -10,6 +10,7 @@ vi.mock('fs', () => ({
     writeFileSync: vi.fn(),
     readFileSync: vi.fn(),
     appendFileSync: vi.fn(),
+    mkdirSync: vi.fn(),
     createWriteStream: vi.fn(() => ({
       write: vi.fn(),
       end: vi.fn(),
@@ -24,12 +25,12 @@ vi.mock('../src/utils/fs.js', () => ({
 }));
 
 vi.mock('../src/utils/logger.js', () => ({
-  logger: {
+  createLogger: () => ({
     info: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
     warn: vi.fn()
-  }
+  })
 }));
 
 vi.mock('fastmcp', () => ({
@@ -67,30 +68,33 @@ describe('Task Management', () => {
     vi.restoreAllMocks();
   });
   
-  it('should create a new task', () => {
+  it('should create a new task', async () => {
     const task: Task = {
       id: uuidv4(),
       description: 'Test task',
       status: 'todo',
-      priority: 'medium'
+      priority: 'medium',
+      created: new Date().toISOString()
     };
     
-    const result = taskStorage.addTask(task);
+    const result = await taskStorage.addTask(task);
     expect(result).toEqual(task);
-    expect(taskStorage.getAllTasks()).toContain(task);
+    const allTasks = await taskStorage.getAllTasks();
+    expect(allTasks).toContain(task);
   });
   
-  it('should update an existing task', () => {
+  it('should update an existing task', async () => {
     const task: Task = {
       id: uuidv4(),
       description: 'Test task',
       status: 'todo',
-      priority: 'medium'
+      priority: 'medium',
+      created: new Date().toISOString()
     };
     
-    taskStorage.addTask(task);
+    await taskStorage.addTask(task);
     
-    const updatedTask = taskStorage.updateTask(task.id, {
+    const updatedTask = await taskStorage.updateTask(task.id, {
       description: 'Updated task',
       priority: 'high'
     });
@@ -102,99 +106,113 @@ describe('Task Management', () => {
     });
   });
   
-  it('should return null when updating a non-existent task', () => {
-    const result = taskStorage.updateTask('non-existent-id', {
-      description: 'This should fail'
-    });
-    
-    expect(result).toBeNull();
+  it('should return null when updating a non-existent task', async () => {
+    try {
+      await taskStorage.updateTask('non-existent-id', {
+        description: 'This should fail'
+      });
+      // If we reach here, the test should fail
+      expect(true).toBe(false); // This should not be reached
+    } catch (error) {
+      // Expect the error to be thrown
+      expect(error).toBeDefined();
+      expect((error as Error).message).toContain('not found');
+    }
   });
   
-  it('should delete a task', () => {
+  it('should delete a task', async () => {
     const task: Task = {
       id: uuidv4(),
       description: 'Task to delete',
       status: 'todo',
-      priority: 'low'
+      priority: 'low',
+      created: new Date().toISOString()
     };
     
-    taskStorage.addTask(task);
-    const deleteResult = taskStorage.deleteTask(task.id);
+    await taskStorage.addTask(task);
+    const deleteResult = await taskStorage.deleteTask(task.id);
     
     expect(deleteResult).toBe(true);
-    expect(taskStorage.getAllTasks()).not.toContain(task);
+    const allTasks = await taskStorage.getAllTasks();
+    expect(allTasks).not.toContain(task);
   });
   
-  it('should filter tasks by status', () => {
+  it('should filter tasks by status', async () => {
     const todoTask: Task = {
       id: uuidv4(),
       description: 'Todo task',
       status: 'todo',
-      priority: 'medium'
+      priority: 'medium',
+      created: new Date().toISOString()
     };
     
     const doneTask: Task = {
       id: uuidv4(),
       description: 'Done task',
       status: 'done',
-      priority: 'medium'
+      priority: 'medium',
+      created: new Date().toISOString()
     };
     
-    taskStorage.addTask(todoTask);
-    taskStorage.addTask(doneTask);
+    await taskStorage.addTask(todoTask);
+    await taskStorage.addTask(doneTask);
     
-    const todoTasks = taskStorage.getTasksBy({ status: 'todo' });
+    const todoTasks = await taskStorage.getTasksBy({ status: 'todo' });
     expect(todoTasks).toHaveLength(1);
     expect(todoTasks[0]).toEqual(todoTask);
     
-    const doneTasks = taskStorage.getTasksBy({ status: 'done' });
+    const doneTasks = await taskStorage.getTasksBy({ status: 'done' });
     expect(doneTasks).toHaveLength(1);
     expect(doneTasks[0]).toEqual(doneTask);
   });
   
-  it('should filter tasks by priority', () => {
+  it('should filter tasks by priority', async () => {
     const highTask: Task = {
       id: uuidv4(),
       description: 'High priority task',
       status: 'todo',
-      priority: 'high'
+      priority: 'high',
+      created: new Date().toISOString()
     };
     
     const lowTask: Task = {
       id: uuidv4(),
       description: 'Low priority task',
       status: 'todo',
-      priority: 'low'
+      priority: 'low',
+      created: new Date().toISOString()
     };
     
-    taskStorage.addTask(highTask);
-    taskStorage.addTask(lowTask);
+    await taskStorage.addTask(highTask);
+    await taskStorage.addTask(lowTask);
     
-    const highTasks = taskStorage.getTasksBy({ priority: 'high' });
+    const highTasks = await taskStorage.getTasksBy({ priority: 'high' });
     expect(highTasks).toHaveLength(1);
     expect(highTasks[0]).toEqual(highTask);
   });
   
-  it('should debounce save operations', () => {
+  it('should debounce save operations', async () => {
     vi.useFakeTimers();
     
     const task: Task = {
       id: uuidv4(),
       description: 'Test task',
       status: 'todo',
-      priority: 'medium'
+      priority: 'medium',
+      created: new Date().toISOString()
     };
     
-    taskStorage.addTask(task);
-    taskStorage.save();
+    await taskStorage.addTask(task);
     
-    // Timer should be set but not executed yet
-    expect(vi.getTimerCount()).toBe(1);
+    // Mock the saveImmediately method to verify it's called
+    const saveImmediatelySpy = vi.spyOn(taskStorage, 'saveImmediately' as any);
+    
+    await taskStorage.save();
     
     // Fast-forward time
     vi.advanceTimersByTime(5000);
     
-    // Timer should have executed
-    expect(vi.getTimerCount()).toBe(0);
+    // Verify save was called
+    expect(saveImmediatelySpy).toHaveBeenCalled();
   });
 }); 

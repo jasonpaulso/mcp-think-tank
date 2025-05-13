@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.1.0 (2025-08-25)
+
+### Improved
+- Major code restructuring for better maintainability
+- Implemented modular architecture with separation of concerns:
+  - Created core module for server lifecycle and state management
+  - Created transport module for handling different transport methods
+  - Extracted connection management into dedicated module
+  - Improved tool registration with centralized registration system
+  - Separated resource setup from server implementation
+- Reduced main server.ts file from 400+ lines to under 50 lines
+- Added comprehensive documentation for all modules
+- Improved error handling with better module boundaries
+- Enhanced startup sequence with async/await pattern
+
+### Added
+- Implemented robust structured logging system
+  - Created dedicated logger module with level-based filtering
+  - Added context-aware logging for better debugging 
+  - Improved error logging with stack trace support
+  - Configurable log levels via environment variables
+- Streamlined task management with Zod schema validation
+  - Type-safe task validation with descriptive error messages
+  - Better TypeScript integration with inferred types
+  - Enhanced task creation and update workflows
+- Improved configuration management with strong typing
+  - Consolidated environment variable handling
+  - Added type-safe configuration interfaces
+  - Better support for command-line arguments
+- Dedicated process management module
+  - Centralized PID file handling
+  - Better cleanup of orphaned processes
+  - Improved shutdown handling
+
 ## 2.0.11 (2025-08-20)
 
 ### Fixed

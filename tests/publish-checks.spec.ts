@@ -39,15 +39,15 @@ describe('Package Publication Checks', () => {
 
   it('server exports needed FastMCP resources and templates', () => {
     // More reliable check for server implementation rather than runtime
-    const serverContent = fs.readFileSync('./src/server.ts', 'utf8');
+    const resourcesContent = fs.readFileSync('./src/core/resources.ts', 'utf8');
     
     // Check for resource registration
-    expect(serverContent).toContain('server.addResource');
-    expect(serverContent).toContain('uri: \'status://health\'');
+    expect(resourcesContent).toContain('server.addResource');
+    expect(resourcesContent).toContain('uri: \'status://health\'');
     
     // Check for resource template registration
-    expect(serverContent).toContain('server.addResourceTemplate');
-    expect(serverContent).toContain('uriTemplate: \'task://{id}\'');
+    expect(resourcesContent).toContain('server.addResourceTemplate');
+    expect(resourcesContent).toContain('uriTemplate: \'task://{id}\'');
   });
 
   it('server can start with --show-memory-path flag', () => {

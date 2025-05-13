@@ -1,7 +1,7 @@
 # Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 name: "@flight505/mcp-think-tank"
 description: "An MCP server that provides reasoning and knowledge graph capabilities for AI assistants"
-version: "2.0.11"
+version: "2.1.0"
 displayName: "MCP Think Tank"
 summary: "A knowledge graph-based reasoning tool with structured thinking and web research capabilities"
 icon: "/assets/MCP_Think_Tank_dark.png"

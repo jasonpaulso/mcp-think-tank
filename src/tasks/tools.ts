@@ -32,7 +32,7 @@ export function registerTaskTools(server: FastMCP): void {
           ...taskData
         };
         
-        taskStorage.addTask(task);
+        await taskStorage.addTask(task);
         createdTasks.push(task);
         
         // Create entities in knowledge graph
@@ -68,7 +68,7 @@ export function registerTaskTools(server: FastMCP): void {
         }
       }
       
-      taskStorage.save();
+      await taskStorage.save();
       
       return JSON.stringify({ 
         tasks: createdTasks,
@@ -93,8 +93,8 @@ export function registerTaskTools(server: FastMCP): void {
       if (priority) filter.priority = priority;
       
       const tasks = Object.keys(filter).length > 0
-        ? taskStorage.getTasksBy(filter)
-        : taskStorage.getAllTasks();
+        ? await taskStorage.getTasksBy(filter)
+        : await taskStorage.getAllTasks();
       
       return JSON.stringify({
         tasks,
@@ -113,7 +113,7 @@ export function registerTaskTools(server: FastMCP): void {
     }),
     execute: async (_args, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
-      const todoTasks = taskStorage.getTasksBy({ status: 'todo' });
+      const todoTasks = await taskStorage.getTasksBy({ status: 'todo' });
       
       if (todoTasks.length === 0) {
         return JSON.stringify({
@@ -124,13 +124,13 @@ export function registerTaskTools(server: FastMCP): void {
       
       // Sort by priority (high -> medium -> low)
       const priorityOrder = { high: 0, medium: 1, low: 2 };
-      const nextTask = todoTasks.sort((a, b) => 
+      const nextTask = todoTasks.sort((a: Task, b: Task) => 
         priorityOrder[a.priority as keyof typeof priorityOrder] - 
         priorityOrder[b.priority as keyof typeof priorityOrder]
       )[0];
       
       // Update status to in-progress
-      const updatedTask = taskStorage.updateTask(nextTask.id, { 
+      const updatedTask = await taskStorage.updateTask(nextTask.id, { 
         status: 'in-progress' 
       });
       
@@ -161,7 +161,7 @@ export function registerTaskTools(server: FastMCP): void {
     }),
     execute: async ({ id }, context) => {
       const log = context && context.log ? context.log : { info() {}, error() {}, warn() {}, debug() {} };
-      const updatedTask = taskStorage.updateTask(id, { status: 'done' });
+      const updatedTask = await taskStorage.updateTask(id, { status: 'done' });
       
       if (!updatedTask) {
         return JSON.stringify({
@@ -214,9 +214,8 @@ export function registerTaskTools(server: FastMCP): void {
       
       for (const update of updates) {
         const { id, ...changes } = update;
-        const updatedTask = taskStorage.updateTask(id, changes);
-        
-        if (updatedTask) {
+        try {
+          const updatedTask = await taskStorage.updateTask(id, changes);
           results.success.push(updatedTask);
           
           // Update knowledge graph
@@ -233,12 +232,12 @@ export function registerTaskTools(server: FastMCP): void {
               if (log) log.error(`Failed to update task entity in knowledge graph: ${err}`);
             }
           }
-        } else {
+        } catch (error) {
           results.failed.push(id);
         }
       }
       
-      taskStorage.save();
+      await taskStorage.save();
       
       return JSON.stringify({
         message: `Updated ${results.success.length} tasks, ${results.failed.length} failed`,
